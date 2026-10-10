@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════
+   NEBULA · DIAGNOSTICS MODAL
+   ═══════════════════════════════════════════════════════ */
+
+.diag-overlay {
+  position: fixed; inset: 0; z-index: 810;
+  background: rgba(0,0,0,.92);
+  display: none;
+  align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity .25s;
+  padding: 16px;
+}
+.diag-overlay.open { display: flex; opacity: 1; }
+
+.diag-modal {
+  background: linear-gradient(180deg, rgba(14,22,38,.99) 0%, rgba(6,10,20,1) 100%);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--r-xl);
+  width: 100%;
+  max-height: 92dvh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 30px 80px -12px rgba(0,0,0,.9);
+  overflow: hidden;
+  animation: diagIn .28s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes diagIn {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.diag-head {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.diag-head h3 {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--hi);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.diag-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
+
+.diag-loading { padding: 40px 20px; text-align: center; }
+
+/* ─── Сводка ─── */
+.diag-summary {
+  padding: 16px 18px;
+  border-radius: var(--r-md);
+  margin-bottom: 14px;
+  border: 1px solid var(--border-hi);
+}
+.diag-summary.diag-ok    { background: linear-gradient(135deg, rgba(69,224,168,.10), rgba(10,16,28,.9)); border-color: rgba(69,224,168,.4); }
+.diag-summary.diag-warn  { background: linear-gradient(135deg, rgba(255,184,88,.10), rgba(10,16,28,.9)); border-color: rgba(255,184,88,.4); }
+.diag-summary.diag-error { background: linear-gradient(135deg, rgba(255,101,132,.10), rgba(10,16,28,.9)); border-color: rgba(255,101,132,.4); }
+
+.diag-summary-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  margin-bottom: 10px;
+}
+.diag-total {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px; font-weight: 700;
+  color: var(--hi);
+  line-height: 1;
+}
+.diag-total small {
+  font-size: 14px; color: var(--mut);
+  font-weight: 400;
+  margin-left: 4px;
+}
+.diag-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--tx);
+  letter-spacing: .5px;
+}
+.diag-counters {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+.diag-cnt { color: var(--tx); }
+.diag-cnt.diag-ok    { color: var(--mint); }
+.diag-cnt.diag-warn  { color: var(--amber); }
+.diag-cnt.diag-err   { color: var(--coral); }
+.diag-ms {
+  margin-left: auto;
+  color: var(--dim);
+  font-size: 10.5px;
+}
+
+/* ─── Группы ─── */
+.diag-group { margin-bottom: 14px; }
+.diag-group-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
+
+.diag-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.35);
+  margin-bottom: 5px;
+}
+.diag-row.diag-row-ok    { border-left: 3px solid var(--mint); }
+.diag-row.diag-row-warn  { border-left: 3px solid var(--amber); }
+.diag-row.diag-row-error { border-left: 3px solid var(--coral); }
+
+.diag-icon {
+  font-size: 13px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.diag-content { flex: 1; min-width: 0; }
+.diag-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--hi);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.diag-detail {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--mut);
+  margin-top: 3px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.diag-ms-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: var(--dim);
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
