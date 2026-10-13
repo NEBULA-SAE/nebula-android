@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · THEMES UI — список + редактор
+// NEBULA v2 · THEMES UI — расширенный редактор
 // ═══════════════════════════════════════════════════════════════
 
 import { isEN } from '../i18n';
@@ -13,7 +13,9 @@ import {
   createThemeFromColors,
   submitTheme,
   getAllThemes,
+  DEFAULT_COLORS,
   type Theme,
+  type ThemeColors,
 } from '../themes';
 
 // ═══ СПИСОК ТЕМ ═══
@@ -37,8 +39,8 @@ function renderThemeList(): void {
   let html = `
     <div style="font-size:12px;color:var(--mut);margin-bottom:14px;line-height:1.55">
       ${en
-        ? 'Choose a theme, or create your own and share it with the community.'
-        : 'Выбери тему или создай свою и поделись с сообществом.'}
+        ? 'Choose a theme, or create your own with full color control and share with the community.'
+        : 'Выбери тему или создай свою с полным контролем цветов и поделись с сообществом.'}
     </div>
 
     <button class="btn-primary btn-violet" onclick="openThemeCreator()" style="margin-bottom:14px">
@@ -77,15 +79,22 @@ function renderThemeList(): void {
   if (sheetBody) sheetBody.innerHTML = html;
 }
 
-function previewSwatch(colors: Theme['colors']): string {
+function previewSwatch(colors: ThemeColors): string {
   return `
-    <div style="display:flex;gap:3px">
-      <span style="width:16px;height:16px;border-radius:50%;background:${colors.accent};box-shadow:0 0 8px ${colors.accent}88"></span>
-      <span style="width:16px;height:16px;border-radius:50%;background:${colors.cyan};box-shadow:0 0 8px ${colors.cyan}88"></span>
-      <span style="width:16px;height:16px;border-radius:50%;background:${colors.mint};box-shadow:0 0 8px ${colors.mint}88"></span>
-      <span style="width:16px;height:16px;border-radius:50%;background:${colors.coral};box-shadow:0 0 8px ${colors.coral}88"></span>
-      <span style="width:16px;height:16px;border-radius:50%;background:${colors.amber};box-shadow:0 0 8px ${colors.amber}88"></span>
-      <span style="width:16px;height:16px;border-radius:50%;background:${colors.violet};box-shadow:0 0 8px ${colors.violet}88"></span>
+    <div style="display:flex;flex-direction:column;gap:4px;align-items:center">
+      <div style="
+        width:52px;height:52px;border-radius:12px;
+        background:linear-gradient(135deg, ${colors.gradStart} 0%, ${colors.gradEnd} 100%);
+        border:1px solid ${colors.borderHi};
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 0 16px ${colors.accent}55;
+      ">
+        <div style="display:flex;gap:3px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${colors.accent}"></span>
+          <span style="width:8px;height:8px;border-radius:50%;background:${colors.cyan}"></span>
+          <span style="width:8px;height:8px;border-radius:50%;background:${colors.mint}"></span>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -110,8 +119,50 @@ export function removeTheme(id: string): void {
 
 // ═══ РЕДАКТОР ═══
 
+interface ColorField {
+  key: keyof ThemeColors;
+  label: string;
+  group: string;
+}
+
+const FIELDS: ColorField[] = [
+  // Акценты
+  { key: 'accent', label: 'Accent', group: 'Акценты' },
+  { key: 'cyan',   label: 'Cyan',   group: 'Акценты' },
+  { key: 'mint',   label: 'Mint',   group: 'Акценты' },
+  { key: 'coral',  label: 'Coral',  group: 'Акценты' },
+  { key: 'amber',  label: 'Amber',  group: 'Акценты' },
+  { key: 'violet', label: 'Violet', group: 'Акценты' },
+  // Фон
+  { key: 'void',     label: 'Background', group: 'Фон' },
+  { key: 'bgCard',   label: 'Card bg',    group: 'Фон' },
+  { key: 'bgCardHi', label: 'Card hi',    group: 'Фон' },
+  { key: 'border',   label: 'Border',     group: 'Фон' },
+  { key: 'borderHi', label: 'Border hi',  group: 'Фон' },
+  // Текст
+  { key: 'hi',  label: 'Text hi',  group: 'Текст' },
+  { key: 'tx',  label: 'Text',     group: 'Текст' },
+  { key: 'mut', label: 'Text mut', group: 'Текст' },
+  { key: 'dim', label: 'Text dim', group: 'Текст' },
+  // Градиент
+  { key: 'gradStart', label: 'Grad start', group: 'Градиент' },
+  { key: 'gradEnd',   label: 'Grad end',   group: 'Градиент' },
+];
+
 export function openThemeCreator(): void {
   const en = isEN();
+  const groups = ['Акценты', 'Фон', 'Текст', 'Градиент'];
+
+  let fieldsHtml = '';
+  for (const g of groups) {
+    const groupFields = FIELDS.filter(f => f.group === g);
+    fieldsHtml += `
+      <div class="theme-group">
+        <div class="theme-group-title">${g}</div>
+        ${groupFields.map(f => colorPicker(f.key, f.label, DEFAULT_COLORS[f.key])).join('')}
+      </div>
+    `;
+  }
 
   const html = `
     <div style="display:flex;flex-direction:column;gap:14px">
@@ -126,27 +177,23 @@ export function openThemeCreator(): void {
         <input class="form-input" id="theme-author" placeholder="@nickname" maxlength="30">
       </div>
 
-      <div class="color-picker">
-        ${colorPicker('accent', 'Accent', '#4e8fff')}
-        ${colorPicker('cyan', 'Cyan', '#5ecbff')}
-        ${colorPicker('mint', 'Mint', '#45e0a8')}
-        ${colorPicker('coral', 'Coral', '#ff6584')}
-        ${colorPicker('amber', 'Amber', '#ffb858')}
-        ${colorPicker('violet', 'Violet', '#a78bfa')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="theme-preset-btn" onclick="applyThemePreset('default')">Nebula</button>
+        <button class="theme-preset-btn" onclick="applyThemePreset('cyberpunk')">Cyberpunk</button>
+        <button class="theme-preset-btn" onclick="applyThemePreset('matrix')">Matrix</button>
+        <button class="theme-preset-btn" onclick="applyThemePreset('sunset')">Sunset</button>
+        <button class="theme-preset-btn" onclick="applyThemePreset('ice')">Ice</button>
+        <button class="theme-preset-btn" onclick="applyThemePreset('gold')">Gold</button>
+        <button class="theme-preset-btn" onclick="applyThemePreset('dracula')">Dracula</button>
       </div>
+
+      ${fieldsHtml}
 
       <div class="theme-preview-large">
         <div style="font-family:'JetBrains Mono';font-size:10px;color:var(--mut);margin-bottom:8px">
           ${en ? 'Live preview' : 'Живой предпросмотр'}
         </div>
-        <div style="display:flex;gap:8px">
-          <span id="prev-accent" style="width:26px;height:26px;border-radius:7px;background:#4e8fff"></span>
-          <span id="prev-cyan" style="width:26px;height:26px;border-radius:7px;background:#5ecbff"></span>
-          <span id="prev-mint" style="width:26px;height:26px;border-radius:7px;background:#45e0a8"></span>
-          <span id="prev-coral" style="width:26px;height:26px;border-radius:7px;background:#ff6584"></span>
-          <span id="prev-amber" style="width:26px;height:26px;border-radius:7px;background:#ffb858"></span>
-          <span id="prev-violet" style="width:26px;height:26px;border-radius:7px;background:#a78bfa"></span>
-        </div>
+        <div id="theme-live-preview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
       </div>
 
       <button class="btn-primary btn-mint" onclick="saveAndApplyTheme()">
@@ -164,36 +211,95 @@ export function openThemeCreator(): void {
   (window as any).openSheet?.(en ? '🎨 Create theme' : '🎨 Создание темы', html);
 
   // Live preview
-  const keys = ['accent', 'cyan', 'mint', 'coral', 'amber', 'violet'];
-  for (const k of keys) {
-    const input = document.getElementById(`theme-color-${k}`) as HTMLInputElement | null;
-    const txt = document.getElementById(`theme-color-${k}-txt`) as HTMLInputElement | null;
-    const prev = document.getElementById(`prev-${k}`);
+  for (const f of FIELDS) {
+    const input = document.getElementById(`theme-color-${f.key}`) as HTMLInputElement | null;
+    const txt = document.getElementById(`theme-color-${f.key}-txt`) as HTMLInputElement | null;
 
-    if (input && prev) {
+    if (input) {
       input.addEventListener('input', () => {
-        prev.style.background = input.value;
         if (txt) txt.value = input.value;
+        updateLivePreview();
       });
     }
-    if (txt && input && prev) {
+    if (txt) {
       txt.addEventListener('input', () => {
         const v = txt.value.trim();
-        if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-          input.value = v;
-          prev.style.background = v;
+        if (isValidColor(v)) {
+          if (input) input.value = toHex(v);
+          updateLivePreview();
         }
       });
     }
   }
+
+  updateLivePreview();
 }
 
 function colorPicker(key: string, label: string, defaultVal: string): string {
+  const hex = toHex(defaultVal);
   return `
     <div class="color-row">
       <label class="color-lbl">${label}</label>
-      <input type="color" id="theme-color-${key}" value="${defaultVal}" class="color-input">
-      <input type="text" id="theme-color-${key}-txt" value="${defaultVal}" class="color-txt" maxlength="7">
+      <input type="color" id="theme-color-${key}" value="${hex}" class="color-input">
+      <input type="text" id="theme-color-${key}-txt" value="${defaultVal}" class="color-txt" maxlength="40">
+    </div>
+  `;
+}
+
+function isValidColor(v: string): boolean {
+  return /^#[0-9a-fA-F]{6}$/.test(v) || /^rgba?\(/.test(v);
+}
+
+function toHex(v: string): string {
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
+  // Конвертация rgba → hex (грубо, для color input)
+  const m = v.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (m) {
+    const [, r, g, b] = m;
+    return '#' + [r, g, b].map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+  }
+  return '#000000';
+}
+
+function updateLivePreview(): void {
+  const preview = document.getElementById('theme-live-preview');
+  if (!preview) return;
+
+  const colors: any = {};
+  for (const f of FIELDS) {
+    const txt = document.getElementById(`theme-color-${f.key}-txt`) as HTMLInputElement | null;
+    colors[f.key] = txt?.value || DEFAULT_COLORS[f.key];
+  }
+
+  preview.innerHTML = `
+    <div style="
+      width:100%;padding:14px;border-radius:12px;
+      background:${colors.void};
+      border:1px solid ${colors.border};
+      font-family:'JetBrains Mono',monospace;
+    ">
+      <div style="color:${colors.hi};font-size:14px;font-weight:700;margin-bottom:6px">
+        NEBULA Theme Preview
+      </div>
+      <div style="color:${colors.tx};font-size:11px;margin-bottom:10px">
+        Это пример текста на фоне темы
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="padding:4px 10px;background:${colors.accent};color:#fff;border-radius:6px;font-size:10px">ACCENT</span>
+        <span style="padding:4px 10px;background:${colors.cyan};color:#000;border-radius:6px;font-size:10px">CYAN</span>
+        <span style="padding:4px 10px;background:${colors.mint};color:#000;border-radius:6px;font-size:10px">MINT</span>
+        <span style="padding:4px 10px;background:${colors.coral};color:#fff;border-radius:6px;font-size:10px">CORAL</span>
+        <span style="padding:4px 10px;background:${colors.amber};color:#000;border-radius:6px;font-size:10px">AMBER</span>
+        <span style="padding:4px 10px;background:${colors.violet};color:#fff;border-radius:6px;font-size:10px">VIOLET</span>
+      </div>
+      <div style="
+        margin-top:10px;padding:10px;border-radius:8px;
+        background:${colors.bgCard};
+        border:1px solid ${colors.borderHi};
+        color:${colors.tx};font-size:11px;
+      ">
+        Пример карточки с подсвеченной границей
+      </div>
     </div>
   `;
 }
@@ -208,13 +314,13 @@ function collectThemeFromForm(): Theme | null {
     return null;
   }
 
-  const keys = ['accent', 'cyan', 'mint', 'coral', 'amber', 'violet'] as const;
   const colors: any = {};
-  for (const k of keys) {
-    colors[k] = (document.getElementById(`theme-color-${k}`) as HTMLInputElement | null)?.value || '#000000';
+  for (const f of FIELDS) {
+    const txt = document.getElementById(`theme-color-${f.key}-txt`) as HTMLInputElement | null;
+    colors[f.key] = txt?.value?.trim() || DEFAULT_COLORS[f.key];
   }
 
-  return createThemeFromColors(name, author, colors);
+  return createThemeFromColors(name, author, colors as ThemeColors);
 }
 
 export function saveAndApplyTheme(): void {
@@ -222,7 +328,6 @@ export function saveAndApplyTheme(): void {
   if (!theme) return;
 
   saveCustomTheme(theme);
-  // Добавим в текущий список
   const all = getAllThemes();
   all.push(theme);
   applyTheme(theme.id);
@@ -245,6 +350,24 @@ export function saveAndSubmitTheme(): void {
   toast(isEN() ? 'Form opened in browser' : 'Форма открыта в браузере', 'info', 3000);
 }
 
+// ─── Пресеты для быстрого старта ───
+
+export function applyThemePreset(presetId: string): void {
+  const themes = getAllThemes();
+  const preset = themes.find(t => t.id === presetId);
+  if (!preset) return;
+
+  for (const f of FIELDS) {
+    const input = document.getElementById(`theme-color-${f.key}`) as HTMLInputElement | null;
+    const txt = document.getElementById(`theme-color-${f.key}-txt`) as HTMLInputElement | null;
+    const val = preset.colors[f.key];
+    if (input) input.value = toHex(val);
+    if (txt) txt.value = val;
+  }
+  updateLivePreview();
+  toast(isEN() ? 'Preset loaded' : 'Пресет загружен', 'info', 1200);
+}
+
 // ─── Экспорт в window ───
 
 if (typeof window !== 'undefined') {
@@ -255,5 +378,6 @@ if (typeof window !== 'undefined') {
     openThemeCreator,
     saveAndApplyTheme,
     saveAndSubmitTheme,
+    applyThemePreset,
   });
 }

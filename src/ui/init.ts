@@ -129,19 +129,20 @@ export function initApp(): void {
   }, 8000);
 
   console.log('[init] NEBULA v2 готов ✓');
-    // ─── Загрузка и применение темы ───
+  // ─── Загрузка и применение темы ───
   setTimeout(async () => {
     try {
       const themesMod = await import('../themes');
       await themesMod.loadThemes();
       const activeId = themesMod.getActiveThemeId();
-      if (activeId && activeId !== 'default') {
+      if (activeId) {
         themesMod.applyTheme(activeId);
+        console.log('[init] theme applied:', activeId);
       }
     } catch (e) {
       console.warn('[init] themes failed:', e);
     }
-  }, 300);
+  }, 200);
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · THEMES — Скины оформления
+// NEBULA v2 · THEMES — Расширенная система тем
 // ═══════════════════════════════════════════════════════════════
 
 const THEMES_URL = 'https://raw.githubusercontent.com/NEBULA-SAE/nebula-android/main/data/themes.json';
@@ -7,12 +7,27 @@ const ACTIVE_THEME_KEY = 'nebulaActiveTheme';
 const CUSTOM_THEMES_KEY = 'nebulaCustomThemes';
 
 export interface ThemeColors {
+  // Акценты
   accent: string;
   cyan: string;
   mint: string;
   coral: string;
   amber: string;
   violet: string;
+  // Фон и поверхности
+  void: string;
+  bgCard: string;
+  bgCardHi: string;
+  border: string;
+  borderHi: string;
+  // Текст
+  hi: string;
+  tx: string;
+  mut: string;
+  dim: string;
+  // Градиент
+  gradStart: string;
+  gradEnd: string;
 }
 
 export interface Theme {
@@ -22,25 +37,27 @@ export interface Theme {
   colors: ThemeColors;
 }
 
-let _themes: Theme[] = [];
+// ─── Дефолтные цвета (для fallback и валидации) ───
 
-// ─── Загрузка ───
-
-export async function loadThemes(): Promise<Theme[]> {
-  try {
-    const r = await fetch(THEMES_URL, { signal: AbortSignal.timeout(8000) });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    const custom = getCustomThemes();
-    _themes = [...(data.themes || []), ...custom];
-    console.log(`[themes] loaded ${_themes.length} themes (${data.themes?.length || 0} remote + ${custom.length} custom)`);
-    return _themes;
-  } catch (e) {
-    console.warn('[themes] remote load failed, using local only:', e);
-    _themes = [...DEFAULT_THEMES, ...getCustomThemes()];
-    return _themes;
-  }
-}
+export const DEFAULT_COLORS: ThemeColors = {
+  accent: '#4e8fff',
+  cyan: '#5ecbff',
+  mint: '#45e0a8',
+  coral: '#ff6584',
+  amber: '#ffb858',
+  violet: '#a78bfa',
+  void: '#000000',
+  bgCard: 'rgba(10,16,28,.94)',
+  bgCardHi: 'rgba(14,22,38,.96)',
+  border: 'rgba(140,170,220,.12)',
+  borderHi: 'rgba(94,203,255,.32)',
+  hi: '#eef3ff',
+  tx: '#c4cdde',
+  mut: '#6b7a94',
+  dim: '#3d4758',
+  gradStart: '#5ecbff',
+  gradEnd: '#a78bfa',
+};
 
 // ─── Fallback если GitHub недоступен ───
 
@@ -49,16 +66,43 @@ const DEFAULT_THEMES: Theme[] = [
     id: 'default',
     name: 'Nebula (по умолчанию)',
     author: 'NEBULA',
-    colors: {
-      accent: '#4e8fff',
-      cyan: '#5ecbff',
-      mint: '#45e0a8',
-      coral: '#ff6584',
-      amber: '#ffb858',
-      violet: '#a78bfa',
-    },
+    colors: { ...DEFAULT_COLORS },
   },
 ];
+
+// ─── Загрузка ───
+
+let _themes: Theme[] = [];
+
+export async function loadThemes(): Promise<Theme[]> {
+  try {
+    const r = await fetch(THEMES_URL, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+
+    // Нормализуем — дозаполняем отсутствующие поля дефолтами
+    const remote: Theme[] = (data.themes || []).map(normalizeTheme);
+
+    const custom = getCustomThemes().map(normalizeTheme);
+    _themes = [...remote, ...custom];
+
+    console.log(`[themes] loaded ${_themes.length} themes (${remote.length} remote + ${custom.length} custom)`);
+    return _themes;
+  } catch (e) {
+    console.warn('[themes] remote load failed, using local only:', e);
+    _themes = [...DEFAULT_THEMES, ...getCustomThemes().map(normalizeTheme)];
+    return _themes;
+  }
+}
+
+function normalizeTheme(t: any): Theme {
+  return {
+    id: t.id || 'unknown',
+    name: t.name || 'Unnamed',
+    author: t.author || 'unknown',
+    colors: { ...DEFAULT_COLORS, ...(t.colors || {}) },
+  };
+}
 
 // ─── Применение темы ───
 
@@ -70,15 +114,39 @@ export function applyTheme(themeId: string): boolean {
   }
 
   const root = document.documentElement;
+
+  // АКЦЕНТЫ
   root.style.setProperty('--accent', theme.colors.accent);
   root.style.setProperty('--cyan', theme.colors.cyan);
   root.style.setProperty('--mint', theme.colors.mint);
   root.style.setProperty('--coral', theme.colors.coral);
   root.style.setProperty('--amber', theme.colors.amber);
   root.style.setProperty('--violet', theme.colors.violet);
-
-  // Цвет линии "NOW" на графике тоже меняется
   root.style.setProperty('--accent-hi', theme.colors.cyan);
+
+  // ФОН И ПОВЕРХНОСТИ
+  root.style.setProperty('--void', theme.colors.void);
+  root.style.setProperty('--bg-card', theme.colors.bgCard);
+  root.style.setProperty('--bg-card-hi', theme.colors.bgCardHi);
+  root.style.setProperty('--border', theme.colors.border);
+  root.style.setProperty('--border-hi', theme.colors.borderHi);
+
+  // ТЕКСТ
+  root.style.setProperty('--hi', theme.colors.hi);
+  root.style.setProperty('--tx', theme.colors.tx);
+  root.style.setProperty('--mut', theme.colors.mut);
+  root.style.setProperty('--dim', theme.colors.dim);
+
+  // ГРАДИЕНТ (лого, бренд)
+  root.style.setProperty('--grad-start', theme.colors.gradStart);
+  root.style.setProperty('--grad-end', theme.colors.gradEnd);
+
+  // Обновляем <meta name="theme-color"> для мобильных
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme.colors.void);
+
+  // Обновляем фон body
+  document.body.style.background = theme.colors.void;
 
   try {
     localStorage.setItem(ACTIVE_THEME_KEY, themeId);
@@ -90,13 +158,14 @@ export function applyTheme(themeId: string): boolean {
 
 export function resetTheme(): void {
   const root = document.documentElement;
-  root.style.removeProperty('--accent');
-  root.style.removeProperty('--cyan');
-  root.style.removeProperty('--mint');
-  root.style.removeProperty('--coral');
-  root.style.removeProperty('--amber');
-  root.style.removeProperty('--violet');
-  root.style.removeProperty('--accent-hi');
+  const vars = [
+    '--accent', '--cyan', '--mint', '--coral', '--amber', '--violet', '--accent-hi',
+    '--void', '--bg-card', '--bg-card-hi', '--border', '--border-hi',
+    '--hi', '--tx', '--mut', '--dim',
+    '--grad-start', '--grad-end',
+  ];
+  for (const v of vars) root.style.removeProperty(v);
+  document.body.style.background = '';
   try { localStorage.removeItem(ACTIVE_THEME_KEY); } catch { /* silent */ }
 }
 
@@ -183,7 +252,7 @@ export function submitTheme(theme: Theme): void {
   window.open(url, '_blank');
 }
 
-// ─── Геттер ───
+// ─── Геттеры ───
 
 export function getAllThemes(): Theme[] {
   return _themes;
@@ -208,5 +277,6 @@ if (typeof window !== 'undefined') {
     submitTheme,
     getAllThemes,
     getTheme,
+    DEFAULT_COLORS,
   });
 }

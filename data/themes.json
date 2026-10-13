@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "updated": 1760000000,
   "themes": [
     {
@@ -12,20 +12,66 @@
         "mint": "#45e0a8",
         "coral": "#ff6584",
         "amber": "#ffb858",
-        "violet": "#a78bfa"
+        "violet": "#a78bfa",
+        "void": "#000000",
+        "bgCard": "rgba(10,16,28,.94)",
+        "bgCardHi": "rgba(14,22,38,.96)",
+        "border": "rgba(140,170,220,.12)",
+        "borderHi": "rgba(94,203,255,.32)",
+        "hi": "#eef3ff",
+        "tx": "#c4cdde",
+        "mut": "#6b7a94",
+        "dim": "#3d4758",
+        "gradStart": "#5ecbff",
+        "gradEnd": "#a78bfa"
       }
     },
     {
       "id": "cyberpunk",
-      "name": "Cyberpunk",
+      "name": "Cyberpunk 2077",
       "author": "NEBULA",
       "colors": {
         "accent": "#ff00aa",
-        "cyan": "#00ffff",
+        "cyan": "#00fff7",
         "mint": "#39ff14",
         "coral": "#ff0055",
-        "amber": "#ffcc00",
-        "violet": "#8b00ff"
+        "amber": "#ffe600",
+        "violet": "#b537f2",
+        "void": "#0a0014",
+        "bgCard": "rgba(20,5,40,.94)",
+        "bgCardHi": "rgba(30,10,60,.96)",
+        "border": "rgba(255,0,170,.15)",
+        "borderHi": "rgba(255,0,170,.45)",
+        "hi": "#ffffff",
+        "tx": "#e0b3ff",
+        "mut": "#8b5fd4",
+        "dim": "#4a2d75",
+        "gradStart": "#ff00aa",
+        "gradEnd": "#00fff7"
+      }
+    },
+    {
+      "id": "matrix",
+      "name": "Matrix",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#00ff41",
+        "cyan": "#00ff41",
+        "mint": "#7fff00",
+        "coral": "#ff3b3b",
+        "amber": "#ccff00",
+        "violet": "#00cc33",
+        "void": "#000000",
+        "bgCard": "rgba(0,20,0,.94)",
+        "bgCardHi": "rgba(0,30,0,.96)",
+        "border": "rgba(0,255,65,.15)",
+        "borderHi": "rgba(0,255,65,.45)",
+        "hi": "#00ff41",
+        "tx": "#7fff9a",
+        "mut": "#3d8a4d",
+        "dim": "#1f4a2a",
+        "gradStart": "#00ff41",
+        "gradEnd": "#00cc33"
       }
     },
     {
@@ -38,20 +84,18 @@
         "mint": "#48dbfb",
         "coral": "#ff9f43",
         "amber": "#ffd93d",
-        "violet": "#c56cf0"
-      }
-    },
-    {
-      "id": "matrix",
-      "name": "Matrix",
-      "author": "NEBULA",
-      "colors": {
-        "accent": "#00ff41",
-        "cyan": "#00ff41",
-        "mint": "#00ff41",
-        "coral": "#ff3b3b",
-        "amber": "#7fff00",
-        "violet": "#00cc33"
+        "violet": "#c56cf0",
+        "void": "#1a0a1a",
+        "bgCard": "rgba(40,15,25,.94)",
+        "bgCardHi": "rgba(50,20,30,.96)",
+        "border": "rgba(255,107,107,.15)",
+        "borderHi": "rgba(255,107,107,.4)",
+        "hi": "#fff0e6",
+        "tx": "#ffcbb3",
+        "mut": "#b37766",
+        "dim": "#5c3833",
+        "gradStart": "#ff6b6b",
+        "gradEnd": "#feca57"
       }
     },
     {
@@ -60,11 +104,22 @@
       "author": "NEBULA",
       "colors": {
         "accent": "#4fc3f7",
-        "cyan": "#81d4fa",
-        "mint": "#b2ebf2",
+        "cyan": "#b3e5fc",
+        "mint": "#80deea",
         "coral": "#ff8a80",
         "amber": "#ffe082",
-        "violet": "#b39ddb"
+        "violet": "#b39ddb",
+        "void": "#040a14",
+        "bgCard": "rgba(8,20,35,.94)",
+        "bgCardHi": "rgba(12,28,48,.96)",
+        "border": "rgba(79,195,247,.15)",
+        "borderHi": "rgba(79,195,247,.45)",
+        "hi": "#ffffff",
+        "tx": "#b3d9f0",
+        "mut": "#5c8fa8",
+        "dim": "#2d4a5c",
+        "gradStart": "#4fc3f7",
+        "gradEnd": "#b3e5fc"
       }
     },
     {
@@ -77,7 +132,42 @@
         "mint": "#aed581",
         "coral": "#ff7043",
         "amber": "#ffca28",
-        "violet": "#d4af37"
+        "violet": "#d4af37",
+        "void": "#0a0805",
+        "bgCard": "rgba(30,20,8,.94)",
+        "bgCardHi": "rgba(45,30,12,.96)",
+        "border": "rgba(255,183,0,.15)",
+        "borderHi": "rgba(255,183,0,.45)",
+        "hi": "#fff8e1",
+        "tx": "#ffd9a0",
+        "mut": "#a67c3f",
+        "dim": "#5c4520",
+        "gradStart": "#ffb700",
+        "gradEnd": "#ffd54f"
+      }
+    },
+    {
+      "id": "dracula",
+      "name": "Dracula",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#bd93f9",
+        "cyan": "#8be9fd",
+        "mint": "#50fa7b",
+        "coral": "#ff5555",
+        "amber": "#f1fa8c",
+        "violet": "#ff79c6",
+        "void": "#0d0a1a",
+        "bgCard": "rgba(30,26,50,.94)",
+        "bgCardHi": "rgba(40,36,65,.96)",
+        "border": "rgba(189,147,249,.15)",
+        "borderHi": "rgba(189,147,249,.45)",
+        "hi": "#f8f8f2",
+        "tx": "#c8c8d8",
+        "mut": "#7a7a99",
+        "dim": "#4a4a66",
+        "gradStart": "#bd93f9",
+        "gradEnd": "#ff79c6"
       }
     }
   ]

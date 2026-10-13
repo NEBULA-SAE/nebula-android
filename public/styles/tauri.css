@@ -12,8 +12,10 @@ html.tauri .tauri-titlebar {
   align-items: center;
   justify-content: space-between;
   height: 36px;
-  background: linear-gradient(180deg, #0a0f1f 0%, #05070d 100%);
-  border-bottom: 1px solid rgba(140,170,220,.12);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--void) 92%, var(--cyan)) 0%,
+    var(--void) 100%);
+  border-bottom: 1px solid var(--border);
   user-select: none;
   -webkit-user-select: none;
   position: fixed;
@@ -36,8 +38,11 @@ html.tauri .tauri-titlebar {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #5ecbff, #4e8fff 50%, #a78bfa 100%);
-  box-shadow: 0 0 10px rgba(94,203,255,.55);
+  background: radial-gradient(circle at 30% 30%,
+    var(--grad-start, #5ecbff),
+    var(--accent, #4e8fff) 50%,
+    var(--grad-end, #a78bfa) 100%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
   flex-shrink: 0;
 }
 
@@ -46,7 +51,7 @@ html.tauri .tauri-titlebar {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 2px;
-  color: #6b7a94;
+  color: var(--mut);
   text-transform: uppercase;
 }
 
@@ -62,7 +67,7 @@ html.tauri .tauri-titlebar {
   height: 36px;
   border: none;
   background: transparent;
-  color: #6b7a94;
+  color: var(--mut);
   font-size: 12px;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
@@ -74,12 +79,12 @@ html.tauri .tauri-titlebar {
 }
 
 .tauri-tb-btn:hover {
-  background: rgba(140,170,220,.10);
-  color: #eef3ff;
+  background: var(--glass, rgba(140,170,220,.10));
+  color: var(--hi);
 }
 
 .tauri-tb-close:hover {
-  background: #e04560;
+  background: var(--coral, #e04560);
   color: #fff;
 }
 
@@ -105,15 +110,15 @@ html.tauri .bottom-nav {
   }
 }
 
-/* ─── Скроллбары в тёмном стиле ─── */
+/* ─── Скроллбары ─── */
 html.tauri ::-webkit-scrollbar { width: 8px; height: 8px; }
-html.tauri ::-webkit-scrollbar-track { background: rgba(0,0,0,.3); }
+html.tauri ::-webkit-scrollbar-track { background: color-mix(in srgb, var(--void) 80%, transparent); }
 html.tauri ::-webkit-scrollbar-thumb {
-  background: rgba(94,203,255,.3);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
   border-radius: 4px;
 }
 html.tauri ::-webkit-scrollbar-thumb:hover {
-  background: rgba(94,203,255,.5);
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 /* ─── Отключаем выделение и drag там, где не нужно ─── */
@@ -154,11 +159,11 @@ html.tauri .bottom-nav {
 
 html.tauri body.mini-mode {
   overflow: hidden;
-  background: #05070d;
+  background: var(--void);
 }
 
 html.tauri body.mini-mode .tauri-titlebar {
-  display: none;  /* в mini-режиме нет титульника */
+  display: none;
 }
 
 html.tauri body.mini-mode .top-bar,
@@ -179,6 +184,15 @@ html.tauri body.mini-mode #screen-home {
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
+  -webkit-app-region: drag;
+  cursor: move;
+}
+
+html.tauri body.mini-mode #screen-home button,
+html.tauri body.mini-mode #screen-home input,
+html.tauri body.mini-mode #screen-home select,
+html.tauri body.mini-mode #screen-home a {
+  -webkit-app-region: no-drag;
 }
 
 html.tauri body.mini-mode #screen-home .btc-card {
@@ -193,6 +207,7 @@ html.tauri body.mini-mode #screen-home .btc-stats {
 html.tauri body.mini-mode #chart-container {
   height: 180px !important;
   min-height: 180px !important;
+  -webkit-app-region: no-drag;
 }
 
 html.tauri body.mini-mode #screen-home > *:not(.btc-card):not(.chart-card) {
