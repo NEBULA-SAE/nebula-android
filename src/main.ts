@@ -13,14 +13,41 @@ installFetchPatch();
 if (isTauri) {
   document.documentElement.classList.add('tauri');
 
-  // ─── Mini-режим (по query параметру ?mini=1) ───
   const params = new URLSearchParams(location.search);
-  if (params.has('mini')) {
+  const isMini = params.has('mini');
+
+  // ─── Mini-режим ───
+  if (isMini) {
     document.body.classList.add('mini-mode');
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = '/styles/mini.css';
     document.head.appendChild(link);
+  }
+
+  // ─── Показать главное окно после того как HTML отрисован ───
+  // (окно стартует с visible: false в tauri.conf.json)
+  if (!isMini) {
+    (async () => {
+      try {
+        const { Window } = await import('@tauri-apps/api/window');
+        const mainWin = await Window.getByLabel('main');
+        if (mainWin) {
+          // Небольшая задержка чтобы WebView успел нарисовать сплэш
+          setTimeout(async () => {
+            try {
+              await mainWin.show();
+              await mainWin.setFocus();
+              console.log('[tauri] main window shown');
+            } catch (e) {
+              console.warn('[tauri] show failed:', e);
+            }
+          }, 100);
+        }
+      } catch (e) {
+        console.warn('[tauri] window show failed:', e);
+      }
+    })();
   }
 
   // ─── Custom Title Bar ───
@@ -61,7 +88,7 @@ if (isTauri) {
   // ─── Graceful shutdown ───
   window.addEventListener('beforeunload', async () => {
     try {
-      // 1. Снимаем хоткеи — чтобы система освободила их для следующего запуска
+      // 1. Снимаем хоткеи
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const unreg = (window as any).__nebulaUnregisterHotkeys;
       if (typeof unreg === 'function') {

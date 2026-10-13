@@ -7,10 +7,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
   <title>NEBULA · v2</title>
-  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+
+  <!-- Рукописные шрифты -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Allura&family=Dancing+Script:wght@700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+
   <link rel="stylesheet" href="/styles/theme.css">
   <link rel="stylesheet" href="/styles/base.css">
   <link rel="stylesheet" href="/styles/layout.css">
@@ -25,6 +29,47 @@
   <link rel="stylesheet" href="/styles/themes.css">
 </head>
 <body>
+
+<!-- ═══ SPLASH (виден сразу, до загрузки JS) ═══ -->
+<div class="splash" id="nebula-splash">
+  <!-- Фон: canvas со звёздами -->
+  <canvas class="splash-stars-canvas" id="splash-stars-canvas"></canvas>
+
+  <!-- Мягкое свечение в центре -->
+  <div class="splash-glow"></div>
+
+  <!-- Вспышка при появлении волка -->
+  <div class="splash-flash"></div>
+
+  <div class="splash-content">
+    <!-- Логотип волка -->
+    <img src="ic_launcher-playstore.png" alt="NEBULA" class="splash-logo" onerror="this.style.display='none'">
+
+    <!-- Тонкая светящаяся линия под волком -->
+    <div class="splash-line"></div>
+
+    <!-- Надпись NEBULA по буквам -->
+    <div class="splash-title">
+      <span class="splash-letter" style="--i:0">N</span>
+      <span class="splash-letter" style="--i:1">E</span>
+      <span class="splash-letter" style="--i:2">B</span>
+      <span class="splash-letter" style="--i:3">U</span>
+      <span class="splash-letter" style="--i:4">L</span>
+      <span class="splash-letter" style="--i:5">A</span>
+    </div>
+
+    <!-- Подзаголовок -->
+    <div class="splash-sub">ORACLE · TRADING TERMINAL</div>
+
+    <!-- Прогресс-бар -->
+    <div class="splash-loader">
+      <div class="splash-loader-bar" id="splash-loader-bar"></div>
+    </div>
+
+    <!-- Статус -->
+    <div class="splash-status" id="splash-status">INITIALIZING...</div>
+  </div>
+</div>
 
 <!-- ═══ Tauri Custom Title Bar (виден только в PC-версии) ═══ -->
 <div class="tauri-titlebar" id="tauri-titlebar">
@@ -458,7 +503,7 @@
       <h4>Технологии</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);">TypeScript · Vite · Capacitor · Web Crypto · Groq API</p>
 
-        <h4>Безопасность</h4>
+      <h4>Безопасность</h4>
       <div class="info-block" style="display:flex;flex-direction:column;gap:8px">
         <div id="about-pwd-status" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)">
           статус: —

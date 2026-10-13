@@ -24,8 +24,8 @@
         "decorations": false,
         "transparent": false,
         "theme": "Dark",
-        "backgroundColor": "#05070d",
-        "visible": true
+        "backgroundColor": "#000000",
+        "visible": false
       },
       {
         "label": "mini",
