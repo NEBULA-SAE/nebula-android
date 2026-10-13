@@ -2,3 +2,9 @@ node_modules/
 dist/ 
 build/ 
 .gradle/ 
+# Build artifacts
+dist_release/
+
+# Android keystore
+*.keystore
+*.jks

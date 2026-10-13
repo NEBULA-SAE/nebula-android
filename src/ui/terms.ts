@@ -8,6 +8,11 @@ import { keysStatus, checkMasterPassword } from '../trading';
 
 const TERMS_KEY = 'nebula_terms_accepted_v1';
 
+// ─── Крипто-адреса для донатов ───
+const DONATE_ADDRESSES = {
+  usdt: 'TD2JBdBdW6jHrXwg8EPcAsV2ZKn8XEi4Zd', // USDT TRC-20
+};
+
 // ═══ PUBLIC API ═══
 
 export function acceptTerms(): void {
@@ -18,7 +23,6 @@ export function acceptTerms(): void {
 
   toast('Спасибо! Приятной работы 🚀', 'success', 2000);
 
-  // После принятия соглашения — проверяем мастер-пароль
   setTimeout(() => {
     try { checkMasterPassword(); } catch { /* silent */ }
   }, 400);
@@ -28,7 +32,6 @@ export function showAbout(): void {
   const ov = document.getElementById('about-overlay');
   if (ov) ov.classList.add('open');
 
-  // Обновить статус пароля
   (async () => {
     try {
       const st = await keysStatus();
@@ -48,6 +51,80 @@ export function hideAbout(): void {
   if (ov) ov.classList.remove('open');
 }
 
+// ─── Донаты ───
+
+export function copyDonate(): void {
+  const addr = DONATE_ADDRESSES.usdt;
+  navigator.clipboard.writeText(addr).then(() => {
+    toast('✅ USDT-адрес скопирован', 'success', 2000);
+  }).catch(() => {
+    // fallback для WebView
+    const ta = document.createElement('textarea');
+    ta.value = addr;
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      toast('✅ USDT-адрес скопирован', 'success', 2000);
+    } catch {
+      toast('Не удалось скопировать', 'error');
+    }
+    document.body.removeChild(ta);
+  });
+}
+
+export function openDonateModal(): void {
+  const addr = DONATE_ADDRESSES.usdt;
+  // QR через публичный API (без установки библиотек)
+  // Используем qrserver.com — работает без ключей
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(addr)}&bgcolor=0a0f1f&color=5ecbff&margin=8`;
+
+  const html = `
+    <div style="text-align:center; padding: 8px 0;">
+      <div style="font-size:42px; margin-bottom:10px;">💎</div>
+      <div style="font-family:'Space Grotesk'; font-size:16px; font-weight:700; color:var(--mint); margin-bottom:12px;">
+        Поддержать NEBULA
+      </div>
+      <div style="font-size:12px; color:var(--mut); line-height:1.55; margin-bottom:16px;">
+        NEBULA — бесплатный проект одного разработчика.<br>
+        Если приложение полезно — можешь поддержать разработку.
+      </div>
+
+      <div style="display:inline-block; padding:10px; background:rgba(0,0,0,.5); border:1px solid var(--border); border-radius:14px; margin-bottom:14px;">
+        <img src="${qrUrl}" alt="QR USDT"
+             style="width:220px; height:220px; display:block; border-radius:6px; image-rendering: pixelated;"
+             onerror="this.style.display='none'">
+      </div>
+
+      <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">
+        USDT · TRC-20 (Tron)
+      </div>
+
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--hi);
+                  background:rgba(0,0,0,.55); border:1px solid rgba(140,170,220,.12);
+                  border-radius:8px; padding:10px 12px; word-break:break-all; line-height:1.5; margin-bottom:14px;">
+        ${addr}
+      </div>
+
+      <button class="btn-primary btn-mint" onclick="copyDonate()" style="margin-bottom:8px;">
+        📋 Скопировать адрес
+      </button>
+
+      <div style="font-size:10.5px; color:var(--coral); margin-top:12px; line-height:1.5;">
+        ⚠️ Отправляй только USDT в сети Tron (TRC-20).<br>
+        Другая сеть = потеря средств.
+      </div>
+
+      <div style="font-size:10.5px; color:var(--mut); margin-top:14px;">
+        Спасибо за поддержку ❤️
+      </div>
+    </div>
+  `;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).openSheet?.('💎 Поддержать проект', html);
+}
+
 // ═══ ПРОВЕРКА СОГЛАШЕНИЯ ═══
 
 function showTerms(): void {
@@ -62,7 +139,6 @@ function checkTerms(): void {
   if (accepted !== '1') {
     showTerms();
   } else {
-    // Соглашение уже принято — сразу проверяем мастер-пароль
     try { checkMasterPassword(); } catch { /* silent */ }
   }
 }
@@ -77,7 +153,7 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// ═══ Экспорт в window для inline-обработчиков ═══
+// ═══ Экспорт в window ═══
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 if (typeof window !== 'undefined') {
@@ -85,5 +161,7 @@ if (typeof window !== 'undefined') {
     acceptTerms,
     showAbout,
     hideAbout,
+    copyDonate,
+    openDonateModal,
   });
 }

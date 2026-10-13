@@ -1,0 +1,59 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "NEBULA capabilities: HTTP to exchanges, notifications, hotkeys, autostart",
+  "windows": ["main", "mini"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-is-visible",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-always-on-top",
+    "core:webview:default",
+    "core:event:default",
+    "core:app:default",
+
+    "notification:default",
+    "notification:allow-notify",
+    "notification:allow-request-permission",
+    "notification:allow-is-permission-granted",
+
+    "global-shortcut:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+
+    "autostart:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://api.gateio.ws/*" },
+        { "url": "https://api.binance.com/*" },
+        { "url": "https://api.bybit.com/*" },
+        { "url": "https://www.okx.com/*" },
+        { "url": "https://api.mexc.com/*" },
+        { "url": "https://api.coinpaprika.com/*" },
+        { "url": "https://api.alternative.me/*" },
+        { "url": "https://www.cbr-xml-daily.ru/*" },
+        { "url": "https://api.groq.com/*" },
+        { "url": "https://shared.eu-central-1.getblock.io/*" },
+        { "url": "https://dash.getblock.io/*" },
+        { "url": "https://go.getblock.io/*" },
+        { "url": "https://dash-rpc.publicnode.com/*" },
+        { "url": "https://www.dashcentral.org/*" },
+        { "url": "https://api.blockchair.com/*" },
+        { "url": "https://api.dexpaprika.com/*" },
+        { "url": "wss://stream.binance.com/*" }
+      ]
+    }
+  ]
+}

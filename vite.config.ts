@@ -1,8 +1,17 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   root: '.',
   publicDir: 'public',
+
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@platform': fileURLToPath(new URL('./src/platform', import.meta.url)),
+    },
+  },
+
   server: {
     port: 5173,
     host: '127.0.0.1',
@@ -31,14 +40,14 @@ export default defineConfig({
         changeOrigin: true, secure: true,
         rewrite: (p) => p.replace(/^\/proxy\/mexc/, ''),
       },
-            '/proxy/okx': {
+      '/proxy/okx': {
         target: 'https://www.okx.com',
         changeOrigin: true,
         secure: true,
-        cookieDomainRewrite: '',   // ← добавь эту строку
+        cookieDomainRewrite: '',
         rewrite: (p) => p.replace(/^\/proxy\/okx/, ''),
       },
-            '/proxy/coinpaprika': {
+      '/proxy/coinpaprika': {
         target: 'https://api.coinpaprika.com',
         changeOrigin: true,
         secure: true,
@@ -76,5 +85,16 @@ export default defineConfig({
       },
     },
   },
-  build: { outDir: 'dist', sourcemap: true, target: 'es2022' },
+
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    target: 'es2022',
+    // Tauri требует, чтобы assets были относительными в prod-сборке
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
 });

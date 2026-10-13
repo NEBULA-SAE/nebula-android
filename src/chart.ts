@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · CHART
-// Фикс: autoSize + rAF-инициализация + принудительный price autoScale
+// Фикс утечки памяти: убран двойной resize (autoSize + ResizeObserver)
 // ═══════════════════════════════════════════════════════════════
 
 import { LineStyle } from 'lightweight-charts';
@@ -32,18 +32,12 @@ function getContainerSize(): { w: number; h: number } {
   return { w, h };
 }
 
-// ─── Принудительный resize ───
-function forceResize(): void {
-  const c = document.getElementById('chart-container');
-  if (!c || !state.chart) return;
-
-  const { w, h } = getContainerSize();
-  if (w > 0 && h > 0) {
-    try {
-      state.chart.applyOptions({ width: w, height: h });
-      state.chart.priceScale('right').applyOptions({ autoScale: true });
-    } catch { /* silent */ }
-  }
+// ─── Только autoScale цены. НЕ трогаем width/height — это ломает autoSize ───
+function refreshAutoScale(): void {
+  if (!state.chart) return;
+  try {
+    state.chart.priceScale('right').applyOptions({ autoScale: true });
+  } catch { /* silent */ }
 }
 
 // ─── INIT CHART ───
@@ -60,7 +54,7 @@ export function initChart(): void {
   }
 
   if (state.chart) {
-    forceResize();
+    refreshAutoScale();
     return;
   }
 
@@ -82,8 +76,9 @@ export function initChart(): void {
 function createChartNow(LW: any, c: HTMLElement, w: number, h: number): void {
   console.log(`[chart] init with container size ${w}×${h}`);
 
-  // autoSize: true — библиотека сама управляет размером через ResizeObserver.
-  // width/height НЕ передаём, иначе они конфликтуют с autoSize.
+  // autoSize: true — библиотека сама следит за размером контейнера.
+  // НЕ добавляем свой ResizeObserver — это вызывает бесконечный цикл
+  // (chart меняет canvas → observer реагирует → applyOptions → canvas меняется → ...).
   state.chart = LW.createChart(c, {
     autoSize: true,
     layout: {
@@ -120,19 +115,9 @@ function createChartNow(LW: any, c: HTMLElement, w: number, h: number): void {
     borderVisible: false,
   });
 
-  // Страховка — свой ResizeObserver, если autoSize по какой-то причине не сработает
-  try {
-    const ro = new ResizeObserver(() => { forceResize(); });
-    ro.observe(c);
-  } catch { /* silent */ }
-
-  window.addEventListener('resize', () => { forceResize(); });
-
-  // Несколько отложенных resize на первые секунды — на случай, если CSS применился позже
-  [100, 300, 800, 1500, 3000].forEach(ms => setTimeout(forceResize, ms));
-
-  // Первый проход сразу
-  forceResize();
+  // Один отложенный проход — на случай, если CSS/шрифты применились позже.
+  // Никаких [100, 300, 800, 1500, 3000] — это лишняя нагрузка.
+  setTimeout(refreshAutoScale, 300);
 }
 
 // ─── CLEAR LINES ───
@@ -226,17 +211,16 @@ export function setCandlesAndFit(candles: Candle[]): void {
     return;
   }
 
-  // Первый проход — сразу
-  forceResize();
+  // Один проход сразу
   try { state.chart?.timeScale().fitContent(); } catch { /* silent */ }
-  try { state.chart?.priceScale('right').applyOptions({ autoScale: true }); } catch { /* silent */ }
+  refreshAutoScale();
 
-  // Несколько повторов — если CSS/шрифты/размеры применились позже
-  [100, 300, 800, 1500, 3000].forEach(ms => setTimeout(() => {
-    forceResize();
+  // Один отложенный проход — на случай поздних CSS/размеров.
+  // Раньше тут было 5 вызовов подряд — это и грузило WebView2.
+  setTimeout(() => {
     try { state.chart?.timeScale().fitContent(); } catch { /* silent */ }
-    try { state.chart?.priceScale('right').applyOptions({ autoScale: true }); } catch { /* silent */ }
-  }, ms));
+    refreshAutoScale();
+  }, 400);
 }
 
 if (typeof window !== 'undefined') {

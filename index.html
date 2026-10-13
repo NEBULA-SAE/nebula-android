@@ -21,8 +21,23 @@
   <link rel="stylesheet" href="/styles/diagnostics.css">
   <link rel="stylesheet" href="/styles/splash.css">
   <link rel="stylesheet" href="/styles/desktop-fix.css">
+  <link rel="stylesheet" href="/styles/tauri.css">
+  <link rel="stylesheet" href="/styles/themes.css">
 </head>
 <body>
+
+<!-- ═══ Tauri Custom Title Bar (виден только в PC-версии) ═══ -->
+<div class="tauri-titlebar" id="tauri-titlebar">
+  <div class="tauri-titlebar-left">
+    <div class="tauri-titlebar-logo"></div>
+    <div class="tauri-titlebar-title">NEBULA · ORACLE TERMINAL</div>
+  </div>
+  <div class="tauri-titlebar-controls">
+    <button class="tauri-tb-btn" id="tb-min" title="Свернуть">─</button>
+    <button class="tauri-tb-btn" id="tb-max" title="Развернуть">□</button>
+    <button class="tauri-tb-btn tauri-tb-close" id="tb-close" title="Закрыть">✕</button>
+  </div>
+</div>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></symbol>
@@ -443,7 +458,7 @@
       <h4>Технологии</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);">TypeScript · Vite · Capacitor · Web Crypto · Groq API</p>
 
-      <h4>Безопасность</h4>
+        <h4>Безопасность</h4>
       <div class="info-block" style="display:flex;flex-direction:column;gap:8px">
         <div id="about-pwd-status" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut)">
           статус: —
@@ -456,6 +471,27 @@
           Сбросить «Больше не напоминать»
         </button>
       </div>
+
+      <h4>Поддержать проект</h4>
+      <div class="info-block" style="display:flex;flex-direction:column;gap:8px">
+        <p style="margin:0;font-size:11.5px;color:var(--tx)">
+          NEBULA — бесплатный проект одного разработчика. Если приложение полезно — можешь поддержать разработку.
+        </p>
+        <button class="btn-primary btn-mint" onclick="openDonateModal()" style="font-size:11px;padding:10px">
+          💎 Поддержать USDT
+        </button>
+      </div>
+
+      <h4>Внешний вид</h4>
+      <div class="info-block" style="display:flex;flex-direction:column;gap:8px">
+        <p style="margin:0;font-size:11.5px;color:var(--tx)">
+          Выбери одну из готовых тем или создай свою и поделись с сообществом.
+        </p>
+        <button class="btn-primary btn-violet" onclick="hideAbout(); openThemeEditor()" style="font-size:11px;padding:10px">
+          🎨 Скины / Темы оформления
+        </button>
+      </div>
+
       <h4>Обратная связь</h4>
       <p>Нашли баг, есть идея или хотите предложить улучшение — пишите автору.</p>
     </div>

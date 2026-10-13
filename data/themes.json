@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "updated": 1760000000,
+  "themes": [
+    {
+      "id": "default",
+      "name": "Nebula (по умолчанию)",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#4e8fff",
+        "cyan": "#5ecbff",
+        "mint": "#45e0a8",
+        "coral": "#ff6584",
+        "amber": "#ffb858",
+        "violet": "#a78bfa"
+      }
+    },
+    {
+      "id": "cyberpunk",
+      "name": "Cyberpunk",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#ff00aa",
+        "cyan": "#00ffff",
+        "mint": "#39ff14",
+        "coral": "#ff0055",
+        "amber": "#ffcc00",
+        "violet": "#8b00ff"
+      }
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#ff6b6b",
+        "cyan": "#feca57",
+        "mint": "#48dbfb",
+        "coral": "#ff9f43",
+        "amber": "#ffd93d",
+        "violet": "#c56cf0"
+      }
+    },
+    {
+      "id": "matrix",
+      "name": "Matrix",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#00ff41",
+        "cyan": "#00ff41",
+        "mint": "#00ff41",
+        "coral": "#ff3b3b",
+        "amber": "#7fff00",
+        "violet": "#00cc33"
+      }
+    },
+    {
+      "id": "ice",
+      "name": "Ice Blue",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#4fc3f7",
+        "cyan": "#81d4fa",
+        "mint": "#b2ebf2",
+        "coral": "#ff8a80",
+        "amber": "#ffe082",
+        "violet": "#b39ddb"
+      }
+    },
+    {
+      "id": "gold",
+      "name": "Gold Rush",
+      "author": "NEBULA",
+      "colors": {
+        "accent": "#ffb700",
+        "cyan": "#ffd54f",
+        "mint": "#aed581",
+        "coral": "#ff7043",
+        "amber": "#ffca28",
+        "violet": "#d4af37"
+      }
+    }
+  ]
+}

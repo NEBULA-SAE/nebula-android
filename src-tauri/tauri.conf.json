@@ -1,0 +1,76 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "NEBULA",
+  "version": "2.0.0",
+  "identifier": "com.nebula.oracle",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "NEBULA Oracle Terminal",
+        "width": 1440,
+        "height": 920,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "decorations": false,
+        "transparent": false,
+        "theme": "Dark",
+        "backgroundColor": "#05070d",
+        "visible": true
+      },
+      {
+        "label": "mini",
+        "title": "NEBULA mini",
+        "url": "/?mini=1",
+        "width": 420,
+        "height": 320,
+        "minWidth": 320,
+        "minHeight": 220,
+        "resizable": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "theme": "Dark",
+        "backgroundColor": "#05070d"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "wix": {
+        "language": "ru-RU"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["Russian", "English"]
+      }
+    },
+    "shortDescription": "Crypto trading terminal with AI analysis",
+    "longDescription": "NEBULA Oracle Terminal — персональный торговый терминал для криптовалютного рынка. Технический анализ, whale-радар, AI-наставник, торговые команды на естественном языке.",
+    "copyright": "© 2026 NEBULA",
+    "category": "Finance",
+    "publisher": "NEBULA"
+  }
+}

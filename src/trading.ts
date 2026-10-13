@@ -795,52 +795,6 @@ export async function mobileSyncPortfolio(silent = false): Promise<void> {
 
 // ─── AI-АГЕНТ ───
 
-async function parseTradeIntent(userPrompt: string): Promise<any> {
-  const key = await loadGroqKey();
-  if (!key) throw new Error('Groq API ключ не найден');
-
-  const systemPrompt = `Ты — парсер торговых команд для крипто-терминала. Отвечай ТОЛЬКО валидным JSON-объектом без markdown-обёрток.
-СХЕМА: {"action": "grid"|"market_buy"|"market_sell"|"cancel_all", "symbol": "BTC/USDT", "side": "buy"|"sell", "capital_pct": 10, "price_low": 60000, "price_high": 65000, "steps": 5}
-ПРАВИЛА:
-- symbol в формате BASE/USDT
-- capital_pct — число 1..100
-- side / price_low / price_high / steps — только для action="grid"
-- Если непонятно — верни {"error": "причина"}`;
-
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${key}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'openai/gpt-oss-120b',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.1,
-      max_tokens: 400,
-      response_format: { type: 'json_object' },
-    }),
-    signal: AbortSignal.timeout(30000),
-  });
-
-  if (!r.ok) throw new Error(`Groq HTTP ${r.status}`);
-  const data = await r.json();
-  let raw = data.choices?.[0]?.message?.content || '';
-
-  if (raw.startsWith('```')) {
-    const nl = raw.indexOf('\n');
-    if (nl !== -1) raw = raw.slice(nl + 1);
-    if (raw.endsWith('```')) raw = raw.slice(0, -3);
-  }
-
-  const parsed = JSON.parse(raw.trim());
-  if (parsed.error) throw new Error(`AI не понял: ${parsed.error}`);
-  return parsed;
-}
-
 export async function mobileAiCommand(): Promise<void> {
   const inputEl = document.getElementById('ai-cmd-input') as HTMLTextAreaElement | null;
   const depositEl = document.getElementById('ai-deposit') as HTMLInputElement | null;
@@ -867,7 +821,7 @@ export async function mobileAiCommand(): Promise<void> {
   if (btn) btn.disabled = true;
 
   try {
-    const intent = await parseTradeIntent(prompt);
+    const intent = await parseTradeIntent(prompt) as any;
     if (btn) btn.disabled = false;
 
     const base = intent.symbol.split('/')[0].toUpperCase();

@@ -129,6 +129,19 @@ export function initApp(): void {
   }, 8000);
 
   console.log('[init] NEBULA v2 готов ✓');
+    // ─── Загрузка и применение темы ───
+  setTimeout(async () => {
+    try {
+      const themesMod = await import('../themes');
+      await themesMod.loadThemes();
+      const activeId = themesMod.getActiveThemeId();
+      if (activeId && activeId !== 'default') {
+        themesMod.applyTheme(activeId);
+      }
+    } catch (e) {
+      console.warn('[init] themes failed:', e);
+    }
+  }, 300);
 }
 
 // ═══════════════════════════════════════════════════════════════
