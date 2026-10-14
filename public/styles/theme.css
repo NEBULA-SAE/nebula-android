@@ -31,7 +31,19 @@
   --screen-pt: calc(var(--safe-top) + var(--topbar-h) + 6px);
   --screen-pb: calc(var(--safe-bot) + var(--navbar-h) + 16px);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION — исключаем сплэш, чтобы анимация всегда работала
+   ═══════════════════════════════════════════════════════════════ */
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  /* Для всего остального интерфейса — отключаем анимации */
+  *:not(.splash):not(.splash *):not(.splash-stars-canvas):not(.tauri-titlebar):not(.tauri-titlebar *),
+  *:not(.splash):not(.splash *):not(.splash-stars-canvas):not(.tauri-titlebar):not(.tauri-titlebar *)::before,
+  *:not(.splash):not(.splash *):not(.splash-stars-canvas):not(.tauri-titlebar):not(.tauri-titlebar *)::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
 }
+
 ::-webkit-scrollbar { width:0; height:0; }

@@ -121,8 +121,14 @@ export function openDonateModal(): void {
     </div>
   `;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).openSheet?.('💎 Поддержать проект', html);
+  // Закрываем About, даём браузеру отрисовать закрытие,
+  // потом открываем Sheet — так он гарантированно окажется сверху
+  hideAbout();
+
+  setTimeout(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).openSheet?.('💎 Поддержать проект', html);
+  }, 80);
 }
 
 // ═══ ПРОВЕРКА СОГЛАШЕНИЯ ═══

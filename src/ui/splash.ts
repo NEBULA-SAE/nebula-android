@@ -46,7 +46,8 @@
       return;
     }
 
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const maxDpr = isMobile ? 1.5 : 2;
+    const dpr = Math.min(maxDpr, window.devicePixelRatio || 1);
     W = window.innerWidth;
     H = window.innerHeight;
     canvas.width = Math.round(W * dpr);
@@ -60,8 +61,12 @@
     ctx = c;
 
     // Меньше звёзд на мобилке
-    const baseCount = isMobile ? STAR_COUNT_BASE * 0.6 : STAR_COUNT_BASE;
-    const count = Math.round(baseCount * (W * H) / (1920 * 1080));
+  let count: number;
+if (isMobile) {
+  count = 40;
+} else {
+  count = Math.max(30, Math.round(STAR_COUNT_BASE * (W * H) / (1920 * 1080)));
+}
 
     stars = [];
     for (let i = 0; i < count; i++) {

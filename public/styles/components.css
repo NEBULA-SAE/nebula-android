@@ -29,7 +29,7 @@
 .btn-coral { background:linear-gradient(135deg, #e04560, #ff6584); }
 .btn-violet { background:linear-gradient(135deg, #8b5cf6, #a78bfa); }
 .btn-amber { background:linear-gradient(135deg, #e0952f, #ffb858); }
-.sheet-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:200; opacity:0; pointer-events:none; transition:opacity .25s; }
+.sheet-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:1000; opacity:0; pointer-events:none; transition:opacity .25s; }
 .sheet-overlay.open { opacity:1; pointer-events:auto; }
 .sheet {
   position:fixed; left:0; right:0; bottom:0; max-height: 92dvh;
@@ -37,7 +37,7 @@
   border-top:1px solid var(--border-hi);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   box-shadow: 0 -20px 60px rgba(0,0,0,.9);
-  z-index:201; transform: translateY(100%);
+  z-index:1001; transform: translateY(100%);
   transition: transform .3s cubic-bezier(.2,.8,.2,1);
   padding: 6px 0 calc(14px + var(--safe-bot));
   overflow: hidden; display: flex; flex-direction: column;
