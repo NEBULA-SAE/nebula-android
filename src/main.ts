@@ -209,6 +209,7 @@ import './ui/learning';
 import './ui/dash';
 import './ui/diagnostics';
 import './ui/themes';
+import './ui/settings';  // ⚙️ единый sheet настроек
 
 // ─── Init ───
 import { initApp } from './ui/init';
