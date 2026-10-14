@@ -58,6 +58,17 @@ export default defineConfig({
         },
         rewrite: (p) => p.replace(/^\/proxy\/coinpaprika/, ''),
       },
+      '/proxy/coingecko': {
+        target: 'https://api.coingecko.com',
+        changeOrigin: true,
+        secure: true,
+        cookieDomainRewrite: '',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json',
+        },
+        rewrite: (p) => p.replace(/^\/proxy\/coingecko/, ''),
+      },
       '/proxy/fng': {
         target: 'https://api.alternative.me',
         changeOrigin: true, secure: true,
@@ -90,7 +101,6 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     target: 'es2022',
-    // Tauri требует, чтобы assets были относительными в prod-сборке
     rollupOptions: {
       output: {
         manualChunks: undefined,

@@ -162,14 +162,14 @@ async function checkCryptoRoundtrip(): Promise<DiagCheck[]> {
 
 async function checkProxies(): Promise<DiagCheck[]> {
   const probes: [string, string, (j: any) => boolean | string][] = [
-    ['/proxy/mexc',        `${P('mexc', 'https://api.mexc.com')}/api/v3/ping`, () => true],
-    ['/proxy/okx',         `${P('okx', 'https://www.okx.com')}/api/v5/public/time`, (j) => j?.code === '0' || `code=${j?.code}`],
-    ['/proxy/coinpaprika', `${P('coinpaprika', 'https://api.coinpaprika.com')}/v1/global`, (j) => !!j?.market_cap_usd || 'нет market_cap_usd'],
-    ['/proxy/cbr',         `${P('cbr', 'https://www.cbr-xml-daily.ru')}/daily_json.js`, (j) => !!j?.Valute?.USD?.Value || 'нет USD'],
-    ['/proxy/gateio',      `${P('gateio', 'https://api.gateio.ws')}/api/v4/spot/tickers?currency_pair=BTC_USDT`,
-                           (j) => (Array.isArray(j) && j.length > 0) || 'нет данных'],
+    ['/proxy/mexc',      `${P('mexc', 'https://api.mexc.com')}/api/v3/ping`, () => true],
+    ['/proxy/okx',       `${P('okx', 'https://www.okx.com')}/api/v5/public/time`, (j) => j?.code === '0' || `code=${j?.code}`],
+    ['/proxy/coingecko', `${P('coingecko', 'https://api.coingecko.com')}/api/v3/ping`, (j) => !!j?.gecko_says || 'нет gecko_says'],
+    ['/proxy/cbr',       `${P('cbr', 'https://www.cbr-xml-daily.ru')}/daily_json.js`, (j) => !!j?.Valute?.USD?.Value || 'нет USD'],
+    ['/proxy/gateio',    `${P('gateio', 'https://api.gateio.ws')}/api/v4/spot/tickers?currency_pair=BTC_USDT`,
+                         (j) => (Array.isArray(j) && j.length > 0) || 'нет данных'],
     ['/proxy/dashcentral', `${P('dashcentral', 'https://www.dashcentral.org')}/api/v1/public`,
-                           (j) => !!j?.general?.consensus_masternodes || 'нет general.consensus_masternodes'],
+                         (j) => !!j?.general?.consensus_masternodes || 'нет general.consensus_masternodes'],
   ];
   const results = await Promise.all(probes.map(async ([name, url, validate]) => {
     const r = await ping(url, validate, 5000);
@@ -256,12 +256,12 @@ async function checkFunding(): Promise<DiagCheck[]> {
 
 async function checkMarketData(): Promise<DiagCheck[]> {
   const probes: [string, string, (j: any) => boolean | string][] = [
-    ['Coinpaprika global',
-      `${P('coinpaprika', 'https://api.coinpaprika.com')}/v1/global`,
-      (j) => !!j?.market_cap_usd || 'нет market_cap_usd'],
-    ['Coinpaprika BTC',
-      `${P('coinpaprika', 'https://api.coinpaprika.com')}/v1/tickers/btc-bitcoin`,
-      (j) => !!j?.quotes?.USD?.price || 'нет BTC price'],
+    ['CoinGecko global',
+      `${P('coingecko', 'https://api.coingecko.com')}/api/v3/global`,
+      (j) => !!j?.data?.total_market_cap?.usd || 'нет total_market_cap'],
+    ['CoinGecko BTC',
+      `${P('coingecko', 'https://api.coingecko.com')}/api/v3/simple/price?ids=bitcoin&vs_currencies=usd`,
+      (j) => !!j?.bitcoin?.usd || 'нет bitcoin.usd'],
     ['Fear & Greed',
       `${P('fng', 'https://api.alternative.me')}/fng/?limit=1`,
       (j) => !!j?.data?.[0]?.value || 'нет F&G'],

@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · MARKET
-// Coinpaprika + Alternative.me + ЦБ РФ (всё через прокси)
+// CoinGecko (основной) + Coinpaprika (фоллбэк) + Alternative.me + ЦБ РФ
 // ═══════════════════════════════════════════════════════════════
 
 import {
@@ -16,9 +16,9 @@ const IS_DEV = (import.meta as any).env?.DEV;
 const P = (name: string, real: string) => IS_DEV ? `/proxy/${name}` : real;
 
 const COINPAPRIKA = P('coinpaprika', 'https://api.coinpaprika.com');
+const COINGECKO   = P('coingecko',   'https://api.coingecko.com');
 const FNG         = P('fng',         'https://api.alternative.me');
 const CBR         = P('cbr',         'https://www.cbr-xml-daily.ru');
-const GATEIO      = P('gateio',      'https://api.gateio.ws');
 const OKX_BASE    = P('okx',         'https://www.okx.com');
 
 // ═══════════════════════════════════════════════════════════════
@@ -161,24 +161,44 @@ export async function getMarketContext(): Promise<MarketContext> {
 
   const result: any = { status: 'success', updated: Math.floor(Date.now() / 1000) };
 
-  // Global (Coinpaprika)
+  // ─── Global: CoinGecko (основной) → Coinpaprika (фоллбэк) ───
+  let globalOk = false;
   try {
-    const r = await fetch(`${COINPAPRIKA}/v1/global`, {
+    const r = await fetch(`${COINGECKO}/api/v3/global`, {
       signal: AbortSignal.timeout(6000),
-      cache: 'no-store',
     });
     if (r.ok) {
-      const d = await r.json();
-      result.total_mcap = d.market_cap_usd;
-      result.total_vol = d.volume_24h_usd;
-      result.btc_dominance = Math.round((d.bitcoin_dominance_percentage || 0) * 100) / 100;
-      result.eth_dominance = Math.round((d.ethereum_dominance_percentage || 0) * 100) / 100;
-      result.mcap_change_24h = Math.round((d.market_cap_change_24h || 0) * 100) / 100;
-      result.active_cryptos = d.cryptocurrencies_number || 0;
+      const j = await r.json();
+      const d = j?.data || {};
+      result.total_mcap = d.total_market_cap?.usd;
+      result.total_vol = d.total_volume?.usd;
+      result.btc_dominance = Math.round((d.market_cap_percentage?.btc || 0) * 100) / 100;
+      result.eth_dominance = Math.round((d.market_cap_percentage?.eth || 0) * 100) / 100;
+      result.mcap_change_24h = Math.round((d.market_cap_change_percentage_24h_usd || 0) * 100) / 100;
+      result.active_cryptos = d.active_cryptocurrencies || 0;
+      globalOk = true;
     }
   } catch { /* silent */ }
 
-  // Fear & Greed
+  if (!globalOk) {
+    try {
+      const r = await fetch(`${COINPAPRIKA}/v1/global`, {
+        signal: AbortSignal.timeout(5000),
+        cache: 'no-store',
+      });
+      if (r.ok) {
+        const d = await r.json();
+        result.total_mcap = d.market_cap_usd;
+        result.total_vol = d.volume_24h_usd;
+        result.btc_dominance = Math.round((d.bitcoin_dominance_percentage || 0) * 100) / 100;
+        result.eth_dominance = Math.round((d.ethereum_dominance_percentage || 0) * 100) / 100;
+        result.mcap_change_24h = Math.round((d.market_cap_change_24h || 0) * 100) / 100;
+        result.active_cryptos = d.cryptocurrencies_number || 0;
+      }
+    } catch { /* silent */ }
+  }
+
+  // ─── Fear & Greed ───
   try {
     const r = await fetch(`${FNG}/fng/?limit=1`, { signal: AbortSignal.timeout(4000) });
     if (r.ok) {
@@ -191,37 +211,67 @@ export async function getMarketContext(): Promise<MarketContext> {
     }
   } catch { /* silent */ }
 
-  // BTC
+  // ─── BTC: CoinGecko → Coinpaprika ───
+  let btcOk = false;
   try {
-    const r = await fetch(`${COINPAPRIKA}/v1/tickers/btc-bitcoin`, { signal: AbortSignal.timeout(8000) });
+    const r = await fetch(
+      `${COINGECKO}/api/v3/coins/bitcoin?localization=false&tickers=false&community_data=false&developer_data=false`,
+      { signal: AbortSignal.timeout(7000) }
+    );
     if (r.ok) {
       const bd = await r.json();
-      const q = bd.quotes?.USD || {};
+      const md = bd?.market_data || {};
       result.btc = {
-        price: q.price || 0,
-        change_24h: Math.round((q.percent_change_24h || 0) * 100) / 100,
-        change_7d: Math.round((q.percent_change_7d || 0) * 100) / 100,
-        change_30d: Math.round((q.percent_change_30d || 0) * 100) / 100,
-        market_cap: q.market_cap || 0,
-        volume: q.volume_24h || 0,
-        ath: q.ath_price || 0,
-        ath_change: Math.round((q.percent_from_price_ath || 0) * 100) / 100,
-        high_24h: q.high_24h || 0,
-        low_24h: q.low_24h || 0,
+        price: md.current_price?.usd || 0,
+        change_24h: Math.round((md.price_change_percentage_24h || 0) * 100) / 100,
+        change_7d: Math.round((md.price_change_percentage_7d || 0) * 100) / 100,
+        change_30d: Math.round((md.price_change_percentage_30d || 0) * 100) / 100,
+        market_cap: md.market_cap?.usd || 0,
+        volume: md.total_volume?.usd || 0,
+        ath: md.ath?.usd || 0,
+        ath_change: Math.round((md.ath_change_percentage?.usd || 0) * 100) / 100,
+        high_24h: md.high_24h?.usd || 0,
+        low_24h: md.low_24h?.usd || 0,
       };
+      btcOk = !!result.btc.price;
     }
   } catch { /* silent */ }
 
-  // Trending
+  if (!btcOk) {
+    try {
+      const r = await fetch(`${COINPAPRIKA}/v1/tickers/btc-bitcoin`, { signal: AbortSignal.timeout(5000) });
+      if (r.ok) {
+        const bd = await r.json();
+        const q = bd.quotes?.USD || {};
+        result.btc = {
+          price: q.price || 0,
+          change_24h: Math.round((q.percent_change_24h || 0) * 100) / 100,
+          change_7d: Math.round((q.percent_change_7d || 0) * 100) / 100,
+          change_30d: Math.round((q.percent_change_30d || 0) * 100) / 100,
+          market_cap: q.market_cap || 0,
+          volume: q.volume_24h || 0,
+          ath: q.ath_price || 0,
+          ath_change: Math.round((q.percent_from_price_ath || 0) * 100) / 100,
+          high_24h: q.high_24h || 0,
+          low_24h: q.low_24h || 0,
+        };
+      }
+    } catch { /* silent */ }
+  }
+
+  // ─── Trending — CoinGecko ───
   try {
-    const r = await fetch(`${COINPAPRIKA}/v1/tickers?limit=15`, { signal: AbortSignal.timeout(6000) });
+    const r = await fetch(
+      `${COINGECKO}/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&price_change_percentage=24h`,
+      { signal: AbortSignal.timeout(6000) }
+    );
     if (r.ok) {
-      const tj = await r.json();
-      result.trending = (tj || []).slice(0, 7).map((c: any) => ({
+      const arr = await r.json();
+      result.trending = (arr || []).slice(0, 7).map((c: any) => ({
         name: c.name,
         symbol: (c.symbol || '').toUpperCase(),
-        rank: c.rank || '?',
-        score: Math.round((c.quotes?.USD?.percent_change_24h || 0) * 100) / 100,
+        rank: c.market_cap_rank || '?',
+        score: Math.round((c.price_change_percentage_24h || 0) * 100) / 100,
       }));
     }
   } catch { /* silent */ }
