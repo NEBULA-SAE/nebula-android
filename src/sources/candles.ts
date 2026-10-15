@@ -1,13 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · СВЕЧИ — Gate.io, Binance SPOT, OKX, Bybit, MEXC
-// Binance SPOT работает из РФ напрямую. Только MEXC — через прокси.
+// MEXC и Binance Futures — через VPS-прокси в prod (config.ts)
 // ═══════════════════════════════════════════════════════════════
+
+import { P } from '../config';
 
 export interface Candle {
   time: number; open: number; high: number; low: number; close: number; volume: number;
 }
 
-const IS_DEV = (import.meta as any).env?.DEV;
 const TIMEOUT = 6000;
 
 async function fromGateio(t: string, limit: number): Promise<Candle[]> {
@@ -35,7 +36,8 @@ async function fromBinance(t: string, limit: number): Promise<Candle[]> {
 }
 
 async function fromOkx(t: string, limit: number): Promise<Candle[]> {
-  const r = await fetch(`https://www.okx.com/api/v5/market/candles?instId=${t}-USDT&bar=1D&limit=${limit}`,
+  const base = P('okx', 'https://www.okx.com');
+  const r = await fetch(`${base}/api/v5/market/candles?instId=${t}-USDT&bar=1D&limit=${limit}`,
     { signal: AbortSignal.timeout(TIMEOUT) });
   if (!r.ok) throw new Error(`okx ${r.status}`);
   const j = await r.json();
@@ -48,7 +50,8 @@ async function fromOkx(t: string, limit: number): Promise<Candle[]> {
 }
 
 async function fromBybit(t: string, limit: number): Promise<Candle[]> {
-  const r = await fetch(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${t}USDT&interval=D&limit=${limit}`,
+  const base = P('bybit', 'https://api.bybit.com');
+  const r = await fetch(`${base}/v5/market/kline?category=spot&symbol=${t}USDT&interval=D&limit=${limit}`,
     { signal: AbortSignal.timeout(TIMEOUT) });
   if (!r.ok) throw new Error(`bybit ${r.status}`);
   const j = await r.json();
@@ -62,7 +65,7 @@ async function fromBybit(t: string, limit: number): Promise<Candle[]> {
 }
 
 async function fromMexc(t: string, limit: number): Promise<Candle[]> {
-  const base = IS_DEV ? '/proxy/mexc' : 'https://api.mexc.com';
+  const base = P('mexc', 'https://api.mexc.com');
   const r = await fetch(`${base}/api/v3/klines?symbol=${t}USDT&interval=1d&limit=${limit}`,
     { signal: AbortSignal.timeout(TIMEOUT) });
   if (!r.ok) throw new Error(`mexc ${r.status}`);

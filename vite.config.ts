@@ -18,7 +18,7 @@ export default defineConfig({
     strictPort: false,
     open: false,
     proxy: {
-      // ─── GetBlock (3 endpoint'а для перебора) ───
+      // ─── GetBlock ───
       '/proxy/getblock': {
         target: 'https://dash.getblock.io',
         changeOrigin: true, secure: true,
@@ -34,7 +34,8 @@ export default defineConfig({
         changeOrigin: true, secure: true,
         rewrite: (p) => p.replace(/^\/proxy\/gb-shared/, ''),
       },
-      // ─── Остальные ───
+
+      // ─── Локальные прокси (для dev) ───
       '/proxy/mexc': {
         target: 'https://api.mexc.com',
         changeOrigin: true, secure: true,
@@ -58,17 +59,6 @@ export default defineConfig({
         },
         rewrite: (p) => p.replace(/^\/proxy\/coinpaprika/, ''),
       },
-      '/proxy/coingecko': {
-        target: 'https://api.coingecko.com',
-        changeOrigin: true,
-        secure: true,
-        cookieDomainRewrite: '',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json',
-        },
-        rewrite: (p) => p.replace(/^\/proxy\/coingecko/, ''),
-      },
       '/proxy/fng': {
         target: 'https://api.alternative.me',
         changeOrigin: true, secure: true,
@@ -84,6 +74,11 @@ export default defineConfig({
         changeOrigin: true, secure: true,
         rewrite: (p) => p.replace(/^\/proxy\/gateio/, ''),
       },
+      '/proxy/bybit': {
+        target: 'https://api.bybit.com',
+        changeOrigin: true, secure: true,
+        rewrite: (p) => p.replace(/^\/proxy\/bybit/, ''),
+      },
       '/proxy/dashcentral': {
         target: 'https://www.dashcentral.org',
         changeOrigin: true, secure: true,
@@ -93,6 +88,13 @@ export default defineConfig({
         target: 'https://api.blockchair.com',
         changeOrigin: true, secure: true,
         rewrite: (p) => p.replace(/^\/proxy\/blockchair/, ''),
+      },
+
+      // ─── VPS-прокси (через Caddy) — для источников, блокируемых из РФ ───
+      '/proxy/binance-futures': {
+        target: 'https://nebula-oracle.duckdns.org:8443',
+        changeOrigin: true, secure: true,
+        rewrite: (p) => p.replace(/^\/proxy\/binance-futures/, '/binance-futures'),
       },
     },
   },
