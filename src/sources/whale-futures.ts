@@ -1,10 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · WHALE FUTURES — Bybit (OI+LSR) + OKX (Taker+TopLSR)
-// OKX через прокси (CORS), Bybit напрямую
+// NEBULA v2 · WHALE FUTURES
+// Bybit (OI+LSR Global) + OKX (Taker+LSR Top) + Binance (fallback)
+// Binance через VPS-прокси (обход блокировки РФ)
 // ═══════════════════════════════════════════════════════════════
 
-const IS_DEV = (import.meta as any).env?.DEV;
-const OKX_BASE = IS_DEV ? '/proxy/okx' : 'https://www.okx.com';
+import { P } from '../config';
+
+const BYBIT_BASE   = P('bybit',           'https://api.bybit.com');
+const OKX_BASE     = P('okx',             'https://www.okx.com');
+const BINANCE_BASE = P('binance_futures', 'https://fapi.binance.com');
+
 const TIMEOUT = 6000;
 
 export interface WhaleFuturesMetrics {
@@ -22,8 +27,12 @@ export interface WhaleFuturesMetrics {
   message?: string;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// BYBIT
+// ═══════════════════════════════════════════════════════════════
+
 async function bybitOI(t: string, limit = 25): Promise<number[]> {
-  const r = await fetch(`https://api.bybit.com/v5/market/open-interest?category=linear&symbol=${t}USDT&intervalTime=1h&limit=${limit}`,
+  const r = await fetch(`${BYBIT_BASE}/v5/market/open-interest?category=linear&symbol=${t}USDT&intervalTime=1h&limit=${limit}`,
     { signal: AbortSignal.timeout(TIMEOUT) });
   if (!r.ok) throw new Error(`bybit OI ${r.status}`);
   const d = await r.json();
@@ -33,8 +42,8 @@ async function bybitOI(t: string, limit = 25): Promise<number[]> {
   return lst.reverse().map((x: any) => parseFloat(x.openInterest));
 }
 
-async function bybitLsr(t: string): Promise<number> {
-  const r = await fetch(`https://api.bybit.com/v5/market/account-ratio?category=linear&symbol=${t}USDT&period=1h&limit=1`,
+async function bybitLsrGlobal(t: string): Promise<number> {
+  const r = await fetch(`${BYBIT_BASE}/v5/market/account-ratio?category=linear&symbol=${t}USDT&period=1h&limit=1`,
     { signal: AbortSignal.timeout(TIMEOUT) });
   if (!r.ok) throw new Error(`bybit LSR ${r.status}`);
   const d = await r.json();
@@ -45,6 +54,10 @@ async function bybitLsr(t: string): Promise<number> {
   const sell = parseFloat(lst[0].sellRatio || '1');
   return sell <= 0 ? 1 : buy / sell;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// OKX
+// ═══════════════════════════════════════════════════════════════
 
 async function okxTaker(t: string): Promise<number> {
   const r = await fetch(`${OKX_BASE}/api/v5/rubik/stat/taker-volume-contract?instId=${t}-USDT-SWAP&period=1H`,
@@ -70,6 +83,58 @@ async function okxTopLsr(t: string): Promise<number> {
   return parseFloat(lst[0][1]);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// BINANCE FUTURES (через VPS-прокси — обход блокировки РФ)
+// ═══════════════════════════════════════════════════════════════
+
+async function binanceOI(t: string, limit = 25): Promise<number[]> {
+  const r = await fetch(
+    `${BINANCE_BASE}/futures/data/openInterestHist?symbol=${t}USDT&period=1h&limit=${limit}`,
+    { signal: AbortSignal.timeout(TIMEOUT) }
+  );
+  if (!r.ok) throw new Error(`binance OI ${r.status}`);
+  const arr = await r.json();
+  if (!Array.isArray(arr) || !arr.length) throw new Error('binance OI empty');
+  return arr.map((x: any) => parseFloat(x.sumOpenInterest));
+}
+
+async function binanceLsrTop(t: string): Promise<number> {
+  const r = await fetch(
+    `${BINANCE_BASE}/futures/data/topLongShortAccountRatio?symbol=${t}USDT&period=1h&limit=1`,
+    { signal: AbortSignal.timeout(TIMEOUT) }
+  );
+  if (!r.ok) throw new Error(`binance top lsr ${r.status}`);
+  const arr = await r.json();
+  if (!Array.isArray(arr) || !arr.length) throw new Error('binance top lsr empty');
+  return parseFloat(arr[0].longShortRatio);
+}
+
+async function binanceLsrGlobal(t: string): Promise<number> {
+  const r = await fetch(
+    `${BINANCE_BASE}/futures/data/globalLongShortAccountRatio?symbol=${t}USDT&period=1h&limit=1`,
+    { signal: AbortSignal.timeout(TIMEOUT) }
+  );
+  if (!r.ok) throw new Error(`binance global lsr ${r.status}`);
+  const arr = await r.json();
+  if (!Array.isArray(arr) || !arr.length) throw new Error('binance global lsr empty');
+  return parseFloat(arr[0].longShortRatio);
+}
+
+async function binanceTaker(t: string): Promise<number> {
+  const r = await fetch(
+    `${BINANCE_BASE}/futures/data/takerlongshortRatio?symbol=${t}USDT&period=1h&limit=1`,
+    { signal: AbortSignal.timeout(TIMEOUT) }
+  );
+  if (!r.ok) throw new Error(`binance taker ${r.status}`);
+  const arr = await r.json();
+  if (!Array.isArray(arr) || !arr.length) throw new Error('binance taker empty');
+  return parseFloat(arr[0].buySellRatio);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// АГРЕГАЦИЯ
+// ═══════════════════════════════════════════════════════════════
+
 const _cache = new Map<string, { value: WhaleFuturesMetrics; ts: number }>();
 const CACHE_TTL_MS = 180 * 1000;
 
@@ -80,18 +145,37 @@ export async function getWhaleFuturesMetrics(ticker: string): Promise<WhaleFutur
 
   const result: WhaleFuturesMetrics = { status: 'success', ticker, sources: [] };
 
-  const [bybitOiR, bybitLsrR, okxTakerR, okxTopLsrR] = await Promise.allSettled([
+  // Все запросы параллельно: Bybit ×2, OKX ×2, Binance ×4
+  const [
+    bybitOiR, bybitLsrR,
+    okxTakerR, okxTopLsrR,
+    binanceOiR, binanceLsrTopR, binanceLsrGlobalR, binanceTakerR,
+  ] = await Promise.allSettled([
     bybitOI(ticker, 25),
-    bybitLsr(ticker),
+    bybitLsrGlobal(ticker),
     okxTaker(ticker),
     okxTopLsr(ticker),
+    binanceOI(ticker, 25),
+    binanceLsrTop(ticker),
+    binanceLsrGlobal(ticker),
+    binanceTaker(ticker),
   ]);
 
+  // ─── OI: Bybit → Binance ───
+  let oiSeries: number[] | null = null;
+  let oiSource = '';
   if (bybitOiR.status === 'fulfilled' && bybitOiR.value.length >= 2) {
-    const h = bybitOiR.value;
+    oiSeries = bybitOiR.value;
+    oiSource = 'bybit';
+  } else if (binanceOiR.status === 'fulfilled' && binanceOiR.value.length >= 2) {
+    oiSeries = binanceOiR.value;
+    oiSource = 'binance';
+  }
+  if (oiSeries) {
+    const h = oiSeries;
     result.oi = h[h.length - 1];
-    result.oi_source = 'bybit';
-    result.sources.push('oi:bybit');
+    result.oi_source = oiSource;
+    result.sources.push(`oi:${oiSource}`);
     if (h[0] > 0) {
       const pct = ((h[h.length - 1] - h[0]) / h[0]) * 100;
       result.oi_change_24h_pct = Math.round(pct * 100) / 100;
@@ -99,29 +183,57 @@ export async function getWhaleFuturesMetrics(ticker: string): Promise<WhaleFutur
     }
   }
 
-  if (bybitLsrR.status === 'fulfilled') {
-    result.lsr_global = Math.round(bybitLsrR.value * 100) / 100;
-    result.sources.push('lsr:bybit');
-  }
-
+  // ─── LSR Top Traders: OKX → Binance → Bybit ───
+  let lsrTop: number | null = null;
+  let lsrTopSource = '';
   if (okxTopLsrR.status === 'fulfilled') {
-    const v = Math.round(okxTopLsrR.value * 100) / 100;
-    result.lsr_top_positions = v;
-    result.lsr_top_accounts = v;
-    result.sources.push('lsr_top:okx');
+    lsrTop = okxTopLsrR.value;
+    lsrTopSource = 'okx';
+  } else if (binanceLsrTopR.status === 'fulfilled') {
+    lsrTop = binanceLsrTopR.value;
+    lsrTopSource = 'binance';
   } else if (bybitLsrR.status === 'fulfilled') {
-    const v = Math.round(bybitLsrR.value * 100) / 100;
+    lsrTop = bybitLsrR.value;
+    lsrTopSource = 'bybit';
+  }
+  if (lsrTop !== null) {
+    const v = Math.round(lsrTop * 100) / 100;
     result.lsr_top_positions = v;
     result.lsr_top_accounts = v;
-    result.sources.push('lsr_top:bybit');
+    result.sources.push(`lsr_top:${lsrTopSource}`);
   }
 
+  // ─── LSR Global (толпа): Bybit → Binance ───
+  let lsrGlobal: number | null = null;
+  let lsrGlobalSource = '';
+  if (bybitLsrR.status === 'fulfilled') {
+    lsrGlobal = bybitLsrR.value;
+    lsrGlobalSource = 'bybit';
+  } else if (binanceLsrGlobalR.status === 'fulfilled') {
+    lsrGlobal = binanceLsrGlobalR.value;
+    lsrGlobalSource = 'binance';
+  }
+  if (lsrGlobal !== null) {
+    result.lsr_global = Math.round(lsrGlobal * 100) / 100;
+    result.sources.push(`lsr:${lsrGlobalSource}`);
+  }
+
+  // ─── Taker Buy/Sell: OKX → Binance ───
+  let taker: number | null = null;
+  let takerSource = '';
   if (okxTakerR.status === 'fulfilled') {
-    result.taker_ratio = Math.round(okxTakerR.value * 100) / 100;
-    result.sources.push('taker:okx');
+    taker = okxTakerR.value;
+    takerSource = 'okx';
+  } else if (binanceTakerR.status === 'fulfilled') {
+    taker = binanceTakerR.value;
+    takerSource = 'binance';
+  }
+  if (taker !== null) {
+    result.taker_ratio = Math.round(taker * 100) / 100;
+    result.sources.push(`taker:${takerSource}`);
   }
 
-  console.log(`[perf] whale ${ticker}: oi=${result.oi_source || '—'} (${result.oi_change_24h_pct ?? '—'}%) lsr=${result.lsr_global ?? '—'} top=${result.lsr_top_positions ?? '—'} taker=${result.taker_ratio ?? '—'}`);
+  console.log(`[perf] whale ${ticker}: oi=${result.oi_source || '—'} (${result.oi_change_24h_pct ?? '—'}%) lsr=${result.lsr_global ?? '—'} top=${result.lsr_top_positions ?? '—'} taker=${result.taker_ratio ?? '—'} sources=[${result.sources.join(', ')}]`);
 
   if (result.sources.length === 0) {
     const err: WhaleFuturesMetrics = { status: 'error', ticker, sources: [], message: 'No data' };
