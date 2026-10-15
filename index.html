@@ -523,32 +523,36 @@
   <div class="sheet-body" id="sheet-body"></div>
 </div>
 
-<!-- ═══════════ MASTER PASSWORD ═══════════ -->
-<div class="terms-overlay" id="master-pwd-overlay">
+<!-- ═══════════ APP LOCK (пароль на вход) ═══════════ -->
+<div class="terms-overlay" id="app-lock-overlay">
   <div class="terms-modal" style="max-width:400px">
     <div class="terms-head">
-      <h3 id="mp-title">🔐 Мастер-пароль</h3>
+      <h3 id="al-title">🔐 Вход в NEBULA</h3>
     </div>
     <div class="terms-body">
-      <p id="mp-desc">Установи мастер-пароль для шифрования API-ключей. Пароль хранится только в памяти до закрытия приложения.</p>
+      <p id="al-desc">Введи пароль для продолжения.</p>
+
       <div class="form-row">
-        <label class="form-lbl" id="mp-lbl">Пароль</label>
-        <input class="form-input" type="password" id="mp-input" placeholder="Минимум 6 символов" autocomplete="new-password">
+        <label class="form-lbl">Пароль</label>
+        <input class="form-input" type="password" id="al-input"
+               placeholder="Минимум 4 символа" autocomplete="new-password">
       </div>
-      <div class="form-row" id="mp-confirm-row" style="display:none">
-        <label class="form-lbl" id="mp-lbl2">Повторите пароль</label>
-        <input class="form-input" type="password" id="mp-input2" placeholder="Ещё раз" autocomplete="new-password">
+
+      <div class="form-row" id="al-confirm-row" style="display:none">
+        <label class="form-lbl">Повторите пароль</label>
+        <input class="form-input" type="password" id="al-input2"
+               placeholder="Ещё раз" autocomplete="new-password">
       </div>
-      <div class="calc-result" id="mp-error" style="display:none"></div>
+
+      <div class="calc-result" id="al-error" style="display:none"></div>
     </div>
+
     <div class="terms-foot" style="display:flex;flex-direction:column;gap:8px">
-      <button class="terms-accept" id="mp-submit" onclick="masterPwdSubmit()">Продолжить</button>
-      <div style="display:flex;gap:8px">
-        <button class="terms-accept" id="mp-skip" onclick="hideMasterPwd(false)"
-                style="background:var(--surface);color:var(--mut);flex:1;padding:12px 18px">Позже</button>
-        <button class="terms-accept" id="mp-skip-forever" onclick="hideMasterPwd(true)"
-                style="background:transparent;color:var(--dim);border:1px solid var(--border);flex:1;padding:12px 18px;font-size:10px">Больше не напоминать</button>
-      </div>
+      <button class="terms-accept" id="al-submit" onclick="appLockSubmit()">Войти</button>
+      <button class="terms-accept" id="al-skip" onclick="appLockSkip()"
+              style="background:transparent;color:var(--dim);border:1px solid var(--border);padding:12px 18px;font-size:10px">
+        Пропустить и работать без пароля
+      </button>
     </div>
   </div>
 </div>

@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · INIT
-// Точка входа UI. Заменяет js/main.js
+// Точка входа UI
 // ═══════════════════════════════════════════════════════════════
 
 import { toast, isEN } from '../utils';
@@ -9,7 +9,7 @@ import { setLang } from '../i18n';
 // ─── Реальные модули ───
 import { applyStaticTranslations, loadBTC } from './screens';
 import { initAutocomplete, renderFavorites, updateStarButton } from './scanner';
-import { checkMasterPassword } from '../trading';
+import { requireAppPassword } from '../auth';
 import { runFullDiagnostics } from './diagnostics';
 
 // ═══════════════════════════════════════════════════════════════
@@ -18,6 +18,11 @@ import { runFullDiagnostics } from './diagnostics';
 
 export function initApp(): void {
   console.log('[init] NEBULA v2 стартует...');
+
+  // ─── 0. Пароль на вход (блокирует UI до ввода) ───
+  requireAppPassword().then((ok) => {
+    if (ok) console.log('[init] app unlocked');
+  }).catch((e) => console.warn('[init] app lock error:', e));
 
   // ─── 1. Язык ───
   const lang = (localStorage.getItem('nebulaLang') as 'ru' | 'en') || 'ru';
@@ -31,7 +36,6 @@ export function initApp(): void {
 
   // ─── 3. BTC-карточка + периодическое обновление ───
   setInterval(() => { try { loadBTC(); } catch { /* silent */ } }, 90000);
-  // Первичная загрузка BTC после первого рендера, чтобы не блокировать старт
   setTimeout(() => { try { loadBTC(); } catch { /* silent */ } }, 100);
 
   // ─── 4. Основной анализ при старте ───
@@ -47,7 +51,7 @@ export function initApp(): void {
     if (st?.currentTicker?.toUpperCase() === 'DASH') {
       try {
         const m = await import('./dash');
-        m.renderDashNetwork();
+        m.refreshDashSection?.();
       } catch { /* silent */ }
     }
   }, 8000);
@@ -74,10 +78,25 @@ export function initApp(): void {
     });
   }
 
-  // ─── 9. Мастер-пароль — через 3.5 секунды после старта ───
-  setTimeout(() => {
-    try { checkMasterPassword(); } catch (e) { console.warn('[init] checkMasterPassword:', e); }
-  }, 3500);
+  // ─── 9. Enter в поле пароля на вход ───
+  const alInput = document.getElementById('al-input');
+  if (alInput) {
+    alInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).appLockSubmit?.();
+      }
+    });
+  }
+  const alInput2 = document.getElementById('al-input2');
+  if (alInput2) {
+    alInput2.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).appLockSubmit?.();
+      }
+    });
+  }
 
   // ─── 10. Восстановление мониторинга из localStorage ───
   setTimeout(() => {
@@ -113,7 +132,7 @@ export function initApp(): void {
         const report = await runFullDiagnostics({ silent: true });
         if (report.overall === 'error') {
           toast(
-            `Диагностика: ${report.summary.failed} ошибок. Открой отчёт иконкой 🩺 в топбаре.`,
+            `Диагностика: ${report.summary.failed} ошибок. Открой отчёт через ⚙️ → Диагностика.`,
             'error',
             6000
           );
@@ -129,7 +148,8 @@ export function initApp(): void {
   }, 8000);
 
   console.log('[init] NEBULA v2 готов ✓');
-  // ─── Загрузка и применение темы ───
+
+  // ─── 12. Загрузка и применение темы ───
   setTimeout(async () => {
     try {
       const themesMod = await import('../themes');

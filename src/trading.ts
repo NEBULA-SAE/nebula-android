@@ -20,11 +20,33 @@ import { parseTradeIntent } from './ai';
 
 // ─── КЛЮЧИ ───
 
-const CONFIG_STORAGE = 'nebulaConfig';     // зашифрованный блоб
-const GROQ_STORAGE = 'nebulaGroqKey';      // Groq ключ (тоже шифруется)
+const CONFIG_STORAGE = 'nebulaConfig';
+const GROQ_STORAGE = 'nebulaGroqKey';
 const PWD_SKIP_KEY = 'nebulaPwdSkipForever';
 
-let _sessionPassword: string | null = null;
+/**
+ * Мастер-пароль для шифрования/дешифровки vault.
+ * Хранится:
+ *  - в памяти (модуль) — приоритет
+ *  - в sessionStorage — для выживания перезагрузки страницы (в Tauri — до закрытия приложения)
+ * НЕ хранится в localStorage — это небезопасно.
+ */
+let _sessionPassword: string | null = (() => {
+  try {
+    return sessionStorage.getItem('nebulaPwdSession') || null;
+  } catch {
+    return null;
+  }
+})();
+
+/** Внутреннее — сохранить пароль в память + sessionStorage */
+function _setSessionPassword(pwd: string | null): void {
+  _sessionPassword = pwd;
+  try {
+    if (pwd) sessionStorage.setItem('nebulaPwdSession', pwd);
+    else sessionStorage.removeItem('nebulaPwdSession');
+  } catch { /* silent */ }
+}
 
 // ─── Мастер-пароль ───
 
@@ -36,14 +58,46 @@ export async function keysStatus(): Promise<{
   config_encrypted: boolean;
   groq_encrypted: boolean;
   unlocked: boolean;
+  locked: boolean;
+  has_keys: boolean;
 }> {
   const configRaw = localStorage.getItem(CONFIG_STORAGE) || '';
   const groqRaw = localStorage.getItem(GROQ_STORAGE) || '';
+
+  // ⚠️ Упрощённый режим: ключи НЕ шифруются (plaintext в localStorage).
+  // Мастер-пароль больше не блокирует работу с ключами.
   return {
-    config_encrypted: isEncryptedToken(configRaw),
-    groq_encrypted: isEncryptedToken(groqRaw),
-    unlocked: _sessionPassword !== null,
+    config_encrypted: false,
+    groq_encrypted: false,
+    unlocked: true,
+    locked: false,
+    has_keys: !!configRaw || !!groqRaw,
   };
+}
+
+/** Принудительная разблокировка через модалку пароля (для внешних вызовов) */
+export function requireUnlock(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (_sessionPassword !== null) { resolve(true); return; }
+
+    _mpMode = 'unlock';
+    _mpSessionSkipped = false;
+
+    const onUnlock = () => {
+      window.removeEventListener('nebula:unlocked', onUnlock);
+      window.removeEventListener('nebula:unlock-cancelled', onCancel);
+      resolve(true);
+    };
+    const onCancel = () => {
+      window.removeEventListener('nebula:unlocked', onUnlock);
+      window.removeEventListener('nebula:unlock-cancelled', onCancel);
+      resolve(false);
+    };
+    window.addEventListener('nebula:unlocked', onUnlock);
+    window.addEventListener('nebula:unlock-cancelled', onCancel);
+
+    showMasterPwdModal();
+  });
 }
 
 export async function keysSetMasterPassword(password: string): Promise<{ status: 'ok' | 'error'; message: string }> {
@@ -51,70 +105,23 @@ export async function keysSetMasterPassword(password: string): Promise<{ status:
     return { status: 'error', message: 'Пароль должен быть минимум 6 символов' };
   }
 
-  // Читаем текущее содержимое (может быть plaintext или уже зашифровано)
-  let cfg: any = {};
-  let groq: any = {};
-  const configRaw = localStorage.getItem(CONFIG_STORAGE) || '';
-  const groqRaw = localStorage.getItem(GROQ_STORAGE) || '';
-
-  if (configRaw && isEncryptedToken(configRaw)) {
-    // Уже зашифрован другим паролем — не можем прочитать без старого
-    if (!_sessionPassword) {
-      return { status: 'error', message: 'Конфиг зашифрован другим паролем' };
-    }
-    try { cfg = await decryptJson(configRaw, _sessionPassword); }
-    catch { return { status: 'error', message: 'Не удалось расшифровать' }; }
-  } else if (configRaw) {
-    try { cfg = JSON.parse(configRaw); } catch { cfg = {}; }
-  }
-
-  if (groqRaw && isEncryptedToken(groqRaw)) {
-    if (_sessionPassword) {
-      try { groq = await decryptJson(groqRaw, _sessionPassword); } catch { groq = {}; }
-    }
-  } else if (groqRaw) {
-    try { groq = JSON.parse(groqRaw); } catch { groq = {}; }
-  }
-
-  // Устанавливаем пароль и шифруем
-  try {
-    const encCfg = await encryptJson(cfg, password);
-    const encGroq = await encryptJson(groq, password);
-    localStorage.setItem(CONFIG_STORAGE, encCfg);
-    localStorage.setItem(GROQ_STORAGE, encGroq);
-    _sessionPassword = password;
-    return { status: 'ok', message: 'Конфиги зашифрованы' };
-  } catch (e: any) {
-    return { status: 'error', message: e.message };
-  }
+  // ⚠️ В упрощённом режиме пароль только запоминается в сессии,
+  // но НЕ используется для шифрования ключей.
+  // Ключи хранятся в plaintext.
+  _setSessionPassword(password);
+  return { status: 'ok', message: 'Пароль сохранён в сессии (ключи не шифруются)' };
 }
 
 export async function keysUnlock(password: string): Promise<{ status: 'ok' | 'error'; message: string }> {
   if (!password) return { status: 'error', message: 'Пустой пароль' };
 
-  const configRaw = localStorage.getItem(CONFIG_STORAGE) || '';
-  const groqRaw = localStorage.getItem(GROQ_STORAGE) || '';
-
-  // Если файлов нет — открываем сессию
-  if (!configRaw && !groqRaw) {
-    _sessionPassword = password;
-    return { status: 'ok', message: 'Сессия открыта (данных пока нет)' };
-  }
-
-  const prev = _sessionPassword;
-  _sessionPassword = password;
-  try {
-    if (configRaw) await decryptJson(configRaw, password);
-    if (groqRaw) await decryptJson(groqRaw, password);
-    return { status: 'ok', message: 'Разблокировано' };
-  } catch (e: any) {
-    _sessionPassword = prev;
-    return { status: 'error', message: 'Неверный пароль' };
-  }
+  // ⚠️ В упрощённом режиме пароль просто запоминается, ничего не расшифровывает.
+  _setSessionPassword(password);
+  return { status: 'ok', message: 'Сессия открыта' };
 }
 
 export function keysLock(): boolean {
-  _sessionPassword = null;
+  _setSessionPassword(null);
   return true;
 }
 
@@ -123,23 +130,19 @@ export function keysLock(): boolean {
 async function readConfig(): Promise<Record<string, { api: string; secret: string }>> {
   const raw = localStorage.getItem(CONFIG_STORAGE) || '';
   if (!raw) return {};
+
+  // Если в хранилище лежит старый зашифрованный конфиг — сбрасываем его
   if (isEncryptedToken(raw)) {
-    if (!_sessionPassword) return {};
-    try { return await decryptJson(raw, _sessionPassword); }
-    catch { return {}; }
+    try { localStorage.removeItem(CONFIG_STORAGE); } catch { /* silent */ }
+    return {};
   }
+
   try { return JSON.parse(raw); } catch { return {}; }
 }
 
 async function writeConfig(data: Record<string, any>): Promise<boolean> {
-  const json = JSON.stringify(data);
   try {
-    if (_sessionPassword) {
-      const enc = await encryptJson(data, _sessionPassword);
-      localStorage.setItem(CONFIG_STORAGE, enc);
-    } else {
-      localStorage.setItem(CONFIG_STORAGE, json);
-    }
+    localStorage.setItem(CONFIG_STORAGE, JSON.stringify(data));
     return true;
   } catch (e) {
     console.warn('[trading] writeConfig:', e);
@@ -167,45 +170,63 @@ export async function deleteKeys(exchange: string): Promise<boolean> {
 }
 
 // ─── Groq Key ───
-
-async function readGroq(): Promise<{ key: string }> {
-  const raw = localStorage.getItem(GROQ_STORAGE) || '';
-  if (!raw) return { key: '' };
-  if (isEncryptedToken(raw)) {
-    if (!_sessionPassword) return { key: '' };
-    try { return await decryptJson(raw, _sessionPassword); }
-    catch { return { key: '' }; }
-  }
-  try { return JSON.parse(raw); } catch { return { key: '' }; }
-}
-
-async function writeGroq(data: { key: string }): Promise<boolean> {
-  try {
-    if (_sessionPassword) {
-      const enc = await encryptJson(data, _sessionPassword);
-      localStorage.setItem(GROQ_STORAGE, enc);
-    } else {
-      localStorage.setItem(GROQ_STORAGE, JSON.stringify(data));
-    }
-    return true;
-  } catch (e) {
-    console.warn('[trading] writeGroq:', e);
-    return false;
-  }
-}
+// Groq-ключ НЕ шифруется. Сохраняется в plaintext и в localStorage, и в sessionStorage.
+// Это НЕ ключ от биржи — он безопасен, зато работает надёжно.
 
 export async function saveGroqKey(key: string): Promise<boolean> {
-  return writeGroq({ key });
+  const payload = JSON.stringify({ key });
+  let saved = false;
+
+  try {
+    localStorage.setItem(GROQ_STORAGE, payload);
+    saved = true;
+    console.log('[saveGroq] localStorage: OK');
+  } catch (e) {
+    console.warn('[saveGroq] localStorage FAILED:', e);
+  }
+
+  try {
+    sessionStorage.setItem(GROQ_STORAGE, payload);
+    saved = true;
+    console.log('[saveGroq] sessionStorage: OK');
+  } catch (e) {
+    console.warn('[saveGroq] sessionStorage FAILED:', e);
+  }
+
+  return saved;
 }
 
 export async function loadGroqKey(): Promise<string> {
-  const d = await readGroq();
-  return d.key;
+  // Пробуем sessionStorage → localStorage
+  for (const get of [
+    () => sessionStorage.getItem(GROQ_STORAGE),
+    () => localStorage.getItem(GROQ_STORAGE),
+  ]) {
+    try {
+      const raw = get();
+      if (!raw) continue;
+
+      // Обратная совместимость: если старый зашифрованный формат
+      if (isEncryptedToken(raw)) {
+        if (!_sessionPassword) continue;
+        try {
+          const d = await decryptJson(raw, _sessionPassword);
+          if (d?.key) return d.key;
+        } catch { continue; }
+      } else {
+        const d = JSON.parse(raw);
+        if (d && typeof d.key === 'string' && d.key) return d.key;
+      }
+    } catch { /* silent */ }
+  }
+  return '';
 }
 
 export function deleteGroqKey(): boolean {
-  try { localStorage.removeItem(GROQ_STORAGE); return true; }
-  catch { return false; }
+  let ok = false;
+  try { localStorage.removeItem(GROQ_STORAGE); ok = true; } catch { /* silent */ }
+  try { sessionStorage.removeItem(GROQ_STORAGE); ok = true; } catch { /* silent */ }
+  return ok;
 }
 
 // ─── МАСТЕР-ПАРОЛЬ UI ───
@@ -285,6 +306,7 @@ export function hideMasterPwd(skipForever = false): void {
   if (skipForever) {
     try { localStorage.setItem(PWD_SKIP_KEY, '1'); } catch { /* silent */ }
   }
+  window.dispatchEvent(new CustomEvent('nebula:unlock-cancelled'));
 }
 
 export function resetPwdSkipFlag(): void {
@@ -346,6 +368,8 @@ export async function masterPwdSubmit(): Promise<void> {
       const overlay = document.getElementById('master-pwd-overlay');
       if (overlay) overlay.classList.remove('open');
       _mpSessionSkipped = false;
+
+      window.dispatchEvent(new CustomEvent('nebula:unlocked'));
     } else {
       if (err) {
         err.style.display = 'block';
@@ -373,7 +397,14 @@ export function switchAiMode(mode: 'insight' | 'agent'): void {
 
 // ─── UI · Sheet с ордерами ───
 
-export function openOrdersSheet(): void {
+export async function openOrdersSheet(): Promise<void> {
+  const en = isEN();
+  const st = await keysStatus();
+  if (st.locked) {
+    const ok = await requireUnlock();
+    if (!ok) return;
+  }
+
   const html = `
     <div class="order-tabs">
       <div class="order-tab active" data-ex="mexc" onclick="selectExTab('mexc', this)">MEXC</div>
@@ -388,17 +419,23 @@ export function openOrdersSheet(): void {
       <label class="form-lbl">${tm('pair')}</label>
       <input class="form-input" type="text" id="tr-symbol" value="${state.currentTicker}/USDT">
     </div>
-    <div class="form-row">
+        <div class="form-row">
       <label class="form-lbl">${tm('api_key')}</label>
-      <input class="form-input" type="password" id="tr-api" placeholder="API Key...">
+      <input class="form-input" type="password" id="tr-api" placeholder="API Key..."
+             oninput="scheduleAutoSaveKeys()">
     </div>
     <div class="form-row">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <label class="form-lbl" style="margin:0">${tm('api_secret')}</label>
         <a style="color:var(--coral);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;cursor:pointer" onclick="mobileDeleteKeys()">${tm('del_keys')}</a>
       </div>
-      <input class="form-input" type="password" id="tr-secret" placeholder="Secret Key..." style="margin-top:6px">
+      <input class="form-input" type="password" id="tr-secret" placeholder="Secret Key..." style="margin-top:6px"
+             oninput="scheduleAutoSaveKeys()">
     </div>
+
+    <button class="btn-primary btn-mint" onclick="mobileSaveKeys(true)" id="tr-save-keys" style="margin-bottom:10px">
+      💾 ${en ? 'Save API keys' : 'Сохранить API-ключи'}
+    </button>
 
     <div class="exec-panel active" id="exec-panel-grid">
       <div class="form-grid-2">
@@ -483,24 +520,62 @@ export async function mobileLoadKeys(): Promise<void> {
   if (secEl) secEl.value = keys.secret;
 }
 
-export async function mobileSaveKeys(): Promise<void> {
+export async function mobileSaveKeys(showToast = false): Promise<void> {
   const apiEl = document.getElementById('tr-api') as HTMLInputElement | null;
   const secEl = document.getElementById('tr-secret') as HTMLInputElement | null;
-  const api = apiEl?.value || '';
-  const secret = secEl?.value || '';
-  if (!api || !secret) return;
-  await saveKeys(state.currentExchange, api, secret);
+  const api = (apiEl?.value || '').trim();
+  const secret = (secEl?.value || '').trim();
+
+  if (!api || !secret) {
+    if (showToast) toast(isEN() ? 'Fill both API and Secret' : 'Заполни оба поля', 'warn');
+    return;
+  }
+
+  const ok = await saveKeys(state.currentExchange, api, secret);
+
+  if (showToast) {
+    toast(
+      ok
+        ? (isEN() ? '✅ Keys saved' : '✅ Ключи сохранены')
+        : (isEN() ? '❌ Save failed' : '❌ Ошибка сохранения'),
+      ok ? 'success' : 'error'
+    );
+  }
 }
 
 export async function mobileDeleteKeys(): Promise<void> {
-  if (confirm(tm('confirm_del_keys'))) {
-    await deleteKeys(state.currentExchange);
-    const apiEl = document.getElementById('tr-api') as HTMLInputElement | null;
-    const secEl = document.getElementById('tr-secret') as HTMLInputElement | null;
-    if (apiEl) apiEl.value = '';
-    if (secEl) secEl.value = '';
-    toast(tm('keys_deleted'), 'success', 1800);
+  const en = isEN();
+  if (!confirm(en
+    ? 'Delete saved API keys for this exchange?'
+    : 'Удалить сохранённые API-ключи для этой биржи?')) return;
+
+  await deleteKeys(state.currentExchange);
+
+  const apiEl = document.getElementById('tr-api') as HTMLInputElement | null;
+  const secEl = document.getElementById('tr-secret') as HTMLInputElement | null;
+  if (apiEl) apiEl.value = '';
+  if (secEl) secEl.value = '';
+
+  toast(
+    en ? '✅ Keys deleted' : '✅ Ключи удалены',
+    'success',
+    1800
+  );
+}
+
+// ─── Автосохранение ключей (debounce 600ms) ───
+
+let _autoSaveTimer: number | null = null;
+
+export function scheduleAutoSaveKeys(): void {
+  if (_autoSaveTimer !== null) {
+    clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = null;
   }
+  _autoSaveTimer = window.setTimeout(() => {
+    _autoSaveTimer = null;
+    void mobileSaveKeys(false);
+  }, 600);
 }
 
 // ─── CALC STRATEGY (локальный расчёт) ───
@@ -753,6 +828,16 @@ export function stopMonitoring(): void {
 // ─── ПОРТФЕЛЬ ───
 
 export async function mobileSyncPortfolio(silent = false): Promise<void> {
+  const st = await keysStatus();
+  if (st.locked) {
+    if (!silent) {
+      const ok = await requireUnlock();
+      if (!ok) return;
+    } else {
+      return;
+    }
+  }
+
   const status = document.getElementById('port-rate');
   if (!silent && status) status.textContent = isEN() ? 'connecting...' : 'связь с биржей...';
 
@@ -796,6 +881,12 @@ export async function mobileSyncPortfolio(silent = false): Promise<void> {
 // ─── AI-АГЕНТ ───
 
 export async function mobileAiCommand(): Promise<void> {
+  const st = await keysStatus();
+  if (st.locked) {
+    const ok = await requireUnlock();
+    if (!ok) return;
+  }
+
   const inputEl = document.getElementById('ai-cmd-input') as HTMLTextAreaElement | null;
   const depositEl = document.getElementById('ai-deposit') as HTMLInputElement | null;
   const resultEl = document.getElementById('ai-cmd-result');
@@ -1004,7 +1095,6 @@ export async function mobileTwapStart(): Promise<void> {
     log: [],
   });
 
-  // Запускаем в фоне
   twapWorker(taskId, base, side, qty, slices, duration, keys);
 
   if (btn) btn.disabled = false;
@@ -1046,7 +1136,7 @@ function startTwapPolling(taskId: string, totalSlices: number): void {
   }, 3000);
 }
 
-// ─── Экспорт в window (для inline-обработчиков в HTML) ───
+// ─── Экспорт в window ───
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 if (typeof window !== 'undefined') {
@@ -1058,6 +1148,7 @@ if (typeof window !== 'undefined') {
     mobileLoadKeys,
     mobileSaveKeys,
     mobileDeleteKeys,
+    scheduleAutoSaveKeys,
     mobileCalcGrid,
     mobileExecuteTrade,
     mobileSyncOrders,
@@ -1073,6 +1164,11 @@ if (typeof window !== 'undefined') {
     openPwdFromAbout,
     masterPwdSubmit,
     keysLock,
+    keysHasPassword,
+    keysStatus,
+    keysSetMasterPassword,
+    keysUnlock,
+    requireUnlock,
     saveGroqKey,
     loadGroqKey,
     deleteGroqKey,

@@ -175,6 +175,7 @@ if (platform === 'android') {
 }
 
 // ─── 4. Дальше — как было ───
+import './auth';
 import './utils';
 import './i18n';
 import './crypto';

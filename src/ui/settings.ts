@@ -1,20 +1,20 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · SETTINGS (UI)
 // Единый sheet настроек: Безопасность / AI / Внешний вид / Система / О программе
-// Открывается чипом ⚙️ в топбаре
 // ═══════════════════════════════════════════════════════════════
 
 import { tm, isEN } from '../i18n';
 import { esc, toast } from '../utils';
 import { openSheet, closeSheet } from './screens';
 import {
-  keysStatus,
-  showMasterPwdModal,
-  resetPwdSkipFlag,
   saveGroqKey,
   loadGroqKey,
   deleteGroqKey,
 } from '../trading';
+import {
+  hasAppPassword,
+  clearAppPassword,
+} from '../auth';
 
 // ═══════════════════════════════════════════════════════════════
 // ГЛАВНЫЙ SHEET НАСТРОЕК
@@ -22,35 +22,31 @@ import {
 
 export async function openSettings(): Promise<void> {
   const en = isEN();
-  const st = await keysStatus();
-
-  let pwdStatus: string;
-  let pwdColor: string;
-  if (st.unlocked) {
-    pwdStatus = en ? 'Unlocked' : 'Открыт';
-    pwdColor = 'var(--mint)';
-  } else if (st.config_encrypted || st.groq_encrypted) {
-    pwdStatus = en ? 'Locked' : 'Заблокирован';
-    pwdColor = 'var(--amber)';
-  } else {
-    pwdStatus = en ? 'Not set' : 'Не установлен';
-    pwdColor = 'var(--dim)';
-  }
+  const appPwdOn = hasAppPassword();
+  const pwdStatus = appPwdOn ? (en ? 'ON' : 'ВКЛ') : (en ? 'OFF' : 'ВЫКЛ');
+  const pwdColor = appPwdOn ? 'var(--mint)' : 'var(--dim)';
 
   const groqKey = await loadGroqKey();
-  const groqStatus = groqKey
-    ? `${groqKey.slice(0, 8)}…${groqKey.slice(-4)}`
-    : (en ? 'Not set' : 'Не задан');
+  let groqStatus: string;
+  if (groqKey) {
+    groqStatus = `${groqKey.slice(0, 8)}…${groqKey.slice(-4)}`;
+  } else {
+    groqStatus = en ? 'Not set' : 'Не задан';
+  }
   const groqColor = groqKey ? 'var(--mint)' : 'var(--dim)';
 
   const html = `
     <div class="settings-section">
       <div class="settings-section-title">${en ? '🔐 Security' : '🔐 Безопасность'}</div>
-      <button class="settings-row" onclick="openPwdSheet()">
+      <button class="settings-row" onclick="toggleAppPassword()">
         <div class="settings-row-icon">🔐</div>
         <div class="settings-row-body">
-          <div class="settings-row-title">${en ? 'Master password' : 'Мастер-пароль'}</div>
-          <div class="settings-row-hint">${en ? 'API key encryption' : 'шифрование API-ключей'}</div>
+          <div class="settings-row-title">${en ? 'App password' : 'Пароль на вход'}</div>
+          <div class="settings-row-hint">
+            ${appPwdOn
+              ? (en ? 'tap to disable' : 'нажми чтобы отключить')
+              : (en ? 'tap to enable' : 'нажми чтобы включить')}
+          </div>
         </div>
         <div class="settings-row-status" style="color:${pwdColor}">${pwdStatus}</div>
       </button>
@@ -90,11 +86,11 @@ export async function openSettings(): Promise<void> {
         </div>
         <div class="settings-row-arrow">›</div>
       </button>
-      <button class="settings-row" onclick="resetPwdSkipFromSettings()">
-        <div class="settings-row-icon">🔄</div>
+      <button class="settings-row" onclick="resetAllKeys()" style="border-color:rgba(255,101,132,.3)">
+        <div class="settings-row-icon">🗑️</div>
         <div class="settings-row-body">
-          <div class="settings-row-title">${en ? 'Reset flags' : 'Сбросить флаги'}</div>
-          <div class="settings-row-hint">${en ? '«Don\'t remind again»' : '«Больше не напоминать»'}</div>
+          <div class="settings-row-title" style="color:var(--coral)">${en ? 'Reset ALL keys' : 'Сбросить ВСЕ ключи'}</div>
+          <div class="settings-row-hint">${en ? 'MEXC + Groq — wipe completely' : 'MEXC + Groq — полное удаление'}</div>
         </div>
         <div class="settings-row-arrow">›</div>
       </button>
@@ -126,67 +122,12 @@ export async function openSettings(): Promise<void> {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ПОДРАЗДЕЛ · Мастер-пароль
-// ═══════════════════════════════════════════════════════════════
-
-export async function openPwdSheet(): Promise<void> {
-  const en = isEN();
-  const st = await keysStatus();
-
-  let statusText: string;
-  let statusColor: string;
-  if (st.unlocked) {
-    statusText = en ? '✅ Currently unlocked' : '✅ Сейчас открыт';
-    statusColor = 'var(--mint)';
-  } else if (st.config_encrypted || st.groq_encrypted) {
-    statusText = en ? '🔒 Encrypted, needs unlock' : '🔒 Зашифрован, требуется unlock';
-    statusColor = 'var(--amber)';
-  } else {
-    statusText = en ? '⚠️ Not set — keys are plaintext' : '⚠️ Не установлен — ключи в открытом виде';
-    statusColor = 'var(--coral)';
-  }
-
-  const html = `
-    <div style="padding:12px 14px;background:rgba(0,0,0,.35);border-radius:10px;border:1px solid var(--border);margin-bottom:14px">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">
-        ${en ? 'Status' : 'Статус'}
-      </div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${statusColor};font-weight:600">
-        ${statusText}
-      </div>
-    </div>
-
-    <p style="font-size:12.5px;color:var(--tx);line-height:1.6;margin-bottom:14px">
-      ${en
-        ? 'Master password encrypts your API keys and Groq key with AES-256-GCM. It is stored only in memory until the app closes.'
-        : 'Мастер-пароль шифрует API-ключи и Groq-ключ через AES-256-GCM. Хранится только в памяти до закрытия приложения.'}
-    </p>
-
-    <button class="btn-primary btn-amber" onclick="setOrChangePwd()">
-      ${st.unlocked || st.config_encrypted
-        ? (en ? '🔐 Change master password' : '🔐 Сменить мастер-пароль')
-        : (en ? '🔐 Set master password' : '🔐 Установить мастер-пароль')}
-    </button>
-  `;
-
-  openSheet(en ? '🔐 Master password' : '🔐 Мастер-пароль', html);
-  injectSettingsStyles();
-}
-
-export function setOrChangePwd(): void {
-  closeSheet();
-  setTimeout(() => {
-    try { showMasterPwdModal(); } catch (e) { console.warn('[settings] showMasterPwdModal:', e); }
-  }, 150);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// ПОДРАЗДЕЛ · Groq API-ключ
+// Groq API-ключ
 // ═══════════════════════════════════════════════════════════════
 
 export async function openGroqSheet(): Promise<void> {
-  const key = await loadGroqKey();
   const en = isEN();
+  const key = await loadGroqKey();
 
   const html = `
     <div class="form-row">
@@ -220,14 +161,41 @@ export async function openGroqSheet(): Promise<void> {
 }
 
 export async function saveGroqFromSettings(): Promise<void> {
+  const en = isEN();
+
   const inp = document.getElementById('groq-key-input') as HTMLInputElement | null;
   const key = (inp?.value || '').trim();
   if (!key) {
-    toast(isEN() ? 'Enter key' : 'Введи ключ', 'warn');
+    toast(en ? 'Enter key' : 'Введи ключ', 'warn');
     return;
   }
-  await saveGroqKey(key);
-  toast(isEN() ? 'Groq key saved' : 'Groq-ключ сохранён', 'success');
+
+  const saved = await saveGroqKey(key);
+  if (!saved) {
+    toast(
+      en ? '❌ Storage error (LS and SS both failed)' : '❌ Ошибка записи (LS и SS недоступны)',
+      'error', 8000
+    );
+    return;
+  }
+
+  const readBack = await loadGroqKey();
+
+  if (!readBack || readBack !== key) {
+    let ls = '';
+    let ss = '';
+    try { ls = (localStorage.getItem('nebulaGroqKey') || '').slice(0, 60); } catch { /* */ }
+    try { ss = (sessionStorage.getItem('nebulaGroqKey') || '').slice(0, 60); } catch { /* */ }
+
+    toast(
+      `❌ Не сохранилось!\nLS="${ls}"\nSS="${ss}"`,
+      'error', 20000
+    );
+    console.error('[saveGroq] verify failed:', { readBack, expected: key, ls, ss });
+    return;
+  }
+
+  toast(en ? '✅ Groq key saved' : '✅ Groq-ключ сохранён', 'success');
   closeSheet();
 }
 
@@ -268,14 +236,6 @@ export function openDiagnosticsFromSettings(): void {
   }, 150);
 }
 
-export function resetPwdSkipFromSettings(): void {
-  resetPwdSkipFlag();
-  toast(
-    isEN() ? 'Flags reset. Restart the app.' : 'Флаги сброшены. Перезапусти приложение.',
-    'success'
-  );
-}
-
 export function openAboutFromSettings(): void {
   closeSheet();
   setTimeout(() => {
@@ -295,6 +255,59 @@ export function openDonateFromSettings(): void {
       console.warn('[settings] openDonateModal failed:', e);
     }
   }, 150);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Пароль на вход — вкл/выкл
+// ═══════════════════════════════════════════════════════════════
+
+export function toggleAppPassword(): void {
+  const en = isEN();
+
+  if (hasAppPassword()) {
+    // Отключаем
+    if (!confirm(en
+      ? 'Disable app password?\n\nThe app will open without asking for password.'
+      : 'Отключить пароль?\n\nПриложение будет открываться без запроса пароля.')) return;
+
+    clearAppPassword();
+    toast(en ? 'Password disabled' : 'Пароль отключён', 'success');
+    closeSheet();
+    setTimeout(() => openSettings(), 250);
+  } else {
+    // Включаем — открываем окно создания пароля
+    closeSheet();
+    setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).openSetPasswordDialog?.();
+    }, 250);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// СБРОС всех ключей
+// ═══════════════════════════════════════════════════════════════
+
+export function resetAllKeys(): void {
+  const en = isEN();
+  const msg = en
+    ? 'Delete ALL saved keys (MEXC + Groq)?\n\nThis CANNOT be undone.'
+    : 'Удалить ВСЕ сохранённые ключи (MEXC + Groq)?\n\nЭто НЕЛЬЗЯ отменить.';
+  if (!confirm(msg)) return;
+
+  try {
+    localStorage.removeItem('nebulaConfig');
+    localStorage.removeItem('nebulaGroqKey');
+    sessionStorage.removeItem('nebulaGroqKey');
+  } catch { /* silent */ }
+
+  toast(
+    en ? 'Keys deleted' : 'Ключи удалены',
+    'success',
+    2000
+  );
+
+  closeSheet();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -370,15 +383,14 @@ function injectSettingsStyles(): void {
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     openSettings,
-    openPwdSheet,
-    setOrChangePwd,
     openGroqSheet,
     saveGroqFromSettings,
     deleteGroqFromSettings,
     openThemesFromSettings,
     openDiagnosticsFromSettings,
-    resetPwdSkipFromSettings,
     openAboutFromSettings,
     openDonateFromSettings,
+    toggleAppPassword,
+    resetAllKeys,
   });
 }
