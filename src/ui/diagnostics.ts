@@ -32,7 +32,7 @@ const REQUIRED_DOM: string[] = [
   'toast-wrap', 'terms-overlay', 'about-overlay', 'scan-list', 'fav-list',
   'ai-cmd-input', 'ai-deposit', 'ai-cmd-result',
   'dash-section', 'dash-network-content',
-  'master-pwd-overlay', 'mp-input', 'mp-input2', 'mp-submit', 'mp-error',
+  'app-lock-overlay', 'al-input', 'al-input2', 'al-submit', 'al-error',
 ];
 
 interface DiagCheck {

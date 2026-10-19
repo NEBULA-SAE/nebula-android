@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · SETTINGS (UI)
-// Единый sheet настроек: Безопасность / AI / Внешний вид / Система / О программе
+// Единый sheet настроек: Безопасность / AI / Внешний вид / Поддержка / Система / О программе
 // ═══════════════════════════════════════════════════════════════
 
 import { tm, isEN } from '../i18n';
@@ -71,6 +71,37 @@ export async function openSettings(): Promise<void> {
         <div class="settings-row-body">
           <div class="settings-row-title">${en ? 'Themes' : 'Темы оформления'}</div>
           <div class="settings-row-hint">${en ? 'choose skin' : 'выбери скин'}</div>
+        </div>
+        <div class="settings-row-arrow">›</div>
+      </button>
+    </div>
+
+        <div class="settings-section">
+      <div class="settings-section-title">${en ? '💬 Community' : '💬 Сообщество'}</div>
+      
+      <button class="settings-row" onclick="openSupportChat()">
+        <div class="settings-row-icon">🆘</div>
+        <div class="settings-row-body">
+          <div class="settings-row-title">${en ? 'Contact support' : 'Написать в поддержку'}</div>
+          <div class="settings-row-hint">${en ? 'Telegram · reply in 24h' : 'Telegram · ответ за 24ч'}</div>
+        </div>
+        <div class="settings-row-arrow">›</div>
+      </button>
+
+      <button class="settings-row" onclick="openCommunityChat()">
+        <div class="settings-row-icon">💬</div>
+        <div class="settings-row-body">
+          <div class="settings-row-title">${en ? 'Community chat' : 'Чат сообщества'}</div>
+          <div class="settings-row-hint">${en ? 'Talk with traders' : 'Общение трейдеров'}</div>
+        </div>
+        <div class="settings-row-arrow">›</div>
+      </button>
+
+      <button class="settings-row" onclick="openFunChat()">
+        <div class="settings-row-icon">🏀</div>
+        <div class="settings-row-body">
+          <div class="settings-row-title">${en ? 'Fun & Memes' : 'Развлечения'}</div>
+          <div class="settings-row-hint">${en ? 'Memes, offtop' : 'Мемы, оффтоп'}</div>
         </div>
         <div class="settings-row-arrow">›</div>
       </button>
@@ -258,6 +289,34 @@ export function openDonateFromSettings(): void {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Поддержка — открыть Telegram-бота
+// ═══════════════════════════════════════════════════════════════
+
+export function openSupportChat(): void {
+  // Импортируем userId лениво, чтобы не зависеть от порядка загрузки
+  import('../auth').then(({ getOrCreateUserId }) => {
+    const userId = getOrCreateUserId();
+    const url = `https://t.me/NebulaTerminalBot?start=${userId}`;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+
+    if (w.__TAURI_INTERNALS__) {
+      // Tauri — opener
+      import('@tauri-apps/plugin-opener')
+        .then((m) => m.openUrl(url))
+        .catch(() => window.open(url, '_blank'));
+    } else {
+      // Web / Android — обычное открытие
+      window.open(url, '_blank');
+    }
+  }).catch(() => {
+    // Fallback без userId
+    window.open('https://t.me/NebulaTerminalBot', '_blank');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Пароль на вход — вкл/выкл
 // ═══════════════════════════════════════════════════════════════
 
@@ -377,6 +436,38 @@ function injectSettingsStyles(): void {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Открытие чатов сообщества
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Универсальная функция для открытия ссылки.
+ * В Tauri — через opener, в Web/Android — через window.open.
+ */
+function openExternalUrl(url: string): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const w = window as any;
+  if (w.__TAURI_INTERNALS__) {
+    import('@tauri-apps/plugin-opener')
+      .then((m) => m.openUrl(url))
+      .catch(() => window.open(url, '_blank'));
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+export function openCommunityChat(): void {
+  // ⚠️ ВСТАВЬ СЮДА СВОЮ ССЫЛКУ НА ТОПИК NEBULA Chat
+  const url = 'https://t.me/c/4375017338/19'; 
+  openExternalUrl(url);
+}
+
+export function openFunChat(): void {
+  // ⚠️ ВСТАВЬ СЮДА СВОЮ ССЫЛКУ НА ТОПИК NEBULA Fun
+  const url = 'https://t.me/c/4375017338/24';
+  openExternalUrl(url);
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ЭКСПОРТ В WINDOW
 // ═══════════════════════════════════════════════════════════════
 
@@ -390,6 +481,9 @@ if (typeof window !== 'undefined') {
     openDiagnosticsFromSettings,
     openAboutFromSettings,
     openDonateFromSettings,
+    openSupportChat,
+    openCommunityChat,
+    openFunChat,
     toggleAppPassword,
     resetAllKeys,
   });

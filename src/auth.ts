@@ -27,6 +27,39 @@ export function hasAppPassword(): boolean {
   try { return !!localStorage.getItem(AUTH_KEY); } catch { return false; }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// USER_ID — уникальный ID устройства для авторизации в поддержке
+// ═══════════════════════════════════════════════════════════════
+
+const USER_ID_KEY = 'nebulaUserId';
+
+/** Получить или сгенерировать постоянный USER_ID */
+export function getOrCreateUserId(): string {
+  try {
+    let id = localStorage.getItem(USER_ID_KEY);
+    if (id && id.length >= 32) return id;
+
+    // Генерируем UUID v4
+    id = 'u_' + generateUuid();
+    localStorage.setItem(USER_ID_KEY, id);
+    return id;
+  } catch {
+    // Fallback если localStorage недоступен
+    return 'u_' + generateUuid();
+  }
+}
+
+function generateUuid(): string {
+  // Простая генерация UUID v4 без зависимостей
+  const hex = '0123456789abcdef';
+  let uuid = '';
+  for (let i = 0; i < 32; i++) {
+    if (i === 8 || i === 12 || i === 16 || i === 20) uuid += '-';
+    uuid += hex[Math.floor(Math.random() * 16)];
+  }
+  return uuid;
+}
+
 export async function setAppPassword(pwd: string): Promise<void> {
   const hash = await sha256(pwd);
   localStorage.setItem(AUTH_KEY, hash);
