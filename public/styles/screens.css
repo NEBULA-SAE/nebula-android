@@ -439,7 +439,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DEMO SANDBOX (OVERLAY MODE)
+   DEMO SANDBOX (OVERLAY MODE) - RESPONSIVE FIXES
    ═══════════════════════════════════════════════════════════════ */
 body.in-demo-mode .top-bar,
 body.in-demo-mode .bottom-nav {
@@ -448,34 +448,71 @@ body.in-demo-mode .bottom-nav {
 body.in-demo-mode .screens {
   top: 0 !important;
   bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
 }
 html.tauri body.in-demo-mode .screens {
   top: 36px !important;
 }
 
+/* ВАЖНО: сбрасываем дефолтные отступы экрана, чтобы демо-панель прилипла к верху */
+body.in-demo-mode .screen {
+  padding: 0 !important;
+}
+
+/* ВАЖНО: возвращаем отображение демо-панели */
 body.in-demo-mode #demo-panel {
   display: block !important;
 }
 
-/* ═══ ЖЕСТКОЕ ЦЕНТРИРОВАНИЕ ДЕМО НА ПК (СБРОС САЙДБАРА) ═══ */
-@media (min-width: 900px) {
-  body.in-demo-mode .screens {
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
+/* Универсальный контейнер для демо с учетом "челки" телефона */
+body.in-demo-mode #screen-home {
+  display: block !important;
+  width: 100% !important;
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+  padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bot) + 24px) 16px !important;
+  box-sizing: border-box;
+}
+
+/* ═══ МОБИЛЬНАЯ АДАПТАЦИЯ ШАПКИ ДЕМО ═══ */
+@media (max-width: 768px) {
+  .demo-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 10px;
   }
-  body.in-demo-mode #screen-home {
-    display: block !important;
-    max-width: 1100px !important;
-    margin: 0 auto !important;
-    padding-top: 32px !important;
-    padding-bottom: 40px !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+  .demo-exit-btn {
+    align-self: flex-start;
+    padding: 8px 14px;
+  }
+  .demo-ticker-wrap {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .demo-balance-grid {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+    background: rgba(0,0,0,.25);
+    padding: 8px;
+    border-radius: 8px;
+  }
+  .db-cell {
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+  }
+  .db-val {
+    font-size: 14px;
+  }
+  .demo-layout {
+    grid-template-columns: 1fr;
   }
 }
 
-/* ═══ DEMO HEADER ═══ */
+/* ═══ DEMO HEADER (ОБЩИЕ) ═══ */
 .demo-header {
   display: flex;
   justify-content: space-between;
@@ -734,24 +771,6 @@ body.in-demo-mode #demo-panel {
   background: rgba(94,203,255,.15);
   border-color: var(--cyan);
   color: var(--cyan);
-}
-
-/* Мобильная адаптация */
-@media (max-width: 600px) {
-  body.in-demo-mode #screen-home {
-    padding: 12px;
-  }
-  .demo-balance-grid {
-    margin-left: 0;
-    width: 100%;
-    justify-content: space-between;
-  }
-  .db-cell { min-width: 0; flex: 1; text-align: center; }
-}
-@media (max-width: 380px) {
-  .demo-balance-grid { flex-wrap: wrap; gap: 8px; }
-  .db-cell { flex-basis: 48%; }
-  .demo-amount-pct { flex: 1; padding: 8px 4px; }
 }
 
 /* ═══ DEMO TICKER SUMMARY (Сводка по монетам) ═══ */
