@@ -10,6 +10,7 @@ import { renderPro } from './oracle';
 import { renderFavorites } from './scanner';
 import { mobileSyncPortfolio } from '../trading';
 import { renderOracleDashboard } from './oracle';
+import { cancelDemoOrder } from '../demo';
 
 // ═══ ВКЛАДКИ ═══
 
@@ -175,6 +176,171 @@ export function closeSheet(): void {
   document.getElementById('sheet')?.classList.remove('open');
 }
 
+// ═══ DEMO MODE ═══
+
+export function enterDemoMode() {
+  state.isDemoMode = true;
+  document.body.classList.add('in-demo-mode');
+  switchTab('home');
+
+  const demoInp = document.getElementById('demo-ticker') as HTMLInputElement | null;
+  if (demoInp) {
+    demoInp.value = state.currentTicker || 'DASH';
+  }
+
+  initDemoAutocomplete();
+
+  import('../demo').then(m => {
+    // m.resetDemo(); <--- УБРАЛИ, чтобы ордера сохранялись
+    m.startDemoEngine();
+  });
+}
+
+export function exitDemoMode() {
+  state.isDemoMode = false;
+  document.body.classList.remove('in-demo-mode');
+
+  const mainInp = document.getElementById('ticker') as HTMLInputElement | null;
+  if (mainInp) mainInp.value = state.currentTicker;
+
+  import('../demo').then(m => m.stopDemoEngine());
+
+  switchTab('home');
+  toast('Вы вышли из демо-режима', 'info');
+}
+
+// Автокомплит для демо-поиска (защищён от дублей)
+let _demoAutoInit = false;
+
+function initDemoAutocomplete() {
+  if (_demoAutoInit) return;
+
+  const input = document.getElementById('demo-ticker') as HTMLInputElement | null;
+  const box = document.getElementById('demo-ticker-suggest');
+  if (!input || !box) return;
+
+  let debounceT: any;
+  input.addEventListener('input', () => {
+    if (debounceT) clearTimeout(debounceT);
+    debounceT = setTimeout(showSuggest, 150);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!box.contains(e.target as Node) && e.target !== input) {
+      box.classList.remove('open');
+    }
+  });
+
+  function showSuggest() {
+    const q = (input!.value || '').toUpperCase().trim();
+    let items = state.allPairs;
+    if (q) items = items.filter(p => p.symbol.startsWith(q));
+
+    if (!items.length && q) {
+      box!.classList.remove('open');
+      return;
+    }
+
+    box!.innerHTML = items.slice(0, 30).map(p => `
+      <div class="suggest-item" onclick="document.getElementById('demo-ticker').value='${p.symbol}';document.getElementById('demo-ticker-suggest').classList.remove('open');mobileAnalyze();">
+        <span class="si-symbol">${p.symbol}</span>
+        <span class="si-vol">$${(p.vol / 1e6).toFixed(1)}M</span>
+      </div>`).join('');
+    box!.classList.add('open');
+  }
+
+  _demoAutoInit = true;
+}
+
+// ═══ Быстрый выбор % от баланса для суммы входа ═══
+
+export function setDemoAmount(pct: number): void {
+  const inp = document.getElementById('demo-entry-amount') as HTMLInputElement | null;
+  if (!inp) return;
+  const amount = Math.floor(state.demoBalance * (pct / 100));
+  inp.value = String(amount > 0 ? amount : 0);
+  inp.focus();
+  inp.select();
+}
+
+// ═══ РЕНДЕР ПЛАНА ОРАКУЛА (в демо) ═══
+
+export function renderDemoPlan() {
+  const box = document.getElementById('demo-oracle-content');
+  if (!box) return;
+
+  // Сохраняем текущее значение суммы, чтобы не потерять при перерисовке
+  const prevAmount = (document.getElementById('demo-entry-amount') as HTMLInputElement | null)?.value || '';
+
+  if (!state.lastMarketData || !state.lastMarketData.current_price) {
+    box.innerHTML = `<div class="empty-msg">Введи монету и нажми GO, чтобы Оракул составил план</div>`;
+    (window as any)._currentDemoPlan = null;
+    return;
+  }
+
+  const price = state.lastMarketData.current_price;
+  const min = state.lastMarketData.min_120;
+  const max = state.lastMarketData.max_120;
+
+  const tr = max - price;
+  const plan = {
+    entry: price,
+    tp1: price + tr * 0.3,
+    tp2: price + tr * 0.6,
+    tp3: max * 0.98,
+    stop: min * 0.92,
+  };
+
+  (window as any)._currentDemoPlan = plan;
+
+  const is3Steps = document.getElementById('demo-strat-3')?.classList.contains('active') || false;
+  const steps = is3Steps ? 3 : 2;
+
+  let stratHtml = '<div class="demo-strategy-box">';
+  stratHtml += `<div class="demo-strat-step"><span class="lbl">Вход (Market)</span> <span class="val">${price.toFixed(4)}</span></div>`;
+
+  if (steps === 2) {
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 1 (50%)</span> <span class="val tp">TP1: ${plan.tp1.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 2 (50%)</span> <span class="val tp">TP2: ${plan.tp2.toFixed(4)}</span></div>`;
+  } else {
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 1 (34%)</span> <span class="val tp">TP1: ${plan.tp1.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 2 (33%)</span> <span class="val tp">TP2: ${plan.tp2.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 3 (33%)</span> <span class="val tp">TP3: ${plan.tp3.toFixed(4)}</span></div>`;
+  }
+  stratHtml += `<div class="demo-strat-step"><span class="lbl">Стоп-лосс</span> <span class="val" style="color:var(--coral)">${plan.stop.toFixed(4)}</span></div>`;
+  stratHtml += `</div>`;
+
+  const placeholder = `20% от баланса ($${Math.floor(state.demoBalance * 0.2)})`;
+
+  box.innerHTML = `
+    <div class="demo-strat-selector">
+      <button class="demo-strat-btn ${!is3Steps ? 'active' : ''}" id="demo-strat-2"
+        onclick="document.getElementById('demo-strat-3').classList.remove('active');document.getElementById('demo-strat-2').classList.add('active');renderDemoPlan();">2 шага</button>
+      <button class="demo-strat-btn ${is3Steps ? 'active' : ''}" id="demo-strat-3"
+        onclick="document.getElementById('demo-strat-2').classList.remove('active');document.getElementById('demo-strat-3').classList.add('active');renderDemoPlan();">3 шага</button>
+    </div>
+
+    ${stratHtml}
+
+    <div class="demo-amount-block">
+      <div class="demo-amount-lbl">Сумма входа (USDT)</div>
+      <div class="demo-amount-row">
+        <input type="number" id="demo-entry-amount" class="demo-amount-input"
+               value="${prevAmount}" placeholder="${placeholder}"
+               min="1" step="1" autocomplete="off">
+        <button class="demo-amount-pct" onclick="setDemoAmount(10)">10%</button>
+        <button class="demo-amount-pct" onclick="setDemoAmount(25)">25%</button>
+        <button class="demo-amount-pct" onclick="setDemoAmount(50)">50%</button>
+        <button class="demo-amount-pct" onclick="setDemoAmount(100)">MAX</button>
+      </div>
+    </div>
+
+    <button class="btn-primary btn-mint" onclick="executeDemoTrade()" style="margin-top:12px;">
+      🤖 Выполнить план Оракула
+    </button>
+  `;
+}
+
 // ═══ Экспорт в window ═══
 
 if (typeof window !== 'undefined') {
@@ -186,5 +352,10 @@ if (typeof window !== 'undefined') {
     loadBTC,
     openSheet,
     closeSheet,
+    enterDemoMode,
+    exitDemoMode,
+    renderDemoPlan,
+    setDemoAmount,
+    cancelDemoOrder,
   });
 }

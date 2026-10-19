@@ -437,3 +437,396 @@
   .mp-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
   .learn-grid { grid-template-columns: 1fr 1fr 1fr; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DEMO SANDBOX (OVERLAY MODE)
+   ═══════════════════════════════════════════════════════════════ */
+body.in-demo-mode .top-bar,
+body.in-demo-mode .bottom-nav {
+  display: none !important;
+}
+body.in-demo-mode .screens {
+  top: 0 !important;
+  bottom: 0 !important;
+}
+html.tauri body.in-demo-mode .screens {
+  top: 36px !important;
+}
+
+body.in-demo-mode #demo-panel {
+  display: block !important;
+}
+
+/* ═══ ЖЕСТКОЕ ЦЕНТРИРОВАНИЕ ДЕМО НА ПК (СБРОС САЙДБАРА) ═══ */
+@media (min-width: 900px) {
+  body.in-demo-mode .screens {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  body.in-demo-mode #screen-home {
+    display: block !important;
+    max-width: 1100px !important;
+    margin: 0 auto !important;
+    padding-top: 32px !important;
+    padding-bottom: 40px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* ═══ DEMO HEADER ═══ */
+.demo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(10,16,28,.8);
+  padding: 12px 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+}
+
+.demo-exit-btn {
+  background: rgba(255,101,132,.15);
+  border: 1px solid var(--coral);
+  color: var(--coral);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform .15s;
+  white-space: nowrap;
+}
+.demo-exit-btn:active { transform: scale(.95); }
+
+/* ═══ DEMO SEARCH ═══ */
+.demo-ticker-wrap {
+  flex: 1;
+  max-width: 320px;
+  min-width: 200px;
+  display: flex;
+  position: relative;
+  background: rgba(0,0,0,.6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.demo-ticker-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--hi);
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  outline: none;
+  border-radius: 8px 0 0 8px;
+  min-width: 0;
+}
+.demo-go-btn {
+  background: var(--cyan);
+  border: none;
+  color: #000;
+  padding: 0 18px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+}
+.demo-go-btn:active { opacity: .85; }
+
+/* Автокомплит внутри демо */
+#demo-ticker-suggest {
+  position: absolute !important;
+  top: calc(100% + 4px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* ═══ DEMO BALANCE (3 колонки) ═══ */
+.demo-balance-grid {
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+}
+.db-cell {
+  text-align: right;
+  min-width: 84px;
+}
+.db-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 3px;
+}
+.db-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--hi);
+  white-space: nowrap;
+}
+.db-val.mint  { color: var(--mint); }
+.db-val.coral { color: var(--coral); }
+
+/* ═══ DEMO LAYOUT ═══ */
+.demo-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+@media (min-width: 900px) {
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+/* ═══ СТРАТЕГИЯ ═══ */
+.demo-strategy-box {
+  background: rgba(0,0,0,.35);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.demo-strat-step {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255,255,255,.05);
+  gap: 10px;
+}
+.demo-strat-step:last-child { border-bottom: none; }
+.demo-strat-step .lbl { color: var(--mut); }
+.demo-strat-step .val { color: var(--hi); font-weight: 700; }
+.demo-strat-step .val.tp { color: var(--mint); }
+
+/* ═══ ВВОД СУММЫ ВХОДА ═══ */
+.demo-amount-block {
+  margin-bottom: 12px;
+}
+.demo-amount-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.demo-amount-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.demo-amount-input {
+  flex: 1;
+  min-width: 110px;
+  background: rgba(0,0,0,.5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--hi);
+  padding: 10px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color .15s;
+}
+.demo-amount-input:focus {
+  border-color: var(--cyan);
+}
+.demo-amount-input::placeholder {
+  color: var(--dim);
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: .3px;
+}
+.demo-amount-pct {
+  padding: 0 10px;
+  background: rgba(94,203,255,.1);
+  border: 1px solid rgba(94,203,255,.3);
+  border-radius: 6px;
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.demo-amount-pct:active {
+  transform: scale(.95);
+  background: rgba(94,203,255,.2);
+}
+
+/* ═══ СДЕЛКИ ═══ */
+.demo-trade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.demo-trade-info { flex: 1; min-width: 160px; }
+.demo-trade-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hi);
+}
+.demo-trade-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--mut);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.demo-trade-pnl {
+  text-align: right;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+}
+.demo-trade-pnl.mint  { color: var(--mint); }
+.demo-trade-pnl.coral { color: var(--coral); }
+
+/* ═══ СЕЛЕКТОР ШАГОВ ═══ */
+.demo-strat-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.demo-strat-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(0,0,0,.5);
+  border: 1px solid var(--border);
+  color: var(--mut);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.demo-strat-btn.active {
+  background: rgba(94,203,255,.15);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* Мобильная адаптация */
+@media (max-width: 600px) {
+  body.in-demo-mode #screen-home {
+    padding: 12px;
+  }
+  .demo-balance-grid {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .db-cell { min-width: 0; flex: 1; text-align: center; }
+}
+@media (max-width: 380px) {
+  .demo-balance-grid { flex-wrap: wrap; gap: 8px; }
+  .db-cell { flex-basis: 48%; }
+  .demo-amount-pct { flex: 1; padding: 8px 4px; }
+}
+
+/* ═══ DEMO TICKER SUMMARY (Сводка по монетам) ═══ */
+.demo-ticker-summary {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+.demo-ticker-summary::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+.demo-sum-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(10,16,28,.8);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.demo-sum-item.mint {
+  border-color: rgba(69,224,168,.35);
+  background: rgba(69,224,168,.08);
+}
+.demo-sum-item.coral {
+  border-color: rgba(255,101,132,.35);
+  background: rgba(255,101,132,.08);
+}
+.demo-sum-item .sym {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hi);
+}
+.demo-sum-item .pnl {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.demo-sum-item.mint .pnl { color: var(--mint); }
+.demo-sum-item.coral .pnl { color: var(--coral); }
+
+/* ═══ КНОПКА ОТМЕНЫ ОРДЕРА В ДЕМО ═══ */
+.demo-trade-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.demo-trade-cancel {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255,101,132,.1);
+  border: 1px solid rgba(255,101,132,.3);
+  color: var(--coral);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+  padding: 0;
+}
+.demo-trade-cancel:active {
+  background: rgba(255,101,132,.25);
+  transform: scale(.9);
+}
+@media (max-width: 380px) {
+  .demo-trade-right { flex-direction: column; align-items: flex-end; gap: 6px; }
+}

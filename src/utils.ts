@@ -72,6 +72,12 @@ export const state = {
   lastOracleResult: null as any,
   lastMarketData: null as any,
   lastWhaleData: null as any,
+
+    // ─── DEMO MODE ───
+  isDemoMode: false,
+  demoBalance: 10000, // Стартовый баланс $10,000
+  demoActiveOrders: [] as any[], // Открытые виртуальные сделки
+  demoHistory: [] as any[], // Закрытые сделки (для статистики)
 };
 
 // ─── СОХРАНЕНИЕ ИЗБРАННОГО ───

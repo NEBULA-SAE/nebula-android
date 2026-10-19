@@ -32,17 +32,25 @@ import {
 // ═══ ОСНОВНОЙ АНАЛИЗ ═══
 
 export async function mobileAnalyze(): Promise<void> {
-  const tickerInput = document.getElementById('ticker') as HTMLInputElement | null;
+  // Смотрим, откуда брать тикер: из демо-режима или из главного
+  const inputId = state.isDemoMode ? 'demo-ticker' : 'ticker';
+  const tickerInput = document.getElementById(inputId) as HTMLInputElement | null;
+  
   const raw = (tickerInput?.value || '').toUpperCase().trim();
   if (!raw) return;
 
+  // Синхронизируем оба инпута
   state.currentTicker = raw;
+  const mainInp = document.getElementById('ticker') as HTMLInputElement | null;
+  if (mainInp) mainInp.value = raw;
+
   state.lastOracleResult = null;
   state.lastMarketData = null;
 
   const hint = document.getElementById('oracle-ticker-hint');
   if (hint) hint.textContent = raw;
   document.getElementById('ticker-suggest')?.classList.remove('open');
+  document.getElementById('demo-ticker-suggest')?.classList.remove('open');
 
   try {
     // ── Параллельный старт: candles + futures + extras ──
@@ -118,6 +126,7 @@ export async function mobileAnalyze(): Promise<void> {
         planCard.style.display = 'block';
         const tr = max120 - price, dr = price - min120;
         const p = {
+          entry: price,
           buy1: price,
           buy2: price - dr * 0.4,
           buy3: min120 * 1.01,
@@ -126,6 +135,10 @@ export async function mobileAnalyze(): Promise<void> {
           tp3: max120 * 0.98,
           stop: min120 * 0.92,
         };
+        
+        // ⚠️ СОХРАНЯЕМ ПЛАН ДЛЯ ДЕМО-РЕЖИМА
+        (window as any)._currentDemoPlan = p;
+
         setHTML('plan-content', `
           <div><div class="plan-lbl">🔵 ${tm('entry')}</div>
             <div class="plan-entry">1: ${fmt(p.buy1)}</div>
@@ -158,7 +171,7 @@ export async function mobileAnalyze(): Promise<void> {
       `);
     }
 
-      const whaleSpot = calculateVolumeAnomalies(candles);
+    const whaleSpot = calculateVolumeAnomalies(candles);
     const hasFutures = !!(futuresMetrics && (futuresMetrics as any).sources?.length);
     const merged = mergeWhaleMetrics(whaleSpot, hasFutures ? (futuresMetrics as any) : null, price);
     state.lastWhaleData = merged;
@@ -222,6 +235,12 @@ export async function mobileAnalyze(): Promise<void> {
       const ds = document.getElementById('dash-section');
       if (ds) ds.style.display = 'none';
     }
+
+    // ⚠️ ОБНОВЛЕНИЕ ДЕМО-РЕЖИМА: если мы в песочнице, перерисовываем её
+    if (state.isDemoMode) {
+      import('./screens').then(m => m.renderDemoPlan());
+    }
+
   } catch (e: any) {
     toast(tm('error') + ': ' + e.message, 'error');
   }
@@ -655,6 +674,23 @@ function computeQuiz(): void {
     </div>`);
 }
 
+// ═══ DEMO MODE ═══
+
+export async function executeDemoTrade(): Promise<void> {
+  const plan = (window as any)._currentDemoPlan;
+  if (!plan || !plan.entry || !plan.tp1 || !plan.stop) {
+    toast('Сначала сделай анализ (GO), чтобы Оракул составил план', 'warn');
+    return;
+  }
+
+  // Определяем выбранную стратегию (2 или 3 шага)
+  const is3Steps = document.getElementById('demo-strat-3')?.classList.contains('active') || false;
+  const steps = is3Steps ? 3 : 2;
+
+  const { executeDemoPlan } = await import('../demo');
+  await executeDemoPlan(plan.entry, plan, steps);
+}
+
 // ═══ Экспорт в window ═══
 
 if (typeof window !== 'undefined') {
@@ -670,5 +706,6 @@ if (typeof window !== 'undefined') {
     openAISettings,
     saveGroqKeyFromModal,
     deleteGroqKeyFromModal,
+    executeDemoTrade,
   });
 }

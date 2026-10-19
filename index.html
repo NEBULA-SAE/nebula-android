@@ -103,7 +103,12 @@
 
 <header class="top-bar">
   <div class="top-row-1">
-    <div class="brand-mini"><span class="brand-dot"></span>NEBULA</div>
+        <div class="brand-mini-wrap">
+      <div class="brand-mini"><span class="brand-dot"></span>NEBULA</div>
+      <button class="demo-badge-btn" onclick="enterDemoMode()" title="Виртуальная торговля без риска">
+        🧪 DEMO
+      </button>
+    </div>
     <div class="top-right">
       <button class="chip amber" onclick="openMarketPulse()" title="Market"><svg class="ico-sm"><use href="#i-globe"/></svg></button>
       <button class="chip mint" onclick="openLearning()" title="Learning"><svg class="ico-sm"><use href="#i-brain"/></svg></button>
@@ -128,6 +133,66 @@
 <main class="screens">
 
   <section class="screen active" id="screen-home">
+       <!-- ═══ ПАНЕЛЬ ДЕМО-РЕЖИМА ═══ -->
+    <div id="demo-panel" style="display:none;">
+      <div class="demo-header">
+        <button class="demo-exit-btn" onclick="exitDemoMode()">⬅️ Покинуть</button>
+
+        <div class="demo-ticker-wrap">
+          <input type="text" id="demo-ticker" value="DASH" placeholder="Монета" spellcheck="false">
+          <button class="demo-go-btn" onclick="mobileAnalyze()">GO</button>
+          <div class="suggest" id="demo-ticker-suggest"></div>
+        </div>
+
+        <div class="demo-balance-grid">
+          <div class="db-cell">
+            <div class="db-lbl">Свободно</div>
+            <div class="db-val" id="demo-balance-free">$10,000.00</div>
+          </div>
+          <div class="db-cell">
+            <div class="db-lbl">В сделках</div>
+            <div class="db-val" id="demo-balance-invested">$0.00</div>
+          </div>
+          <div class="db-cell">
+            <div class="db-lbl">PnL</div>
+            <div class="db-val" id="demo-balance-pnl">+$0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ НОВЫЙ ТИКЕР-БАР (СВОДКА ПО МОНЕТАМ) ═══ -->
+      <div id="demo-ticker-summary" class="demo-ticker-summary" style="display:none;"></div>
+
+      <div class="demo-layout">
+        <!-- План Оракула -->
+        <div class="card" style="border-color:var(--mint);">
+          <div class="card-head" style="color:var(--mint);background:linear-gradient(90deg, rgba(69,224,168,.08), transparent 60%);">
+            <div class="card-head-icon">
+              <svg style="color:var(--mint);"><use href="#i-trending"/></svg>
+              <span>🤖 План Оракула</span>
+            </div>
+            <button onclick="resetDemo()" style="background:rgba(255,101,132,.12);border:1px solid rgba(255,101,132,.3);color:var(--coral);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;padding:4px 8px;border-radius:6px;letter-spacing:.5px;">СБРОС</button>
+          </div>
+          <div class="card-body" id="demo-oracle-content">
+            <div class="empty-msg">Введи монету и нажми GO, чтобы Оракул составил план</div>
+          </div>
+        </div>
+
+        <!-- Виртуальные сделки -->
+        <div class="card" style="border-color:var(--cyan);">
+          <div class="card-head" style="color:var(--cyan);background:linear-gradient(90deg, rgba(94,203,255,.08), transparent 60%);">
+            <div class="card-head-icon">
+              <svg style="color:var(--cyan);"><use href="#i-wallet"/></svg>
+              <span>Виртуальные сделки</span>
+            </div>
+          </div>
+          <div class="card-body" id="demo-orders-list">
+            <div class="empty-msg">Нет активных сделок</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="card btc-card">
       <div class="btc-top">
         <div class="btc-left">
@@ -357,7 +422,6 @@
     </div>
     <button class="btn-primary btn-mint" onclick="mobileSyncPortfolio()" id="lbl-port-sync">↻ Sync</button>
   </section>
-
 </main>
 
 <nav class="bottom-nav">
@@ -384,6 +448,11 @@
   <button class="nav-btn" data-tab="portfolio" onclick="switchTab('portfolio')">
     <svg><use href="#i-wallet"/></svg>
     <span class="lbl" id="nav-portfolio">Wallet</span>
+  </button>
+    <!-- Кнопка Демо-режима (видна только на ПК) -->
+  <button class="nav-btn demo-nav-btn" onclick="enterDemoMode()" style="margin-top: auto; border: 1px dashed var(--violet); background: rgba(167,139,250,.05);">
+    <svg style="color:var(--violet)"><use href="#i-flask"/></svg>
+    <span class="lbl" style="color:var(--violet)">Демо-режим</span>
   </button>
 </nav>
 
