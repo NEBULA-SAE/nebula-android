@@ -24,7 +24,6 @@ export function switchTab(tab: string): void {
   });
 
   if (tab === 'scanner' && !state.scannerRunning) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).runScanner?.();
   }
   if (tab === 'fav') renderFavorites();
@@ -54,7 +53,6 @@ export function setLanguage(lang: 'ru' | 'en'): void {
 
   if (state.lastAdv) renderPro(state.lastAdv);
   if (state.currentTicker) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).mobileAnalyze?.();
   }
   if (document.getElementById('screen-fav')?.classList.contains('active')) {
@@ -73,32 +71,18 @@ export function applyStaticTranslations(): void {
     'nav-fav': 'favorites', 'nav-oracle': 'oracle', 'nav-portfolio': 'portfolio',
     'lbl-rebound': 'rebound', 'lbl-drop': 'drop', 'lbl-trend': 'trend',
     'lbl-plan': 'plan', 'lbl-agent': 'agent', 'lbl-xray': 'xray', 'lbl-walls': 'walls',
-    'lbl-whale': 'whale',
-    'lbl-monitor': 'monitor',
-    'lbl-scan-acc': 'acc',
-    'lbl-fav': 'fav_title',
-    'lbl-port-total': 'port_total', 'lbl-port-pnl': 'port_pnl',
-    'lbl-assets': 'assets',
-    'lbl-port-sync': 'sync',
-    'lbl-oracle-name': 'oracle_name',
-    'lbl-oracle-status': 'oracle_status',
-    'lbl-oracle-profile': 'oracle_profile',
-    'lbl-oracle-stats': 'oracle_stats',
-    'lbl-oracle-recent': 'oracle_recent',
-    'lbl-oracle-analyze': 'oracle_analyze',
-    'lbl-oracle-edit': 'oracle_edit',
-    'lbl-oracle-refresh': 'oracle_refresh',
-    'lbl-oracle-edit-hint': 'oracle_edit_hint',
-    'lbl-oracle-refresh-hint': 'oracle_refresh_hint',
-    'lbl-free-usdt': 'free_usdt',
-    'lbl-assets-count': 'assets_count',
-    'lbl-in-portfolio': 'in_portfolio',
-    'terms-title': 'terms_title',
-    'about-title': 'about_title',
-    'lbl-ai-mode-insight': 'ai_mode_insight',
-    'lbl-ai-mode-agent': 'ai_mode_agent',
-    'lbl-ai-deposit': 'ai_deposit',
-    'lbl-ai-run': 'ai_run',
+    'lbl-whale': 'whale', 'lbl-monitor': 'monitor', 'lbl-scan-acc': 'acc',
+    'lbl-fav': 'fav_title', 'lbl-port-total': 'port_total', 'lbl-port-pnl': 'port_pnl',
+    'lbl-assets': 'assets', 'lbl-port-sync': 'sync', 'lbl-oracle-name': 'oracle_name',
+    'lbl-oracle-status': 'oracle_status', 'lbl-oracle-profile': 'oracle_profile',
+    'lbl-oracle-stats': 'oracle_stats', 'lbl-oracle-recent': 'oracle_recent',
+    'lbl-oracle-analyze': 'oracle_analyze', 'lbl-oracle-edit': 'oracle_edit',
+    'lbl-oracle-refresh': 'oracle_refresh', 'lbl-oracle-edit-hint': 'oracle_edit_hint',
+    'lbl-oracle-refresh-hint': 'oracle_refresh_hint', 'lbl-free-usdt': 'free_usdt',
+    'lbl-assets-count': 'assets_count', 'lbl-in-portfolio': 'in_portfolio',
+    'terms-title': 'terms_title', 'about-title': 'about_title',
+    'lbl-ai-mode-insight': 'ai_mode_insight', 'lbl-ai-mode-agent': 'ai_mode_agent',
+    'lbl-ai-deposit': 'ai_deposit', 'lbl-ai-run': 'ai_run',
   };
 
   Object.keys(map).forEach(id => {
@@ -131,8 +115,7 @@ export async function loadBTC(): Promise<void> {
     if (d.status !== 'success') return;
 
     setText('btc-price', '$' + d.price.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 2, maximumFractionDigits: 2,
     }));
 
     const ch = document.getElementById('btc-change');
@@ -144,9 +127,7 @@ export async function loadBTC(): Promise<void> {
     const r = document.getElementById('btc-rsi');
     if (r) {
       r.textContent = d.rsi.toFixed(1);
-      r.style.color = d.rsi < 35 ? 'var(--mint)'
-                     : d.rsi > 65 ? 'var(--coral)'
-                     : 'var(--hi)';
+      r.style.color = d.rsi < 35 ? 'var(--mint)' : d.rsi > 65 ? 'var(--coral)' : 'var(--hi)';
     }
 
     setText('btc-rebound', '+' + d.rebound_pct.toFixed(1) + '%');
@@ -191,7 +172,6 @@ export function enterDemoMode() {
   initDemoAutocomplete();
 
   import('../demo').then(m => {
-    // m.resetDemo(); <--- УБРАЛИ, чтобы ордера сохранялись
     m.startDemoEngine();
   });
 }
@@ -252,7 +232,7 @@ function initDemoAutocomplete() {
   _demoAutoInit = true;
 }
 
-// ═══ Быстрый выбор % от баланса для суммы входа ═══
+// ═══ Быстрый выбор % от баланса ═══
 
 export function setDemoAmount(pct: number): void {
   const inp = document.getElementById('demo-entry-amount') as HTMLInputElement | null;
@@ -269,7 +249,6 @@ export function renderDemoPlan() {
   const box = document.getElementById('demo-oracle-content');
   if (!box) return;
 
-  // Сохраняем текущее значение суммы, чтобы не потерять при перерисовке
   const prevAmount = (document.getElementById('demo-entry-amount') as HTMLInputElement | null)?.value || '';
 
   if (!state.lastMarketData || !state.lastMarketData.current_price) {
@@ -284,11 +263,7 @@ export function renderDemoPlan() {
 
   const tr = max - price;
   const plan = {
-    entry: price,
-    tp1: price + tr * 0.3,
-    tp2: price + tr * 0.6,
-    tp3: max * 0.98,
-    stop: min * 0.92,
+    entry: price, tp1: price + tr * 0.3, tp2: price + tr * 0.6, tp3: max * 0.98, stop: min * 0.92,
   };
 
   (window as any)._currentDemoPlan = plan;
@@ -341,10 +316,125 @@ export function renderDemoPlan() {
   `;
 }
 
+// ═══ РАДАРНОЕ МЕНЮ (ПОЛУКРУГ + ЛАЗЕР) ═══
+
+export function initRadarMenu() {
+  const trigger = document.getElementById('radar-trigger');
+  const overlay = document.getElementById('radar-overlay');
+  const items = document.querySelectorAll<HTMLElement>('.radar-item');
+  const laserLine = document.querySelector('.radar-laser-line line') as SVGLineElement;
+  
+  if (!trigger || !overlay || !laserLine) return;
+
+  let isDragging = false;
+  let currentActiveIndex = -1;
+  let startX = 0;
+  let startY = 0;
+
+  // Нажали на кнопку
+  trigger.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    isDragging = true;
+    overlay.classList.add('open');
+    currentActiveIndex = -1;
+    items.forEach(i => i.classList.remove('active'));
+
+    // Точка старта лазера = центр кнопки-триггера
+    const rect = trigger.getBoundingClientRect();
+    startX = rect.left + rect.width / 2;
+    startY = rect.top + rect.height / 2;
+
+    laserLine.setAttribute('x1', startX.toString());
+    laserLine.setAttribute('y1', startY.toString());
+    laserLine.setAttribute('x2', startX.toString());
+    laserLine.setAttribute('y2', startY.toString());
+    laserLine.style.opacity = '1';
+
+    if (navigator.vibrate) navigator.vibrate(20);
+  });
+
+  // Ведем пальцем
+  document.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    laserLine.setAttribute('x2', x.toString());
+    laserLine.setAttribute('y2', y.toString());
+
+    let closestIndex = -1;
+    let minDistance = Infinity;
+
+    items.forEach((item, index) => {
+      const rect = item.getBoundingClientRect();
+      const itemCenterX = rect.left + rect.width / 2;
+      const itemCenterY = rect.top + rect.height / 2;
+      
+      const dist = Math.hypot(x - itemCenterX, y - itemCenterY);
+      
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestIndex = index;
+      }
+    });
+
+    // Магнитный эффект (если палец ближе 100px к иконке)
+    if (minDistance < 100) {
+      if (currentActiveIndex !== closestIndex) {
+        currentActiveIndex = closestIndex;
+        
+        items.forEach((item, idx) => {
+          item.classList.toggle('active', idx === closestIndex);
+        });
+
+        const rect = items[closestIndex].getBoundingClientRect();
+        laserLine.setAttribute('x2', (rect.left + rect.width / 2).toString());
+        laserLine.setAttribute('y2', (rect.top + rect.height / 2).toString());
+
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
+    } else {
+      if (currentActiveIndex !== -1) {
+        currentActiveIndex = -1;
+        items.forEach(i => i.classList.remove('active'));
+      }
+    }
+  });
+
+  // Отпустили палец
+  document.addEventListener('pointerup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    laserLine.style.opacity = '0';
+
+    if (currentActiveIndex !== -1) {
+      const activeItem = items[currentActiveIndex];
+      const action = activeItem.getAttribute('data-action');
+      const value = activeItem.getAttribute('data-value');
+
+      if (navigator.vibrate) navigator.vibrate([10, 30, 20]);
+
+      setTimeout(() => {
+        if (action === 'tab' && value) {
+          switchTab(value);
+        } else if (action === 'func' && value) {
+          const fn = (window as any)[value];
+          if (typeof fn === 'function') fn();
+        }
+      }, 50);
+    }
+
+    overlay.classList.remove('open');
+    items.forEach(i => i.classList.remove('active'));
+  });
+
+  trigger.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+}
+
 // ═══ Экспорт в window ═══
 
 if (typeof window !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Object.assign(window as any, {
     switchTab,
     setLanguage,
@@ -357,5 +447,8 @@ if (typeof window !== 'undefined') {
     renderDemoPlan,
     setDemoAmount,
     cancelDemoOrder,
+    initRadarMenu,
   });
+
+  setTimeout(initRadarMenu, 500);
 }

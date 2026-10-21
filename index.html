@@ -99,20 +99,31 @@
   <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
   <symbol id="i-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></symbol>
+  
+  <symbol id="i-radar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    <path d="M12 2v20M2 12h20" opacity="0.3" />
+    <path d="M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93" opacity="0.3" />
+    <path d="M12 12 L 19 5" stroke-width="2" />
+    <path d="M12 12 A 9 9 0 0 1 21 12 Z" fill="currentColor" opacity="0.4" stroke="none" />
+  </symbol>
 </svg>
 
 <header class="top-bar">
   <div class="top-row-1">
-        <div class="brand-mini-wrap">
+    <div class="brand-mini-wrap">
       <div class="brand-mini"><span class="brand-dot"></span>NEBULA</div>
       <button class="demo-badge-btn" onclick="enterDemoMode()" title="Виртуальная торговля без риска">
         🧪 DEMO
       </button>
     </div>
     <div class="top-right">
-      <button class="chip amber" onclick="openMarketPulse()" title="Market"><svg class="ico-sm"><use href="#i-globe"/></svg></button>
-      <button class="chip mint" onclick="openLearning()" title="Learning"><svg class="ico-sm"><use href="#i-brain"/></svg></button>
-      <button class="chip violet" onclick="openOrdersSheet()" title="Orders"><svg class="ico-sm"><use href="#i-bolt"/></svg></button>
+      <button class="chip amber hide-on-mobile" onclick="openMarketPulse()" title="Market"><svg class="ico-sm"><use href="#i-globe"/></svg></button>
+      <button class="chip mint hide-on-mobile" onclick="openLearning()" title="Learning"><svg class="ico-sm"><use href="#i-brain"/></svg></button>
+      <button class="chip violet hide-on-mobile" onclick="openOrdersSheet()" title="Orders"><svg class="ico-sm"><use href="#i-bolt"/></svg></button>
+      
       <button class="chip cyan" onclick="openSettings()" title="Settings"><svg class="ico-sm"><use href="#i-settings"/></svg></button>
       <div class="lang-mini">
         <button id="lang-ru" onclick="setLanguage('ru')">RU</button>
@@ -133,7 +144,6 @@
 <main class="screens">
 
   <section class="screen active" id="screen-home">
-       <!-- ═══ ПАНЕЛЬ ДЕМО-РЕЖИМА ═══ -->
     <div id="demo-panel" style="display:none;">
       <div class="demo-header">
         <button class="demo-exit-btn" onclick="exitDemoMode()">⬅️ Покинуть</button>
@@ -160,11 +170,9 @@
         </div>
       </div>
 
-      <!-- ═══ НОВЫЙ ТИКЕР-БАР (СВОДКА ПО МОНЕТАМ) ═══ -->
       <div id="demo-ticker-summary" class="demo-ticker-summary" style="display:none;"></div>
 
       <div class="demo-layout">
-        <!-- План Оракула -->
         <div class="card" style="border-color:var(--mint);">
           <div class="card-head" style="color:var(--mint);background:linear-gradient(90deg, rgba(69,224,168,.08), transparent 60%);">
             <div class="card-head-icon">
@@ -178,7 +186,6 @@
           </div>
         </div>
 
-        <!-- Виртуальные сделки -->
         <div class="card" style="border-color:var(--cyan);">
           <div class="card-head" style="color:var(--cyan);background:linear-gradient(90deg, rgba(94,203,255,.08), transparent 60%);">
             <div class="card-head-icon">
@@ -424,37 +431,79 @@
   </section>
 </main>
 
-<nav class="bottom-nav">
+<nav class="bottom-nav" id="main-nav">
   <button class="nav-btn active" data-tab="home" onclick="switchTab('home')">
     <svg><use href="#i-chart"/></svg>
-    <span class="lbl" id="nav-home">Chart</span>
+    <span class="lbl" id="nav-home">График</span>
   </button>
   <button class="nav-btn" data-tab="pro" onclick="switchTab('pro')">
     <svg><use href="#i-flask"/></svg>
-    <span class="lbl" id="nav-pro">Analytics</span>
+    <span class="lbl" id="nav-pro">Аналитика</span>
   </button>
+
+    <!-- ЦЕНТРАЛЬНАЯ КНОПКА РАДАРА (Только на мобилке) -->
+  <div class="radar-center-wrap" id="radar-trigger-wrap">
+    <button class="radar-trigger" id="radar-trigger">
+      <span class="rt-core">NEBUL</span>
+    </button>
+  </div>
+
   <button class="nav-btn" data-tab="scanner" onclick="switchTab('scanner')">
     <svg><use href="#i-target"/></svg>
-    <span class="lbl" id="nav-scanner">Scanner</span>
-  </button>
-  <button class="nav-btn" data-tab="fav" onclick="switchTab('fav')">
-    <svg><use href="#i-star"/></svg>
-    <span class="lbl" id="nav-fav">Favorites</span>
+    <span class="lbl" id="nav-scanner">Сканер</span>
   </button>
   <button class="nav-btn" data-tab="oracle" onclick="switchTab('oracle')">
     <svg><use href="#i-oracle"/></svg>
-    <span class="lbl" id="nav-oracle">Oracle</span>
+    <span class="lbl" id="nav-oracle">Оракул</span>
   </button>
-  <button class="nav-btn" data-tab="portfolio" onclick="switchTab('portfolio')">
+
+  <button class="nav-btn hide-on-mobile" data-tab="fav" onclick="switchTab('fav')">
+    <svg><use href="#i-star"/></svg>
+    <span class="lbl" id="nav-fav">Избранное</span>
+  </button>
+  <button class="nav-btn hide-on-mobile" data-tab="portfolio" onclick="switchTab('portfolio')">
     <svg><use href="#i-wallet"/></svg>
-    <span class="lbl" id="nav-portfolio">Wallet</span>
+    <span class="lbl" id="nav-portfolio">Баланс</span>
   </button>
-    <!-- Кнопка Демо-режима (видна только на ПК) -->
-  <button class="nav-btn demo-nav-btn" onclick="enterDemoMode()" style="margin-top: auto; border: 1px dashed var(--violet); background: rgba(167,139,250,.05);">
+  <button class="nav-btn demo-nav-btn hide-on-mobile" onclick="enterDemoMode()" style="margin-top: auto; border: 1px dashed var(--violet); background: rgba(167,139,250,.05);">
     <svg style="color:var(--violet)"><use href="#i-flask"/></svg>
     <span class="lbl" style="color:var(--violet)">Демо-режим</span>
   </button>
 </nav>
+
+<!-- ═══ РАДАРНОЕ МЕНЮ (ПОЛУКРУГ + ЛАЗЕР) ═══ -->
+<div class="radar-overlay" id="radar-overlay">
+  <svg class="radar-laser-line" id="radar-laser-line">
+    <line x1="0" y1="0" x2="0" y2="0" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="4 4" />
+  </svg>
+
+  <div class="radar-items-container" id="radar-items">
+    <div class="radar-item" data-action="func" data-value="openMarketPulse">
+      <div class="radar-icon-wrap" style="color:var(--amber);"><svg><use href="#i-globe"/></svg></div>
+      <span class="radar-label">Рынок</span>
+    </div>
+
+    <div class="radar-item" data-action="tab" data-value="fav">
+      <div class="radar-icon-wrap" style="color:var(--amber);"><svg><use href="#i-star"/></svg></div>
+      <span class="radar-label">Избранное</span>
+    </div>
+
+    <div class="radar-item" data-action="tab" data-value="portfolio">
+      <div class="radar-icon-wrap" style="color:var(--cyan);"><svg><use href="#i-wallet"/></svg></div>
+      <span class="radar-label">Баланс</span>
+    </div>
+
+    <div class="radar-item" data-action="func" data-value="openOrdersSheet">
+      <div class="radar-icon-wrap" style="color:var(--violet);"><svg><use href="#i-bolt"/></svg></div>
+      <span class="radar-label">Ордера</span>
+    </div>
+
+    <div class="radar-item" data-action="func" data-value="openLearning">
+      <div class="radar-icon-wrap" style="color:var(--mint);"><svg><use href="#i-brain"/></svg></div>
+      <span class="radar-label">Обучение</span>
+    </div>
+  </div>
+</div>
 
 <div class="toast-wrap" id="toast-wrap"></div>
 
@@ -466,61 +515,20 @@
     </div>
     <div class="terms-body">
       <p><em>Пожалуйста, прочитайте внимательно перед использованием NEBULA Oracle Terminal.</em></p>
-
       <h4>1. Что такое NEBULA Oracle</h4>
       <p>NEBULA Oracle — программа для анализа криптовалютного рынка. Она собирает публичные данные с бирж (Gate.io, Binance, Bybit, OKX, MEXC), рассчитывает технические индикаторы, метрики крупных игроков и формирует оценки на основе алгоритмов и искусственного интеллекта.</p>
-
       <h4>2. Не является финансовой рекомендацией</h4>
-      <p>Вся информация в приложении носит <strong>исключительно информационный и образовательный характер</strong>. Это НЕ инвестиционный совет, НЕ рекомендация к покупке или продаже, НЕ руководство к действию. Любые торговые решения вы принимаете <strong>самостоятельно и под свою ответственность</strong>.</p>
-
+      <p>Вся информация в приложении носит <strong>исключительно информационный и образовательный характер</strong>.</p>
       <h4>3. Риски</h4>
-      <div class="warn">
-        Торговля криптовалютами связана с высоким риском <strong>полной потери</strong> вложенных средств. Рынок волатилен, прогнозы не гарантированы, прошлые результаты не означают будущих. <strong>Не торгуйте на средства, потерю которых не можете себе позволить.</strong>
-      </div>
-
-      <h4>4. Точность данных и алгоритмов</h4>
-      <p>Программа использует публичные API бирж и AI-модели. Мы <strong>не гарантируем</strong>:</p>
-      <ul>
-        <li>точность, полноту или актуальность данных с бирж;</li>
-        <li>безошибочную работу алгоритмов анализа;</li>
-        <li>корректность ответов ИИ — модели могут ошибаться, выдумывать факты и паттерны.</li>
-      </ul>
-      <p>Данные предоставляются «как есть», без каких-либо гарантий.</p>
-
-      <h4>5. Ответственность</h4>
-      <p>Автор и создатели NEBULA Oracle <strong>не несут ответственности</strong> за:</p>
-      <ul>
-        <li>любые убытки, упущенную выгоду или ущерб, связанные с использованием программы;</li>
-        <li>решения, принятые на основе данных, показанных в приложении;</li>
-        <li>ошибки, сбои, недоступность приложения или источников данных;</li>
-        <li>потерю API-ключей, утечку данных с вашего устройства.</li>
-      </ul>
-      <p>Используя программу, вы принимаете все связанные с этим риски на себя.</p>
-
-      <h4>6. API-ключи и данные</h4>
-      <p>API-ключи хранятся <strong>локально на вашем устройстве</strong> и не передаются третьим лицам. Вы самостоятельно отвечаете за безопасность своих ключей, устройства и данных.</p>
-
-      <h4>7. Условия использования</h4>
-      <ul>
-        <li>Возраст 18+;</li>
-        <li>не использовать в незаконных целях и для манипуляций рынком;</li>
-        <li>не пытаться взломать, декомпилировать или перепродавать программу.</li>
-      </ul>
-
-      <h4>8. Изменения</h4>
-      <p>Соглашение может обновляться. Продолжая пользоваться программой, вы принимаете актуальную версию.</p>
-
-      <h4>9. Принятие</h4>
-      <p>Нажимая «Я принимаю условия», вы подтверждаете, что прочитали текст выше, согласны с ним и принимаете все риски на себя.</p>
+      <div class="warn">Торговля криптовалютами связана с высоким риском <strong>полной потери</strong> вложенных средств.</div>
     </div>
     <div class="terms-foot">
       <button class="terms-accept" onclick="acceptTerms()">Я принимаю условия и риски</button>
-      <div class="terms-note">Нажимая кнопку, вы подтверждаете, что<br>ознакомились с текстом соглашения</div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ ABOUT (только описание проекта) ═══════════ -->
+<!-- ═══════════ ABOUT ═══════════ -->
 <div class="terms-overlay" id="about-overlay" onclick="if(event.target===this)hideAbout()">
   <div class="terms-modal">
     <div class="terms-head">
@@ -531,40 +539,6 @@
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
       <div class="ver">ORACLE · TRADING TERMINAL · v2.0</div>
-    </div>
-    <div class="terms-body">
-      <h4>Что это</h4>
-      <p>Персональный торговый терминал для криптовалютного рынка. Задуман как инструмент, который даёт обычному трейдеру то, что обычно доступно только профессионалам: глубокий анализ рынка, метрики крупных игроков и AI-наставника в одном окне.</p>
-
-      <h4>Кто создал</h4>
-      <div class="info-block">
-        Проект сделан <strong>одним человеком</strong> — трейдером-энтузиастом — в сотрудничестве с AI-помощником. Без команды, без инвестиций, без офиса.
-      </div>
-
-      <h4>Что умеет</h4>
-      <ul>
-        <li>Анализ монет с 5 бирж одновременно (Gate.io, Binance, Bybit, OKX, MEXC);</li>
-        <li>Whale-радар: Z-score объёмов, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
-        <li>AI-наставник — объясняет простым языком, что происходит с монетой;</li>
-        <li>Сканер дна по топ-200 монетам;</li>
-        <li>Технический анализ: MACD, Bollinger, ADX, Stoch RSI, дивергенции, S/R, Volume Profile;</li>
-        <li>Торговый план, калькулятор сетки, отправка ордеров на MEXC;</li>
-        <li>Портфель с синхронизацией и курсом USDT/RUB;</li>
-        <li><strong>AI-Агент</strong> — торговые команды на естественном языке;</li>
-        <li><strong>TWAP</strong> — плавное исполнение крупных ордеров;</li>
-        <li><strong>Шифрование API-ключей</strong> — AES-256-GCM + PBKDF2 через Web Crypto.</li>
-      </ul>
-
-      <h4>Технологии</h4>
-      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);">TypeScript · Vite · Capacitor · Web Crypto · Groq API</p>
-
-      <h4>Настройки</h4>
-      <div class="info-block">
-        Все параметры — мастер-пароль, Groq API-ключ, темы оформления, диагностика и поддержка проекта — теперь в одном месте: <strong>⚙️ Настройки</strong> в топбаре.
-      </div>
-
-      <h4>Обратная связь</h4>
-      <p>Нашли баг, есть идея или хотите предложить улучшение — пишите автору.</p>
     </div>
   </div>
 </div>
@@ -592,7 +566,7 @@
   <div class="sheet-body" id="sheet-body"></div>
 </div>
 
-<!-- ═══════════ APP LOCK (пароль на вход) ═══════════ -->
+<!-- ═══════════ APP LOCK ═══════════ -->
 <div class="terms-overlay" id="app-lock-overlay">
   <div class="terms-modal" style="max-width:400px">
     <div class="terms-head">
@@ -600,26 +574,19 @@
     </div>
     <div class="terms-body">
       <p id="al-desc">Введи пароль для продолжения.</p>
-
       <div class="form-row">
         <label class="form-lbl">Пароль</label>
-        <input class="form-input" type="password" id="al-input"
-               placeholder="Минимум 4 символа" autocomplete="new-password">
+        <input class="form-input" type="password" id="al-input" placeholder="Минимум 4 символа" autocomplete="new-password">
       </div>
-
       <div class="form-row" id="al-confirm-row" style="display:none">
         <label class="form-lbl">Повторите пароль</label>
-        <input class="form-input" type="password" id="al-input2"
-               placeholder="Ещё раз" autocomplete="new-password">
+        <input class="form-input" type="password" id="al-input2" placeholder="Ещё раз" autocomplete="new-password">
       </div>
-
       <div class="calc-result" id="al-error" style="display:none"></div>
     </div>
-
     <div class="terms-foot" style="display:flex;flex-direction:column;gap:8px">
       <button class="terms-accept" id="al-submit" onclick="appLockSubmit()">Войти</button>
-      <button class="terms-accept" id="al-skip" onclick="appLockSkip()"
-              style="background:transparent;color:var(--dim);border:1px solid var(--border);padding:12px 18px;font-size:10px">
+      <button class="terms-accept" id="al-skip" onclick="appLockSkip()" style="background:transparent;color:var(--dim);border:1px solid var(--border);padding:12px 18px;font-size:10px">
         Пропустить и работать без пароля
       </button>
     </div>
