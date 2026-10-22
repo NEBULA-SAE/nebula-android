@@ -10,7 +10,7 @@ import { renderPro } from './oracle';
 import { renderFavorites } from './scanner';
 import { mobileSyncPortfolio } from '../trading';
 import { renderOracleDashboard } from './oracle';
-import { cancelDemoOrder } from '../demo';
+import { cancelDemoOrder, resetDemo } from '../demo';
 
 // ═══ ВКЛАДКИ ═══
 
@@ -447,6 +447,7 @@ if (typeof window !== 'undefined') {
     renderDemoPlan,
     setDemoAmount,
     cancelDemoOrder,
+    resetDemo,
     initRadarMenu,
   });
 

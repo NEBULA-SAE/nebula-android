@@ -61,8 +61,19 @@
 <!-- ═══ Tauri Title Bar ═══ -->
 <div class="tauri-titlebar" id="tauri-titlebar">
   <div class="tauri-titlebar-left">
-    <div class="tauri-titlebar-logo"></div>
-    <div class="tauri-titlebar-title">NEBULA · ORACLE TERMINAL</div>
+    <div class="tauri-titlebar-logo" style="color:var(--cyan); display:flex; align-items:center; justify-content:center;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l3.5 4L20 4l-1 6 3 4-4 1.5-2 5.5h-8l-2-5.5L2 14l3-4-1-6 4.5 2z"/>
+        <circle cx="9" cy="10" r="1" fill="currentColor"/>
+        <circle cx="15" cy="10" r="1" fill="currentColor"/>
+        <path d="M10 14h4"/>
+      </svg>
+    </div>
+    <div class="tauri-titlebar-title" style="display:flex; align-items:center; gap:8px; position:relative;">
+      <span class="status-lamp"></span>
+      NEBULA · ORACLE TERMINAL
+      <div class="title-pulse-line"></div>
+    </div>
   </div>
   <div class="tauri-titlebar-controls">
     <button class="tauri-tb-btn" id="tb-min" title="Свернуть">─</button>
@@ -146,7 +157,10 @@
   <section class="screen active" id="screen-home">
     <div id="demo-panel" style="display:none;">
       <div class="demo-header">
-        <button class="demo-exit-btn" onclick="exitDemoMode()">⬅️ Покинуть</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="demo-exit-btn" onclick="exitDemoMode()">⬅️ Покинуть</button>
+          <button class="demo-exit-btn" style="border-color:var(--amber); color:var(--amber); background:rgba(255,184,88,.1);" onclick="resetDemo()">🔄 Сброс</button>
+        </div>
 
         <div class="demo-ticker-wrap">
           <input type="text" id="demo-ticker" value="DASH" placeholder="Монета" spellcheck="false">
@@ -441,7 +455,6 @@
     <span class="lbl" id="nav-pro">Аналитика</span>
   </button>
 
-    <!-- ЦЕНТРАЛЬНАЯ КНОПКА РАДАРА (Только на мобилке) -->
   <div class="radar-center-wrap" id="radar-trigger-wrap">
     <button class="radar-trigger" id="radar-trigger">
       <span class="rt-core">NEBUL</span>
@@ -535,10 +548,67 @@
       <h3 id="about-title">О программе</h3>
       <button class="sheet-close" onclick="hideAbout()">✕</button>
     </div>
+
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.0</div>
+    </div>
+
+    <div class="terms-body">
+      <h4>Что такое NEBULA</h4>
+      <p>Персональный торговый терминал для криптовалютного рынка. Задуман как инструмент, который даёт обычному трейдеру то, что обычно доступно только профессионалам: глубокий анализ рынка, метрики крупных игроков и AI-наставника в одном окне.</p>
+
+      <h4>Кто создал</h4>
+      <div class="info-block">
+        Проект сделан <strong>одним человеком</strong> — трейдером-энтузиастом — в сотрудничестве с AI-помощником. Без команды, без инвесторов, без офиса. Просто идея и желание сделать удобный инструмент для себя и других.
+      </div>
+
+      <h4>Что умеет</h4>
+      <ul>
+        <li><b>Анализ с 5 бирж</b> — Gate.io, Binance, Bybit, OKX, MEXC одновременно;</li>
+        <li><b>Whale-радар</b> — Z-score объёмов, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
+        <li><b>AI-наставник</b> — объясняет простым языком, что происходит с монетой (Groq API);</li>
+        <li><b>AI-Агент</b> — принимает торговые команды на естественном языке («Купи DASH на 10% депо»);</li>
+        <li><b>Сканер дна</b> — по топ-200 монетам находит точки входа по алгоритму;</li>
+        <li><b>Технический анализ</b> — MACD, Bollinger, ADX, Stoch RSI, дивергенции, S/R уровни, Volume Profile;</li>
+        <li><b>Торговый план</b> — автоматический расчёт TP/SL и калькулятор сетки;</li>
+        <li><b>TWAP</b> — плавное исполнение крупных ордеров без проскальзывания;</li>
+        <li><b>Портфель</b> — синхронизация через API биржи + курс USDT/RUB;</li>
+        <li><b>Демо-режим</b> — виртуальная торговля на $10 000 без риска потери реальных средств;</li>
+        <li><b>Тактический радар</b> — быстрое радиальное меню на смартфоне (нажми и веди палец).</li>
+      </ul>
+
+      <h4>Платформы</h4>
+      <ul>
+        <li>🌐 <b>Web</b> — работает в любом современном браузере;</li>
+        <li>💻 <b>Windows</b> — нативное приложение через Tauri 2 (Rust + WebView2);</li>
+        <li>📱 <b>Android</b> — APK через Capacitor 8 (без Google Play).</li>
+      </ul>
+
+      <h4>Безопасность</h4>
+      <div class="info-block">
+        API-ключи MEXC и Groq-ключ хранятся <strong>только локально</strong> на вашем устройстве. Шифрование — <b>AES-256-GCM + PBKDF2</b> (150 000 итераций). Мастер-пароль не сохраняется ни на сервере, ни в облаке и не покидает устройство. Даже автор программы не имеет к нему доступа.
+      </div>
+
+      <h4>Технологии</h4>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);line-height:1.8;">
+        TypeScript · Vite 5 · Tauri 2 · Capacitor 8 · lightweight-charts 4.2 · Web Crypto · Groq API · Web Worker
+      </p>
+
+      <h4>Версия и сборка</h4>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.0</b><br>
+        Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
+        Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
+      </p>
+
+      <h4>Обратная связь</h4>
+      <p>Нашли баг, есть идея или хотите предложить улучшение — пишите автору. Каждое сообщение читается лично, а не ботом.</p>
+
+      <div class="warn" style="margin-top:20px;">
+        ⚠️ NEBULA — это <strong>инструмент анализа</strong>, а не финансовый советник. Все торговые решения вы принимаете самостоятельно и под свою ответственность. Рынок волатилен, прогнозы не гарантированы. <strong>Не торгуйте на средства, потерю которых не можете себе позволить.</strong>
+      </div>
     </div>
   </div>
 </div>
@@ -576,11 +646,11 @@
       <p id="al-desc">Введи пароль для продолжения.</p>
       <div class="form-row">
         <label class="form-lbl">Пароль</label>
-        <input class="form-input" type="password" id="al-input" placeholder="Минимум 4 символа" autocomplete="new-password">
+        <input class="form-input" type="password" id="al-input" placeholder="Минимум 4 символа" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*">
       </div>
       <div class="form-row" id="al-confirm-row" style="display:none">
         <label class="form-lbl">Повторите пароль</label>
-        <input class="form-input" type="password" id="al-input2" placeholder="Ещё раз" autocomplete="new-password">
+        <input class="form-input" type="password" id="al-input2" placeholder="Ещё раз" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*">
       </div>
       <div class="calc-result" id="al-error" style="display:none"></div>
     </div>

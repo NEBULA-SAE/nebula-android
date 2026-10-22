@@ -317,8 +317,6 @@ function updateDemoBalanceUI(prices: Record<string, number>) {
 // ═══ СБРОС ═══
 
 export function resetDemo() {
-  if (!confirm('Вы уверены, что хотите полностью сбросить демо-режим? Все сделки и баланс обнулятся.')) return;
-  
   state.demoBalance = INITIAL_BALANCE;
   state.demoActiveOrders = [];
   state.demoHistory = [];

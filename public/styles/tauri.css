@@ -37,12 +37,9 @@ html.tauri .tauri-titlebar {
 .tauri-titlebar-logo {
   width: 16px;
   height: 16px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%,
-    var(--grad-start, #5ecbff),
-    var(--accent, #4e8fff) 50%,
-    var(--grad-end, #a78bfa) 100%);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
@@ -53,6 +50,41 @@ html.tauri .tauri-titlebar {
   letter-spacing: 2px;
   color: var(--mut);
   text-transform: uppercase;
+}
+
+/* Лампочка */
+.status-lamp {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 8px var(--mint);
+  animation: blink-lamp 2s infinite;
+}
+
+@keyframes blink-lamp {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+/* Пульс под текстом */
+.title-pulse-line {
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  height: 1px;
+  background: var(--cyan);
+  width: 0;
+  box-shadow: 0 0 5px var(--cyan);
+  animation: pulse-line 3s ease-in-out infinite;
+}
+
+@keyframes pulse-line {
+  0% { width: 0; opacity: 0; left: 0; }
+  10% { opacity: 1; }
+  60% { width: 100%; opacity: 1; left: 0; }
+  90% { opacity: 1; }
+  100% { width: 0; opacity: 0; left: 100%; }
 }
 
 .tauri-titlebar-controls {
@@ -89,24 +121,30 @@ html.tauri .tauri-titlebar {
 }
 
 /* ─── Сдвигаем контент приложения под титульник ─── */
-html.tauri .top-bar { top: 36px; }
-html.tauri .screens { top: 36px; }
-html.tauri .bottom-nav {
-  top: 36px;
-  height: calc(100vh - 36px);
+html.tauri .top-bar { top: 36px !important; }
+html.tauri .screens { top: 36px !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Мобильный режим (узкое окно) - панель остается внизу */
+@media (max-width: 1023px) {
+  html.tauri .bottom-nav {
+    top: auto !important;
+    bottom: 0 !important;
+    height: auto !important;
+    padding-top: 6px !important;
+  }
 }
 
-/* ─── Desktop-layout (sidebar слева) ─── */
+/* ПК режим (широкое окно) - панель становится сайдбаром */
 @media (min-width: 1024px) {
   html.tauri .bottom-nav {
-    top: 36px;
-    height: calc(100vh - 36px);
-  }
-  html.tauri .top-bar {
-    top: 36px;
-  }
-  html.tauri .screens {
-    top: 36px;
+    top: 36px !important;
+    bottom: 0 !important;
+    height: calc(100vh - 36px) !important;
+    padding-top: 24px !important;
   }
 }
 
@@ -133,24 +171,6 @@ html.tauri .nav-btn {
 html.tauri img {
   -webkit-user-drag: none;
   user-select: none;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Сдвигаем весь интерфейс вниз на высоту титульника (36px)
-   ═══════════════════════════════════════════════════════════════ */
-
-html.tauri .top-bar {
-  top: 36px !important;
-}
-
-html.tauri .screens {
-  top: 36px !important;
-}
-
-html.tauri .bottom-nav {
-  top: 36px !important;
-  height: calc(100vh - 36px) !important;
-  padding-top: 24px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
