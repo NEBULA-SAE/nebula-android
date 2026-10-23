@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · CHART
 // Фикс утечки памяти: убран двойной resize (autoSize + ResizeObserver)
+// + updateCandles() для тихого автообновления без сброса зума
 // ═══════════════════════════════════════════════════════════════
 
 import { LineStyle } from 'lightweight-charts';
@@ -202,6 +203,10 @@ export function drawNowLine(price: number): void {
   } catch { /* silent */ }
 }
 
+// ─── ПОЛНОЕ ОБНОВЛЕНИЕ (новый тикер / смена tf) ───
+// Сбрасывает зум на «показать всё», перерисовывает NOW.
+// Вызывается из mobileAnalyze после clearLines().
+
 export function setCandlesAndFit(candles: Candle[]): void {
   if (!state.candleSeries) return;
   try {
@@ -223,6 +228,37 @@ export function setCandlesAndFit(candles: Candle[]): void {
   }, 400);
 }
 
+// ─── ТИХОЕ ОБНОВЛЕНИЕ (авто-refresh каждые N сек) ───
+// НЕ трогает time-axis zoom — пользователь сохраняет свой масштаб.
+// Обновляет данные + пересоздаёт единственную NOW-линию (без утечки),
+// orderbook-стены остаются на месте.
+// Вызывается из ui/timeframes.ts::refreshChartSilently().
+
+export function updateCandles(candles: Candle[]): void {
+  if (!state.candleSeries) return;
+  if (!candles || candles.length === 0) return;
+
+  try {
+    state.candleSeries.setData(candles as any);
+  } catch (e) {
+    console.warn('[chart] updateCandles failed:', e);
+    return;
+  }
+
+  // Убираем старую NOW-линию (только из priceLines, не трогаем orderbook)
+  state.priceLines.forEach((l: any) => {
+    try { state.candleSeries.removePriceLine(l); } catch { /* silent */ }
+  });
+  state.priceLines = [];
+
+  // Ставим новую NOW по последней цене
+  const price = candles[candles.length - 1].close;
+  if (price > 0) drawNowLine(price);
+
+  // Только price-axis autoScale, без fitContent — зум сохраняется
+  refreshAutoScale();
+}
+
 if (typeof window !== 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Object.assign(window as any, {
@@ -234,5 +270,6 @@ if (typeof window !== 'undefined') {
     drawOrderbookWalls,
     drawNowLine,
     setCandlesAndFit,
+    updateCandles,
   });
 }

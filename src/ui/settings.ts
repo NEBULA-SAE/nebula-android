@@ -10,10 +10,15 @@ import {
   saveGroqKey,
   loadGroqKey,
   deleteGroqKey,
-} from '../trading';
+} from '../crypto';
 import {
   hasAppPassword,
   clearAppPassword,
+  getOrCreateUserId,
+  enableBiometrics,
+  disableBiometrics,
+  checkBiometricsAvailable,
+  isBiometricsSupported,
 } from '../auth';
 
 // ═══════════════════════════════════════════════════════════════
@@ -25,6 +30,12 @@ export async function openSettings(): Promise<void> {
   const appPwdOn = hasAppPassword();
   const pwdStatus = appPwdOn ? (en ? 'ON' : 'ВКЛ') : (en ? 'OFF' : 'ВЫКЛ');
   const pwdColor = appPwdOn ? 'var(--mint)' : 'var(--dim)';
+
+  const bioSupported = isBiometricsSupported();
+  const bioAvailable = bioSupported ? await checkBiometricsAvailable() : false;
+  const bioOn = !!localStorage.getItem('nebulaBiometricPwd');
+  const bioStatus = bioOn ? (en ? 'ON' : 'ВКЛ') : (en ? 'OFF' : 'ВЫКЛ');
+  const bioColor = bioOn ? 'var(--mint)' : 'var(--dim)';
 
   const groqKey = await loadGroqKey();
   let groqStatus: string;
@@ -50,6 +61,17 @@ export async function openSettings(): Promise<void> {
         </div>
         <div class="settings-row-status" style="color:${pwdColor}">${pwdStatus}</div>
       </button>
+
+      ${(bioSupported && bioAvailable) ? `
+      <button class="settings-row" onclick="setupBiometrics()">
+        <div class="settings-row-icon">👆</div>
+        <div class="settings-row-body">
+          <div class="settings-row-title">${en ? 'Biometric login' : 'Вход по отпечатку'}</div>
+          <div class="settings-row-hint">${en ? 'FaceID / TouchID' : 'FaceID / Отпечаток'}</div>
+        </div>
+        <div class="settings-row-status" style="color:${bioColor}">${bioStatus}</div>
+      </button>
+      ` : ''}
     </div>
 
     <div class="settings-section">
@@ -76,7 +98,7 @@ export async function openSettings(): Promise<void> {
       </button>
     </div>
 
-        <div class="settings-section">
+    <div class="settings-section">
       <div class="settings-section-title">${en ? '💬 Community' : '💬 Сообщество'}</div>
       
       <button class="settings-row" onclick="openSupportChat()">
@@ -153,6 +175,40 @@ export async function openSettings(): Promise<void> {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// НАСТРОЙКА БИОМЕТРИИ
+// ═══════════════════════════════════════════════════════════════
+
+export async function setupBiometrics(): Promise<void> {
+  const en = isEN();
+  
+  if (!isBiometricsSupported()) {
+    toast(en ? 'Biometrics not supported' : 'Биометрия не поддерживается', 'warn');
+    return;
+  }
+
+  if (!hasAppPassword()) {
+    toast(en ? 'Set app password first' : 'Сначала установите пароль на вход', 'warn');
+    return;
+  }
+
+  if (localStorage.getItem('nebulaBiometricPwd')) {
+    if (confirm(en ? 'Disable biometric login?' : 'Отключить вход по отпечатку?')) {
+      await disableBiometrics();
+      closeSheet();
+      setTimeout(() => openSettings(), 250);
+    }
+    return;
+  }
+
+  const success = await enableBiometrics();
+  if (success) {
+    localStorage.removeItem('nebulaBiometricRejected');
+    closeSheet();
+    setTimeout(() => openSettings(), 250);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Groq API-ключ
 // ═══════════════════════════════════════════════════════════════
 
@@ -203,26 +259,7 @@ export async function saveGroqFromSettings(): Promise<void> {
 
   const saved = await saveGroqKey(key);
   if (!saved) {
-    toast(
-      en ? '❌ Storage error (LS and SS both failed)' : '❌ Ошибка записи (LS и SS недоступны)',
-      'error', 8000
-    );
-    return;
-  }
-
-  const readBack = await loadGroqKey();
-
-  if (!readBack || readBack !== key) {
-    let ls = '';
-    let ss = '';
-    try { ls = (localStorage.getItem('nebulaGroqKey') || '').slice(0, 60); } catch { /* */ }
-    try { ss = (sessionStorage.getItem('nebulaGroqKey') || '').slice(0, 60); } catch { /* */ }
-
-    toast(
-      `❌ Не сохранилось!\nLS="${ls}"\nSS="${ss}"`,
-      'error', 20000
-    );
-    console.error('[saveGroq] verify failed:', { readBack, expected: key, ls, ss });
+    toast(en ? '❌ Error: password required to encrypt keys' : '❌ Ошибка: введите пароль для шифрования', 'error', 5000);
     return;
   }
 
@@ -246,7 +283,6 @@ export function openThemesFromSettings(): void {
   setTimeout(async () => {
     try {
       const m = await import('./themes');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (m as any).openThemeEditor?.();
     } catch (e) {
       console.warn('[settings] openThemeEditor failed:', e);
@@ -280,7 +316,6 @@ export function openDonateFromSettings(): void {
   setTimeout(async () => {
     try {
       const m = await import('./terms');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (m as any).openDonateModal?.();
     } catch (e) {
       console.warn('[settings] openDonateModal failed:', e);
@@ -293,27 +328,21 @@ export function openDonateFromSettings(): void {
 // ═══════════════════════════════════════════════════════════════
 
 export function openSupportChat(): void {
-  // Импортируем userId лениво, чтобы не зависеть от порядка загрузки
-  import('../auth').then(({ getOrCreateUserId }) => {
+  try {
     const userId = getOrCreateUserId();
     const url = `https://t.me/NebulaTerminalBot?start=${userId}`;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
 
     if (w.__TAURI_INTERNALS__) {
-      // Tauri — opener
       import('@tauri-apps/plugin-opener')
         .then((m) => m.openUrl(url))
         .catch(() => window.open(url, '_blank'));
     } else {
-      // Web / Android — обычное открытие
       window.open(url, '_blank');
     }
-  }).catch(() => {
-    // Fallback без userId
+  } catch {
     window.open('https://t.me/NebulaTerminalBot', '_blank');
-  });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -324,22 +353,18 @@ export function toggleAppPassword(): void {
   const en = isEN();
 
   if (hasAppPassword()) {
-    // Отключаем
     if (!confirm(en
-      ? 'Disable app password?\n\nThe app will open without asking for password.'
-      : 'Отключить пароль?\n\nПриложение будет открываться без запроса пароля.')) return;
+      ? 'Disable app password?\n\nWARNING: This will make your API keys unreadable!'
+      : 'Отключить пароль?\n\nВНИМАНИЕ: Это сделает ваши API-ключи нечитаемыми!')) return;
 
     clearAppPassword();
-    toast(en ? 'Password disabled' : 'Пароль отключён', 'success');
+    toast(en ? 'Password disabled. Reload app.' : 'Пароль отключён. Перезагрузите.', 'success');
     closeSheet();
-    setTimeout(() => openSettings(), 250);
+    setTimeout(() => location.reload(), 1000);
   } else {
-    // Включаем — открываем окно создания пароля
     closeSheet();
-    setTimeout(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).openSetPasswordDialog?.();
-    }, 250);
+    toast(en ? 'Reload page to set password' : 'Перезагрузите страницу для установки пароля', 'info', 3000);
+    setTimeout(() => location.reload(), 500);
   }
 }
 
@@ -360,12 +385,7 @@ export function resetAllKeys(): void {
     sessionStorage.removeItem('nebulaGroqKey');
   } catch { /* silent */ }
 
-  toast(
-    en ? 'Keys deleted' : 'Ключи удалены',
-    'success',
-    2000
-  );
-
+  toast(en ? 'Keys deleted' : 'Ключи удалены', 'success', 2000);
   closeSheet();
 }
 
@@ -439,12 +459,7 @@ function injectSettingsStyles(): void {
 // Открытие чатов сообщества
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Универсальная функция для открытия ссылки.
- * В Tauri — через opener, в Web/Android — через window.open.
- */
 function openExternalUrl(url: string): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const w = window as any;
   if (w.__TAURI_INTERNALS__) {
     import('@tauri-apps/plugin-opener')
@@ -456,13 +471,11 @@ function openExternalUrl(url: string): void {
 }
 
 export function openCommunityChat(): void {
-  // ⚠️ ВСТАВЬ СЮДА СВОЮ ССЫЛКУ НА ТОПИК NEBULA Chat
   const url = 'https://t.me/c/4375017338/19'; 
   openExternalUrl(url);
 }
 
 export function openFunChat(): void {
-  // ⚠️ ВСТАВЬ СЮДА СВОЮ ССЫЛКУ НА ТОПИК NEBULA Fun
   const url = 'https://t.me/c/4375017338/24';
   openExternalUrl(url);
 }
@@ -485,6 +498,7 @@ if (typeof window !== 'undefined') {
     openCommunityChat,
     openFunChat,
     toggleAppPassword,
+    setupBiometrics,
     resetAllKeys,
   });
 }

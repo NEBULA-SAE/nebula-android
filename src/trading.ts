@@ -1,13 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · TRADING
-// Ключи + Мастер-пароль + Ордера + TWAP + AI-агент + Портфель
 // ═══════════════════════════════════════════════════════════════
 
 import { tm, isEN } from './i18n';
 import { state, setText, setHTML, esc, toast } from './utils';
-import {
-  encryptJson, decryptJson, isEncryptedToken,
-} from './crypto';
+import { encryptJson, decryptJson, isEncryptedToken } from './crypto'; // Убрали Groq отсюда
+import { getAuthPassword } from './auth';
 import type { MexcKeys, PlanStep } from './sources/mexc';
 import {
   executeExchangeOrders, getOpenOrders,
@@ -18,144 +16,42 @@ import {
 import { getCurrentRate } from './market';
 import { parseTradeIntent } from './ai';
 
-// ─── КЛЮЧИ ───
-
 const CONFIG_STORAGE = 'nebulaConfig';
-const GROQ_STORAGE = 'nebulaGroqKey';
-const PWD_SKIP_KEY = 'nebulaPwdSkipForever';
-
-/**
- * Мастер-пароль для шифрования/дешифровки vault.
- * Хранится:
- *  - в памяти (модуль) — приоритет
- *  - в sessionStorage — для выживания перезагрузки страницы (в Tauri — до закрытия приложения)
- * НЕ хранится в localStorage — это небезопасно.
- */
-let _sessionPassword: string | null = (() => {
-  try {
-    return sessionStorage.getItem('nebulaPwdSession') || null;
-  } catch {
-    return null;
-  }
-})();
-
-/** Внутреннее — сохранить пароль в память + sessionStorage */
-function _setSessionPassword(pwd: string | null): void {
-  _sessionPassword = pwd;
-  try {
-    if (pwd) sessionStorage.setItem('nebulaPwdSession', pwd);
-    else sessionStorage.removeItem('nebulaPwdSession');
-  } catch { /* silent */ }
-}
-
-// ─── Мастер-пароль ───
-
-export function keysHasPassword(): boolean {
-  return _sessionPassword !== null;
-}
-
-export async function keysStatus(): Promise<{
-  config_encrypted: boolean;
-  groq_encrypted: boolean;
-  unlocked: boolean;
-  locked: boolean;
-  has_keys: boolean;
-}> {
-  const configRaw = localStorage.getItem(CONFIG_STORAGE) || '';
-  const groqRaw = localStorage.getItem(GROQ_STORAGE) || '';
-
-  // ⚠️ Упрощённый режим: ключи НЕ шифруются (plaintext в localStorage).
-  // Мастер-пароль больше не блокирует работу с ключами.
-  return {
-    config_encrypted: false,
-    groq_encrypted: false,
-    unlocked: true,
-    locked: false,
-    has_keys: !!configRaw || !!groqRaw,
-  };
-}
-
-/** Принудительная разблокировка через модалку пароля (для внешних вызовов) */
-export function requireUnlock(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (_sessionPassword !== null) { resolve(true); return; }
-
-    _mpMode = 'unlock';
-    _mpSessionSkipped = false;
-
-    const onUnlock = () => {
-      window.removeEventListener('nebula:unlocked', onUnlock);
-      window.removeEventListener('nebula:unlock-cancelled', onCancel);
-      resolve(true);
-    };
-    const onCancel = () => {
-      window.removeEventListener('nebula:unlocked', onUnlock);
-      window.removeEventListener('nebula:unlock-cancelled', onCancel);
-      resolve(false);
-    };
-    window.addEventListener('nebula:unlocked', onUnlock);
-    window.addEventListener('nebula:unlock-cancelled', onCancel);
-
-    showMasterPwdModal();
-  });
-}
-
-export async function keysSetMasterPassword(password: string): Promise<{ status: 'ok' | 'error'; message: string }> {
-  if (!password || password.length < 6) {
-    return { status: 'error', message: 'Пароль должен быть минимум 6 символов' };
-  }
-
-  // ⚠️ В упрощённом режиме пароль только запоминается в сессии,
-  // но НЕ используется для шифрования ключей.
-  // Ключи хранятся в plaintext.
-  _setSessionPassword(password);
-  return { status: 'ok', message: 'Пароль сохранён в сессии (ключи не шифруются)' };
-}
-
-export async function keysUnlock(password: string): Promise<{ status: 'ok' | 'error'; message: string }> {
-  if (!password) return { status: 'error', message: 'Пустой пароль' };
-
-  // ⚠️ В упрощённом режиме пароль просто запоминается, ничего не расшифровывает.
-  _setSessionPassword(password);
-  return { status: 'ok', message: 'Сессия открыта' };
-}
-
-export function keysLock(): boolean {
-  _setSessionPassword(null);
-  return true;
-}
-
-// ─── Внутреннее чтение/запись конфига ───
 
 async function readConfig(): Promise<Record<string, { api: string; secret: string }>> {
   const raw = localStorage.getItem(CONFIG_STORAGE) || '';
   if (!raw) return {};
+  
+  const pass = getAuthPassword();
+  if (!pass) return {};
 
-  // Если в хранилище лежит старый зашифрованный конфиг — сбрасываем его
-  if (isEncryptedToken(raw)) {
-    try { localStorage.removeItem(CONFIG_STORAGE); } catch { /* silent */ }
+  try {
+    if (isEncryptedToken(raw)) {
+      return await decryptJson(raw, pass);
+    }
+    return JSON.parse(raw);
+  } catch (e) {
     return {};
   }
-
-  try { return JSON.parse(raw); } catch { return {}; }
 }
 
 async function writeConfig(data: Record<string, any>): Promise<boolean> {
+  const pass = getAuthPassword();
+  if (!pass) return false;
+
   try {
-    localStorage.setItem(CONFIG_STORAGE, JSON.stringify(data));
+    const encrypted = await encryptJson(data, pass);
+    localStorage.setItem(CONFIG_STORAGE, encrypted);
     return true;
   } catch (e) {
-    console.warn('[trading] writeConfig:', e);
     return false;
   }
 }
 
-// ─── Публичное API ключей ───
-
 export async function saveKeys(exchange: string, api: string, secret: string): Promise<boolean> {
   const data = await readConfig();
   data[exchange] = { api, secret };
-  return writeConfig(data);
+  return await writeConfig(data);
 }
 
 export async function loadKeys(exchange: string): Promise<{ api: string; secret: string }> {
@@ -166,223 +62,7 @@ export async function loadKeys(exchange: string): Promise<{ api: string; secret:
 export async function deleteKeys(exchange: string): Promise<boolean> {
   const data = await readConfig();
   delete data[exchange];
-  return writeConfig(data);
-}
-
-// ─── Groq Key ───
-// Groq-ключ НЕ шифруется. Сохраняется в plaintext и в localStorage, и в sessionStorage.
-// Это НЕ ключ от биржи — он безопасен, зато работает надёжно.
-
-export async function saveGroqKey(key: string): Promise<boolean> {
-  const payload = JSON.stringify({ key });
-  let saved = false;
-
-  try {
-    localStorage.setItem(GROQ_STORAGE, payload);
-    saved = true;
-    console.log('[saveGroq] localStorage: OK');
-  } catch (e) {
-    console.warn('[saveGroq] localStorage FAILED:', e);
-  }
-
-  try {
-    sessionStorage.setItem(GROQ_STORAGE, payload);
-    saved = true;
-    console.log('[saveGroq] sessionStorage: OK');
-  } catch (e) {
-    console.warn('[saveGroq] sessionStorage FAILED:', e);
-  }
-
-  return saved;
-}
-
-export async function loadGroqKey(): Promise<string> {
-  // Пробуем sessionStorage → localStorage
-  for (const get of [
-    () => sessionStorage.getItem(GROQ_STORAGE),
-    () => localStorage.getItem(GROQ_STORAGE),
-  ]) {
-    try {
-      const raw = get();
-      if (!raw) continue;
-
-      // Обратная совместимость: если старый зашифрованный формат
-      if (isEncryptedToken(raw)) {
-        if (!_sessionPassword) continue;
-        try {
-          const d = await decryptJson(raw, _sessionPassword);
-          if (d?.key) return d.key;
-        } catch { continue; }
-      } else {
-        const d = JSON.parse(raw);
-        if (d && typeof d.key === 'string' && d.key) return d.key;
-      }
-    } catch { /* silent */ }
-  }
-  return '';
-}
-
-export function deleteGroqKey(): boolean {
-  let ok = false;
-  try { localStorage.removeItem(GROQ_STORAGE); ok = true; } catch { /* silent */ }
-  try { sessionStorage.removeItem(GROQ_STORAGE); ok = true; } catch { /* silent */ }
-  return ok;
-}
-
-// ─── МАСТЕР-ПАРОЛЬ UI ───
-
-let _mpMode: 'unlock' | 'setup' = 'unlock';
-let _mpSessionSkipped = false;
-
-export async function checkMasterPassword(): Promise<void> {
-  try {
-    const st = await keysStatus();
-    console.log('[pwd] keys_status:', st);
-
-    if (st.unlocked) return;
-    if (_mpSessionSkipped) return;
-
-    const overlay = document.getElementById('master-pwd-overlay');
-    if (!overlay) return;
-
-    if (st.config_encrypted || st.groq_encrypted) {
-      _mpMode = 'unlock';
-      showMasterPwdModal();
-    } else {
-      const forever = localStorage.getItem(PWD_SKIP_KEY) === '1';
-      if (forever) return;
-      _mpMode = 'setup';
-      showMasterPwdModal();
-    }
-  } catch (e) {
-    console.warn('[pwd] checkMasterPassword failed', e);
-  }
-}
-
-export function showMasterPwdModal(): void {
-  const overlay = document.getElementById('master-pwd-overlay');
-  if (!overlay) return;
-
-  const title = document.getElementById('mp-title');
-  const desc = document.getElementById('mp-desc');
-  const lbl = document.getElementById('mp-lbl');
-  const lbl2 = document.getElementById('mp-lbl2');
-  const skip = document.getElementById('mp-skip');
-  const confirmRow = document.getElementById('mp-confirm-row');
-  const inp = document.getElementById('mp-input') as HTMLInputElement | null;
-  const inp2 = document.getElementById('mp-input2') as HTMLInputElement | null;
-  const err = document.getElementById('mp-error');
-
-  if (inp) inp.value = '';
-  if (inp2) inp2.value = '';
-  if (err) { err.style.display = 'none'; err.innerHTML = ''; }
-
-  if (_mpMode === 'setup') {
-    if (title) title.textContent = isEN() ? '🔐 Set master password' : '🔐 Установить мастер-пароль';
-    if (desc) desc.textContent = isEN()
-      ? 'Set a master password to encrypt API keys. Password is stored only in memory until app closes.'
-      : 'Установи мастер-пароль для шифрования API-ключей. Пароль хранится только в памяти до закрытия приложения.';
-    if (lbl) lbl.textContent = isEN() ? 'Password' : 'Пароль';
-    if (lbl2) lbl2.textContent = isEN() ? 'Repeat password' : 'Повторите пароль';
-    if (confirmRow) confirmRow.style.display = '';
-  } else {
-    if (title) title.textContent = isEN() ? '🔐 Unlock' : '🔐 Разблокировать';
-    if (desc) desc.textContent = isEN()
-      ? 'Enter master password to decrypt API keys.'
-      : 'Введи мастер-пароль для расшифровки API-ключей.';
-    if (lbl) lbl.textContent = isEN() ? 'Password' : 'Пароль';
-    if (confirmRow) confirmRow.style.display = 'none';
-  }
-  if (skip) skip.style.display = '';
-
-  overlay.classList.add('open');
-  setTimeout(() => inp?.focus(), 200);
-}
-
-export function hideMasterPwd(skipForever = false): void {
-  const overlay = document.getElementById('master-pwd-overlay');
-  if (overlay) overlay.classList.remove('open');
-  _mpSessionSkipped = true;
-  if (skipForever) {
-    try { localStorage.setItem(PWD_SKIP_KEY, '1'); } catch { /* silent */ }
-  }
-  window.dispatchEvent(new CustomEvent('nebula:unlock-cancelled'));
-}
-
-export function resetPwdSkipFlag(): void {
-  try { localStorage.removeItem(PWD_SKIP_KEY); } catch { /* silent */ }
-  _mpSessionSkipped = false;
-}
-
-export function openPwdFromAbout(): void {
-  _mpSessionSkipped = false;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).hideAbout?.();
-  _mpMode = 'setup';
-  showMasterPwdModal();
-}
-
-export async function masterPwdSubmit(): Promise<void> {
-  const inp = document.getElementById('mp-input') as HTMLInputElement | null;
-  const inp2 = document.getElementById('mp-input2') as HTMLInputElement | null;
-  const err = document.getElementById('mp-error');
-  const btn = document.getElementById('mp-submit') as HTMLButtonElement | null;
-
-  const pwd = (inp?.value || '').trim();
-  if (pwd.length < 6) {
-    if (err) {
-      err.style.display = 'block';
-      err.innerHTML = `<span style="color:var(--coral)">${isEN() ? 'Min 6 characters' : 'Минимум 6 символов'}</span>`;
-    }
-    return;
-  }
-
-  if (_mpMode === 'setup') {
-    const pwd2 = (inp2?.value || '').trim();
-    if (pwd !== pwd2) {
-      if (err) {
-        err.style.display = 'block';
-        err.innerHTML = `<span style="color:var(--coral)">${isEN() ? 'Passwords do not match' : 'Пароли не совпадают'}</span>`;
-      }
-      return;
-    }
-  }
-
-  if (btn) btn.disabled = true;
-  if (err) { err.style.display = 'none'; err.innerHTML = ''; }
-
-  try {
-    const res = _mpMode === 'setup'
-      ? await keysSetMasterPassword(pwd)
-      : await keysUnlock(pwd);
-
-    if (btn) btn.disabled = false;
-
-    if (res.status === 'ok') {
-      toast(
-        _mpMode === 'setup'
-          ? (isEN() ? 'Config encrypted' : 'Конфиг зашифрован')
-          : (isEN() ? 'Unlocked' : 'Разблокировано'),
-        'success'
-      );
-      const overlay = document.getElementById('master-pwd-overlay');
-      if (overlay) overlay.classList.remove('open');
-      _mpSessionSkipped = false;
-
-      window.dispatchEvent(new CustomEvent('nebula:unlocked'));
-    } else {
-      if (err) {
-        err.style.display = 'block';
-        err.innerHTML = `<span style="color:var(--coral)">${esc(res.message)}</span>`;
-      }
-    }
-  } catch (e: any) {
-    if (btn) btn.disabled = false;
-    if (err) {
-      err.style.display = 'block';
-      err.innerHTML = `<span style="color:var(--coral)">${esc(e.message)}</span>`;
-    }
-  }
+  return await writeConfig(data);
 }
 
 // ─── UI · AI-карточка ───
@@ -399,11 +79,6 @@ export function switchAiMode(mode: 'insight' | 'agent'): void {
 
 export async function openOrdersSheet(): Promise<void> {
   const en = isEN();
-  const st = await keysStatus();
-  if (st.locked) {
-    const ok = await requireUnlock();
-    if (!ok) return;
-  }
 
   const html = `
     <div class="order-tabs">
@@ -492,7 +167,6 @@ export async function openOrdersSheet(): Promise<void> {
       </button>
       <div class="calc-result" id="twap-result" style="display:none;margin-top:10px"></div>
     </div>`;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).openSheet?.(tm('orders'), html);
   mobileLoadKeys();
 }
@@ -535,9 +209,7 @@ export async function mobileSaveKeys(showToast = false): Promise<void> {
 
   if (showToast) {
     toast(
-      ok
-        ? (isEN() ? '✅ Keys saved' : '✅ Ключи сохранены')
-        : (isEN() ? '❌ Save failed' : '❌ Ошибка сохранения'),
+      ok ? (isEN() ? '✅ Keys saved' : '✅ Ключи сохранены') : (isEN() ? '❌ Save failed' : '❌ Ошибка сохранения'),
       ok ? 'success' : 'error'
     );
   }
@@ -545,9 +217,7 @@ export async function mobileSaveKeys(showToast = false): Promise<void> {
 
 export async function mobileDeleteKeys(): Promise<void> {
   const en = isEN();
-  if (!confirm(en
-    ? 'Delete saved API keys for this exchange?'
-    : 'Удалить сохранённые API-ключи для этой биржи?')) return;
+  if (!confirm(en ? 'Delete saved API keys for this exchange?' : 'Удалить сохранённые API-ключи для этой биржи?')) return;
 
   await deleteKeys(state.currentExchange);
 
@@ -556,14 +226,8 @@ export async function mobileDeleteKeys(): Promise<void> {
   if (apiEl) apiEl.value = '';
   if (secEl) secEl.value = '';
 
-  toast(
-    en ? '✅ Keys deleted' : '✅ Ключи удалены',
-    'success',
-    1800
-  );
+  toast(en ? '✅ Keys deleted' : '✅ Ключи удалены', 'success', 1800);
 }
-
-// ─── Автосохранение ключей (debounce 600ms) ───
 
 let _autoSaveTimer: number | null = null;
 
@@ -577,8 +241,6 @@ export function scheduleAutoSaveKeys(): void {
     void mobileSaveKeys(false);
   }, 600);
 }
-
-// ─── CALC STRATEGY (локальный расчёт) ───
 
 export async function calculateStrategy(
   rubAmount: number,
@@ -672,8 +334,6 @@ export async function mobileCalcGrid(): Promise<void> {
   }
 }
 
-// ─── Execute / Sync Orders ───
-
 async function getKeys(): Promise<MexcKeys | null> {
   const keys = await loadKeys(state.currentExchange);
   if (!keys.api || !keys.secret) {
@@ -733,8 +393,6 @@ export async function mobileSyncOrders(): Promise<void> {
     box.innerHTML = `<span style="color:var(--coral)">❌ ${res.message}</span>`;
   }
 }
-
-// ─── МОНИТОРИНГ ───
 
 export function startMonitoring(silent = false): void {
   if (state.trackingSymbol && state.currentPlan && state.currentPlan.length) {
@@ -806,9 +464,7 @@ export function startMonitoring(silent = false): void {
   }
 
   if (!silent) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).closeSheet?.();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).switchTab?.('home');
     setTimeout(() => {
       panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -825,19 +481,7 @@ export function stopMonitoring(): void {
   toast(isEN() ? 'Monitoring stopped' : 'Мониторинг остановлен', 'info', 1500);
 }
 
-// ─── ПОРТФЕЛЬ ───
-
 export async function mobileSyncPortfolio(silent = false): Promise<void> {
-  const st = await keysStatus();
-  if (st.locked) {
-    if (!silent) {
-      const ok = await requireUnlock();
-      if (!ok) return;
-    } else {
-      return;
-    }
-  }
-
   const status = document.getElementById('port-rate');
   if (!silent && status) status.textContent = isEN() ? 'connecting...' : 'связь с биржей...';
 
@@ -878,15 +522,7 @@ export async function mobileSyncPortfolio(silent = false): Promise<void> {
   if (!silent) toast(isEN() ? 'Synced' : 'Синхронизировано', 'success', 1500);
 }
 
-// ─── AI-АГЕНТ ───
-
 export async function mobileAiCommand(): Promise<void> {
-  const st = await keysStatus();
-  if (st.locked) {
-    const ok = await requireUnlock();
-    if (!ok) return;
-  }
-
   const inputEl = document.getElementById('ai-cmd-input') as HTMLTextAreaElement | null;
   const depositEl = document.getElementById('ai-deposit') as HTMLInputElement | null;
   const resultEl = document.getElementById('ai-cmd-result');
@@ -963,8 +599,6 @@ export async function mobileAiCommand(): Promise<void> {
     resultEl.innerHTML = `<span style="color:var(--coral)">❌ ${esc(e.message)}</span>`;
   }
 }
-
-// ─── TWAP ───
 
 interface TwapTask {
   status: 'running' | 'completed' | 'failed';
@@ -1136,9 +770,6 @@ function startTwapPolling(taskId: string, totalSlices: number): void {
   }, 3000);
 }
 
-// ─── Экспорт в window ───
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     switchAiMode,
@@ -1157,20 +788,5 @@ if (typeof window !== 'undefined') {
     mobileTwapStart,
     startMonitoring,
     stopMonitoring,
-    checkMasterPassword,
-    showMasterPwdModal,
-    hideMasterPwd,
-    resetPwdSkipFlag,
-    openPwdFromAbout,
-    masterPwdSubmit,
-    keysLock,
-    keysHasPassword,
-    keysStatus,
-    keysSetMasterPassword,
-    keysUnlock,
-    requireUnlock,
-    saveGroqKey,
-    loadGroqKey,
-    deleteGroqKey,
   });
 }

@@ -54,10 +54,11 @@ export async function mobileAnalyze(): Promise<void> {
 
   try {
     // ── Параллельный старт: candles + futures + extras ──
-    const [candlesResult, futuresMetrics] = await Promise.all([
-      fetchCandlesWithSource(raw, 120),
-      getWhaleFuturesMetrics(raw).catch(() => null),
-    ]);
+    const tf = ((state as any).currentTimeframe || '1d') as import('../sources/candles').Timeframe;
+const [candlesResult, futuresMetrics] = await Promise.all([
+  fetchCandlesWithSource(raw, tf),
+  getWhaleFuturesMetrics(raw).catch(() => null),
+]);
     // fetchExtras — параллельно, не блокирует рендер
     const extrasPromise = fetchExtras(raw);
 
@@ -70,7 +71,10 @@ export async function mobileAnalyze(): Promise<void> {
     const max120 = Math.max(...highs);
     const price = closes[closes.length - 1];
 
-    const rsiVal = await wCall('rsi', { closes });
+    const rsiVal = await Promise.race([
+  wCall('rsi', { closes }),
+  new Promise<number>((_, rej) => setTimeout(() => rej(new Error('rsi timeout')), 5000)),
+]).catch(() => 50);
     const rebound = ((price - min120) / min120) * 100;
     const drop = ((max120 - price) / max120) * 100;
 
@@ -445,8 +449,8 @@ export function openAISettings(): void {
 
   (window as any).openSheet?.(tm('ai_settings'), html);
 
-  // Подгружаем существующий ключ асинхронно
-  import('../trading').then(async (m) => {
+  // ИЗМЕНЕНО ТУТ: trading -> crypto
+  import('../crypto').then(async (m) => {
     const key = await m.loadGroqKey();
     const inp = document.getElementById('groq-key-input') as HTMLInputElement | null;
     if (inp) inp.value = key || '';
@@ -458,7 +462,8 @@ export function saveGroqKeyFromModal(): void {
   const key = (inp?.value || '').trim();
   if (!key) return;
 
-  import('../trading').then(async (m) => {
+  // ИЗМЕНЕНО ТУТ: trading -> crypto
+  import('../crypto').then(async (m) => {
     await m.saveGroqKey(key);
     toast(tm('ai_key_saved'), 'success');
     (window as any).closeSheet?.();
@@ -466,7 +471,8 @@ export function saveGroqKeyFromModal(): void {
 }
 
 export function deleteGroqKeyFromModal(): void {
-  import('../trading').then((m) => {
+  // ИЗМЕНЕНО ТУТ: trading -> crypto
+  import('../crypto').then((m) => {
     m.deleteGroqKey();
     toast(tm('ai_key_deleted'), 'info');
     (window as any).closeSheet?.();

@@ -4,7 +4,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { toast } from '../utils';
-import { keysStatus, checkMasterPassword } from '../trading';
 
 const TERMS_KEY = 'nebula_terms_accepted_v1';
 
@@ -22,28 +21,11 @@ export function acceptTerms(): void {
   if (ov) ov.classList.remove('open');
 
   toast('Спасибо! Приятной работы 🚀', 'success', 2000);
-
-  setTimeout(() => {
-    try { checkMasterPassword(); } catch { /* silent */ }
-  }, 400);
 }
 
 export function showAbout(): void {
   const ov = document.getElementById('about-overlay');
   if (ov) ov.classList.add('open');
-
-  (async () => {
-    try {
-      const st = await keysStatus();
-      const el = document.getElementById('about-pwd-status');
-      if (!el) return;
-      let txt = '';
-      if (st.unlocked) txt = '✅ открыт в сессии';
-      else if (st.config_encrypted || st.groq_encrypted) txt = '🔒 зашифрован, требуется unlock';
-      else txt = '⚠️ НЕ зашифрован — установи пароль';
-      el.textContent = 'статус: ' + txt;
-    } catch { /* silent */ }
-  })();
 }
 
 export function hideAbout(): void {
@@ -76,7 +58,6 @@ export function copyDonate(): void {
 export function openDonateModal(): void {
   const addr = DONATE_ADDRESSES.usdt;
   // QR через публичный API (без установки библиотек)
-  // Используем qrserver.com — работает без ключей
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(addr)}&bgcolor=0a0f1f&color=5ecbff&margin=8`;
 
   const html = `
@@ -121,8 +102,6 @@ export function openDonateModal(): void {
     </div>
   `;
 
-  // Закрываем About, даём браузеру отрисовать закрытие,
-  // потом открываем Sheet — так он гарантированно окажется сверху
   hideAbout();
 
   setTimeout(() => {
@@ -144,8 +123,6 @@ function checkTerms(): void {
 
   if (accepted !== '1') {
     showTerms();
-  } else {
-    try { checkMasterPassword(); } catch { /* silent */ }
   }
 }
 
@@ -153,9 +130,9 @@ function checkTerms(): void {
 
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(checkTerms, 4500), { once: true });
+    document.addEventListener('DOMContentLoaded', () => setTimeout(checkTerms, 2000), { once: true });
   } else {
-    setTimeout(checkTerms, 4500);
+    setTimeout(checkTerms, 2000);
   }
 }
 

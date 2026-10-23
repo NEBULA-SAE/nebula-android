@@ -110,3 +110,4 @@
 
   window.addEventListener('scroll', hideTip, { passive: true, capture: true });
 })();
+export {};

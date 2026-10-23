@@ -1,19 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · DASH NETWORK (SOURCES)
-// GetBlock shared token (рабочий) + DashCentral + Blockchair + Bybit
+// Публичный Allnodes RPC + DashCentral + Blockchair + Bybit
 // ═══════════════════════════════════════════════════════════════
 
 const IS_DEV = (import.meta as any).env?.DEV;
 
-// Твой gb_ ключ — оставлен на будущее
-const GB_KEY = 'gb_46dd4fa247fe75091137ab1ffb5713bc3a28f9b4ae2f91fd4f314c991dd7575f';
-
-// Прокси-пути (dev) / прямые URL (prod)
-const GETBLOCK_BASE = IS_DEV ? '/proxy/gb-shared' : 'https://shared.eu-central-1.getblock.io';
-const GETBLOCK_URL = `${GETBLOCK_BASE}/2b1115df73384c3ca7a0839c9a1869d9/`;
-
-// Публичный Dash RPC от Allnodes — без ключа, работает всегда
-const ALLNODES_URL = 'https://dash-rpc.publicnode.com';
+// Используем публичный бесплатный узел, чтобы не хранить ключи в коде
+const PUBLIC_RPC = 'https://dash-rpc.publicnode.com';
 
 const DASHCENTRAL = IS_DEV ? '/proxy/dashcentral' : 'https://www.dashcentral.org';
 const BLOCKCHAIR  = IS_DEV ? '/proxy/blockchair'  : 'https://api.blockchair.com';
@@ -38,46 +31,39 @@ export interface DashNetworkStats {
   } | null;
 }
 
-// ─── JSON-RPC к GetBlock ───
+// ─── JSON-RPC ───
 
-async function getblockRpc(method: string, params: any[] = []): Promise<any> {
-  // Пробуем сначала GetBlock shared, потом Allnodes
-  const endpoints = [GETBLOCK_URL, ALLNODES_URL];
+async function publicRpc(method: string, params: any[] = []): Promise<any> {
+  try {
+    const r = await fetch(PUBLIC_RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method, params, id: 'nebula' }),
+      signal: AbortSignal.timeout(8000),
+    });
 
-  let lastErr = '';
-  for (const url of endpoints) {
-    try {
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', method, params, id: 'nebula' }),
-        signal: AbortSignal.timeout(8000),
-      });
+    const raw = await r.text();
+    if (raw.trim().startsWith('<')) throw new Error('HTML response');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
-      const raw = await r.text();
-      if (raw.trim().startsWith('<')) { lastErr = `${url}: HTML`; continue; }
-      if (!r.ok) { lastErr = `${url}: HTTP ${r.status}`; continue; }
-
-      const data = JSON.parse(raw);
-      if (data.error) { lastErr = `${url}: ${data.error.message || 'rpc'}`; continue; }
-      return data.result;
-    } catch (e: any) {
-      lastErr = `${url}: ${e.message}`;
-    }
+    const data = JSON.parse(raw);
+    if (data.error) throw new Error(data.error.message || 'rpc error');
+    return data.result;
+  } catch (e: any) {
+    throw new Error(`RPC failed: ${e.message}`);
   }
-  throw new Error(lastErr);
 }
 
 // ─── Мастерноды ───
 
 async function getMasternodes() {
   try {
-    const result = await getblockRpc('masternode', ['count']);
+    const result = await publicRpc('masternode', ['count']);
     const enabled = parseInt(result?.enabled ?? 0);
     const total = parseInt(result?.total ?? 0);
-    if (total > 0) return { enabled, total, source: 'getblock' };
+    if (total > 0) return { enabled, total, source: 'allnodes' };
   } catch (e: any) {
-    console.warn('[dash] getblock MN:', e.message);
+    console.warn('[dash] allnodes MN:', e.message);
   }
   try {
     const r = await fetch(`${DASHCENTRAL}/api/v1/public`, { signal: AbortSignal.timeout(10000) });
@@ -102,18 +88,18 @@ async function getMasternodes() {
 
 async function getMining() {
   try {
-    const result = await getblockRpc('getmininginfo');
+    const result = await publicRpc('getmininginfo');
     const hashrate = parseFloat(result?.networkhashps ?? 0);
     const difficulty = parseFloat(result?.difficulty ?? 0);
     if (hashrate > 0) {
       return {
         hashrate_ph: Math.round(hashrate / 1e15 * 100) / 100,
         difficulty: Math.round(difficulty),
-        source: 'getblock',
+        source: 'allnodes',
       };
     }
   } catch (e: any) {
-    console.warn('[dash] getblock mining:', e.message);
+    console.warn('[dash] allnodes mining:', e.message);
   }
   try {
     const r = await fetch(`${BLOCKCHAIR}/dash/stats`, { signal: AbortSignal.timeout(6000) });

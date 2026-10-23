@@ -3,14 +3,17 @@
 // Точка входа UI
 // ═══════════════════════════════════════════════════════════════
 
-import { toast, isEN } from '../utils';
+import { toast, isEN, state } from '../utils';
 import { setLang } from '../i18n';
 
 // ─── Реальные модули ───
 import { applyStaticTranslations, loadBTC } from './screens';
 import { initAutocomplete, renderFavorites, updateStarButton } from './scanner';
-import { requireAppPassword } from '../auth';
 import { runFullDiagnostics } from './diagnostics';
+
+// ─── Список валидных таймфреймов (дублируем из candles.ts) ───
+const VALID_TFS = ['1m', '15m', '1h', '1d', '1w', '1M', 'max'] as const;
+type TF = typeof VALID_TFS[number];
 
 // ═══════════════════════════════════════════════════════════════
 // ГЛАВНАЯ ИНИЦИАЛИЗАЦИЯ
@@ -19,10 +22,19 @@ import { runFullDiagnostics } from './diagnostics';
 export function initApp(): void {
   console.log('[init] NEBULA v2 стартует...');
 
-  // ─── 0. Пароль на вход (блокирует UI до ввода) ───
-  requireAppPassword().then((ok) => {
-    if (ok) console.log('[init] app unlocked');
-  }).catch((e) => console.warn('[init] app lock error:', e));
+  // ─── 0. Восстанавливаем сохранённый таймфрейм ДО первого анализа ───
+  //        (иначе первый mobileAnalyze стартует с дефолтным '1d',
+  //        а initTimeframeBar через 300мс подсветит другую кнопку)
+  try {
+    const savedTf = localStorage.getItem('nebulaTimeframe') as TF | null;
+    if (savedTf && (VALID_TFS as readonly string[]).includes(savedTf)) {
+      (state as any).currentTimeframe = savedTf;
+    } else {
+      (state as any).currentTimeframe = '1d';
+    }
+  } catch {
+    (state as any).currentTimeframe = '1d';
+  }
 
   // ─── 1. Язык ───
   const lang = (localStorage.getItem('nebulaLang') as 'ru' | 'en') || 'ru';
@@ -78,27 +90,7 @@ export function initApp(): void {
     });
   }
 
-  // ─── 9. Enter в поле пароля на вход ───
-  const alInput = document.getElementById('al-input');
-  if (alInput) {
-    alInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).appLockSubmit?.();
-      }
-    });
-  }
-  const alInput2 = document.getElementById('al-input2');
-  if (alInput2) {
-    alInput2.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).appLockSubmit?.();
-      }
-    });
-  }
-
-  // ─── 10. Восстановление мониторинга из localStorage ───
+  // ─── 9. Восстановление мониторинга из localStorage ───
   setTimeout(() => {
     try {
       const saved = localStorage.getItem('nebulaMonitor');
@@ -121,7 +113,7 @@ export function initApp(): void {
     } catch { /* silent */ }
   }, 2500);
 
-  // ─── 11. Автодиагностика — раз в сутки ───
+  // ─── 10. Автодиагностика — раз в сутки ───
   setTimeout(async () => {
     try {
       const lastRun = parseInt(localStorage.getItem('nebulaDiagnosticsLastRun') || '0', 10);
@@ -147,9 +139,7 @@ export function initApp(): void {
     }
   }, 8000);
 
-  console.log('[init] NEBULA v2 готов ✓');
-
-  // ─── 12. Загрузка и применение темы ───
+  // ─── 11. Загрузка и применение темы ───
   setTimeout(async () => {
     try {
       const themesMod = await import('../themes');
@@ -163,6 +153,34 @@ export function initApp(): void {
       console.warn('[init] themes failed:', e);
     }
   }, 200);
+
+  // ─── 12. Панель таймфреймов графика ───
+  //        DOM #tf-bar уже есть (см. index.html),
+  //        сохранённый tf уже применён в пункте 0 — здесь только рисуем UI.
+  setTimeout(async () => {
+    try {
+      const m = await import('./timeframes');
+      if (!document.getElementById('tf-bar')) {
+        console.warn('[init] #tf-bar не найден в HTML — панель не будет построена');
+        return;
+      }
+      m.initTimeframeBar();
+    } catch (e) {
+      console.warn('[init] timeframes failed:', e);
+    }
+  }, 300);
+
+  // ─── 13. Pull-to-refresh (свайп вниз для обновления экрана) ───
+  setTimeout(async () => {
+    try {
+      const m = await import('./pull-refresh');
+      m.initPullToRefresh();
+    } catch (e) {
+      console.warn('[init] pull-refresh failed:', e);
+    }
+  }, 400);
+
+  console.log('[init] NEBULA v2 готов ✓');
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · AI
-// Точный порт из python/ai.py
 // Groq AI Mentor + Trade Intent Parser
 // ═══════════════════════════════════════════════════════════════
 
-import { loadGroqKey } from './trading';
+import { loadGroqKey } from './crypto'; // <--- ИЗМЕНЕНО ЗДЕСЬ
 import { getWhaleFuturesMetrics } from './sources/whale-futures';
 import { matchPatterns } from './patterns';
+import { esc } from './utils';
 
 // ═══════════════════════════════════════════════════════════════
 // СИСТЕМНЫЙ ПРОМПТ
@@ -238,7 +238,12 @@ ${patternsText}
 
     if (r.status === 200) {
       const data = await r.json();
-      const advice = data.choices?.[0]?.message?.content || '';
+      let advice = data.choices?.[0]?.message?.content || '';
+      
+      // 🛡️ ЗАЩИТА ОТ XSS: Экранируем весь ответ. 
+      // Символы ** останутся, их потом красиво заменит UI.
+      advice = esc(advice);
+
       return { status: 'success', advice };
     } else {
       let err = r.statusText;

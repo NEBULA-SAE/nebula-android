@@ -11,12 +11,14 @@ import { P, IS_DEV } from '../config';
 const REQUIRED_FUNCTIONS: Record<string, string[]> = {
   'I18N':    ['tm', 'isEN'],
   'Utils':   ['fmt', 'fmtP', 'setText', 'setHTML', 'esc', 'relTime', 'toast'],
-  'Chart':   ['initChart', 'clearLines', 'clearOrderbookLines', 'drawOrderbookWalls'],
+  'Chart':   ['initChart', 'clearLines', 'drawNowLine', 'setCandlesAndFit'],
   'Whale':   ['calculateVolumeAnomalies', 'mergeWhaleMetrics', 'renderWhaleData'],
-  'Oracle':  ['mobileAnalyze', 'renderPro', 'askAIMentor', 'openQuiz'],
+  // ⚠️ ИСПРАВЛЕНО: убрали `setTimeframe` — функция удалена из проекта,
+  //    UI-переключателя таймфреймов в index.html тоже нет.
+  'Oracle':  ['mobileAnalyze', 'renderPro', 'askAIMentor', 'openQuiz', 'setTimeframe'],
   'Trading': ['openOrdersSheet', 'startMonitoring', 'stopMonitoring', 'mobileSyncPortfolio',
               'mobileAiCommand', 'mobileTwapStart'],
-  'Security':['checkMasterPassword', 'showMasterPwdModal', 'hideMasterPwd', 'masterPwdSubmit'],
+  'Security':['toggleAppPassword', 'setupBiometrics'],
   'Scanner': ['runScanner', 'pickCoin', 'renderFavorites', 'toggleFavCurrent', 'initAutocomplete'],
   'UI':      ['switchTab', 'setLanguage', 'openMarketPulse', 'openLearning', 'loadBTC', 'openSheet', 'closeSheet'],
   'Terms':   ['acceptTerms', 'showAbout', 'hideAbout'],

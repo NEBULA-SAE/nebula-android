@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
   },
   server: {
-    androidScheme: 'https',
+    androidScheme: 'https', // ОБЯЗАТЕЛЬНО для работы Web Crypto
   },
   plugins: {
     CapacitorHttp: {

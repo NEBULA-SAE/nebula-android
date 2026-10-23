@@ -45,6 +45,9 @@ export const state = {
   lastAdv: null as any,
   currentTicker: 'DASH',
 
+  // Таймфрейм графика (меняется через setTimeframe в ui/timeframes.ts)
+  currentTimeframe: '1d' as '1m' | '15m' | '1h' | '1d' | '1w' | '1M' | 'max',
+
   // Сканер
   scannerRunning: false,
   scannerTimer: null as ReturnType<typeof setInterval> | null,
@@ -167,6 +170,7 @@ export function toast(msg: string, type: 'info' | 'success' | 'warn' | 'error' =
 // isEN, setLang, getLang, tm теперь живут в i18n.ts.
 // Здесь только ре-экспорт для удобства (чтобы не менять импорты везде).
 export { isEN, setLang, getLang, tm } from './i18n';
+
 // ─── Экспорт в window для inline-обработчиков ───
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {

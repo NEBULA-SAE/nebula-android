@@ -1,11 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · MAIN
-// Точка входа. Гарантированная загрузка всех модулей.
+// Точка входа. Загрузка модулей -> Сплэш -> Пароль -> UI.
 // ═══════════════════════════════════════════════════════════════
 
 // ─── 1. ПЛАТФОРМА (должно быть САМЫМ ПЕРВЫМ) ───
 import { installFetchPatch } from './platform/http';
 import { platform, isTauri } from './platform';
+import { initAuth } from './auth';
 
 installFetchPatch();
 
@@ -16,7 +17,6 @@ if (isTauri) {
   const params = new URLSearchParams(location.search);
   const isMini = params.has('mini');
 
-  // ─── Mini-режим ───
   if (isMini) {
     document.body.classList.add('mini-mode');
     const link = document.createElement('link');
@@ -25,32 +25,23 @@ if (isTauri) {
     document.head.appendChild(link);
   }
 
-  // ─── Показать главное окно после того как HTML отрисован ───
-  // (окно стартует с visible: false в tauri.conf.json)
   if (!isMini) {
     (async () => {
       try {
         const { Window } = await import('@tauri-apps/api/window');
         const mainWin = await Window.getByLabel('main');
         if (mainWin) {
-          // Небольшая задержка чтобы WebView успел нарисовать сплэш
           setTimeout(async () => {
             try {
               await mainWin.show();
               await mainWin.setFocus();
-              console.log('[tauri] main window shown');
-            } catch (e) {
-              console.warn('[tauri] show failed:', e);
-            }
+            } catch (e) { /* silent */ }
           }, 100);
         }
-      } catch (e) {
-        console.warn('[tauri] window show failed:', e);
-      }
+      } catch (e) { /* silent */ }
     })();
   }
 
-  // ─── Custom Title Bar ───
   (async () => {
     try {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
@@ -62,13 +53,11 @@ if (isTauri) {
       const dragArea = document.querySelector('.tauri-titlebar-left');
 
       if (btnMin) btnMin.addEventListener('click', () => win.minimize());
-
       if (btnMax) btnMax.addEventListener('click', async () => {
         const isMax = await win.isMaximized();
         if (isMax) await win.unmaximize();
         else await win.maximize();
       });
-
       if (btnClose) btnClose.addEventListener('click', () => win.close());
 
       if (dragArea) {
@@ -78,25 +67,14 @@ if (isTauri) {
           else await win.maximize();
         });
       }
-
-      console.log('[tauri] custom title bar wired');
-    } catch (e) {
-      console.warn('[tauri] title bar failed:', e);
-    }
+    } catch (e) { /* silent */ }
   })();
 
-  // ─── Graceful shutdown ───
   window.addEventListener('beforeunload', async () => {
     try {
-      // 1. Снимаем хоткеи
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const unreg = (window as any).__nebulaUnregisterHotkeys;
-      if (typeof unreg === 'function') {
-        await unreg();
-      }
+      if (typeof unreg === 'function') await unreg();
 
-      // 2. Закрываем WebSocket мониторинга
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const st = (window as any).state;
       if (st?.monitorWs) {
         try { st.monitorWs.close(); } catch { /* silent */ }
@@ -106,55 +84,83 @@ if (isTauri) {
         clearInterval(st.monitorInterval);
         st.monitorInterval = null;
       }
-
-      console.log('[tauri] graceful shutdown complete');
-    } catch (e) {
-      console.warn('[tauri] shutdown error:', e);
-    }
+    } catch (e) { /* silent */ }
   });
 }
 
 // ─── 3. Android: патч fetch через CapacitorHttp ───
+// ⚠️ КЛЮЧЕВОЙ ФИКС: CapacitorHttp.request() НЕ поддерживает AbortSignal.
+// Значит любой `AbortSignal.timeout(6000)` без дополнительной обработки
+// просто игнорируется, и запрос висит до дефолтного таймаута (30–60 с).
+// Ниже — обёртка через Promise.race, которая:
+//   1) уважает переданный signal (мгновенный reject при abort/timeout),
+//   2) НЕ делает fallback на origFetch при AbortError (иначе двойное ожидание),
+//   3) аккуратно обрабатывает body (JSON / plain-text),
+//   4) не матчит произвольный `ws...` — только реальные ws:// / wss://.
 if (platform === 'android') {
   import('@capacitor/core').then(({ CapacitorHttp, Capacitor }) => {
     if (!Capacitor.isNativePlatform()) return;
 
     const origFetch = window.fetch.bind(window);
-    window.fetch = async (input: any, init?: any) => {
+
+    window.fetch = async (input: any, init?: any): Promise<Response> => {
       const url = typeof input === 'string' ? input : input.url;
 
+      // Локальные и WS — WebView сам справится
       if (
         url.startsWith('/') ||
         url.startsWith('blob:') ||
         url.startsWith('data:') ||
         url.startsWith('http://localhost') ||
-        url.startsWith('http://127.0.0.1')
+        url.startsWith('http://127.0.0.1') ||
+        url.startsWith('ws://') ||
+        url.startsWith('wss://')
       ) {
         return origFetch(input, init);
       }
 
-      if (url.startsWith('ws://') || url.startsWith('wss://')) {
-        return origFetch(input, init);
+      const signal = init?.signal as AbortSignal | undefined;
+
+      // Быстрый выход, если сигнал уже отменён
+      if (signal?.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
       }
 
-      try {
-        const method = (init?.method || 'GET').toUpperCase();
-        const headers: Record<string, string> = {};
-        if (init?.headers) {
-          if (init.headers instanceof Headers) {
-            init.headers.forEach((v: string, k: string) => { headers[k] = v; });
-          } else if (Array.isArray(init.headers)) {
-            init.headers.forEach(([k, v]: [string, string]) => { headers[k] = v; });
-          } else {
-            Object.assign(headers, init.headers as Record<string, string>);
-          }
-        }
+      const method = (init?.method || 'GET').toUpperCase();
 
+      const headers: Record<string, string> = {};
+      if (init?.headers) {
+        if (init.headers instanceof Headers) {
+          init.headers.forEach((v: string, k: string) => { headers[k] = v; });
+        } else if (Array.isArray(init.headers)) {
+          init.headers.forEach(([k, v]: [string, string]) => { headers[k] = v; });
+        } else {
+          Object.assign(headers, init.headers as Record<string, string>);
+        }
+      }
+
+      let data: any = undefined;
+      if (init?.body != null) {
+        if (typeof init.body === 'string') {
+          try { data = JSON.parse(init.body); }
+          catch { data = init.body; } // plain text — CapacitorHttp отправит как есть
+        } else {
+          // FormData / Blob / URLSearchParams — нативно не поддерживаются,
+          // пробрасываем через WebView-fetch
+          return origFetch(input, init);
+        }
+      }
+
+      const runNative = async (): Promise<Response> => {
         const response = await CapacitorHttp.request({
           url,
           method,
           headers,
-          data: init?.body ? JSON.parse(String(init.body)) : undefined,
+          data,
+          // Страховка от «висяков» без signal (например, опрос в фоне).
+          // Реальный таймаут задаётся через signal сверху.
+          connectTimeout: 15000,
+          readTimeout: 30000,
         });
 
         return new Response(
@@ -165,58 +171,96 @@ if (platform === 'android') {
             headers: new Headers(response.headers as any),
           }
         );
-      } catch (e) {
-        console.warn('[android-http] fallback to orig fetch:', e);
+      };
+
+      // Сигнала нет — просто идём нативно (с fallback)
+      if (!signal) {
+        try {
+          return await runNative();
+        } catch {
+          return origFetch(input, init);
+        }
+      }
+
+      // Сигнал есть — гоним через race
+      const abortPromise = new Promise<never>((_, reject) => {
+        const onAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+        signal.addEventListener('abort', onAbort, { once: true });
+      });
+
+      try {
+        return await Promise.race([runNative(), abortPromise]);
+      } catch (e: any) {
+        // AbortError — не делаем fallback, иначе ждём ещё столько же
+        if (e?.name === 'AbortError') throw e;
+        // Прочие ошибки — пробуем WebView
         return origFetch(input, init);
       }
     };
-    console.log('[platform] Android CapacitorHttp fetch patch installed');
   });
 }
 
-// ─── 4. Дальше — как было ───
-import './auth';
-import './utils';
-import './i18n';
-import './crypto';
-import './worker';
-import './chart';
-import './indicators';
-import './patterns';
-import './ai';
-import './oracle';
-import './market';
-import './trading';
-import './themes';
+// ═══════════════════════════════════════════════════════════════
+// 4. ГЛАВНАЯ ЗАГРУЗКА
+// ═══════════════════════════════════════════════════════════════
 
-// ─── Sources ───
-import './sources/candles';
-import './sources/orderbook';
-import './sources/funding';
-import './sources/dash';
-import './sources/whale-futures';
-import './sources/mexc';
+async function bootstrap() {
+  // 1. Загружаем базовые модули и UI
+  await import('./utils');
+  await import('./i18n');
+  await import('./crypto');
+  await import('./worker');
+  await import('./chart');
+  await import('./indicators');
+  await import('./patterns');
+  await import('./ai');
+  await import('./oracle');
+  await import('./market');
+  await import('./themes');
 
-// ─── UI ───
-import './ui/splash';
-import './ui/terms';
-import './ui/tooltip';
-import './ui/screens';
-import './ui/scanner';
-import './ui/whale';
-import './ui/oracle';
-import './ui/market';
-import './ui/learning';
-import './ui/dash';
-import './ui/diagnostics';
-import './ui/themes';
-import './ui/settings';  // ⚙️ единый sheet настроек
+  // ─── Sources ───
+  await import('./sources/candles');
+  await import('./sources/orderbook');
+  await import('./sources/funding');
+  await import('./sources/dash');
+  await import('./sources/whale-futures');
+  await import('./sources/mexc');
 
-// ─── Init ───
-import { initApp } from './ui/init';
+  // ─── UI (запускает анимацию сплэша) ───
+  await import('./ui/splash');
+  await import('./ui/terms');
+  await import('./ui/tooltip');
+  await import('./ui/screens');
+  await import('./ui/scanner');
+  await import('./ui/whale');
+  await import('./ui/oracle');
+  await import('./ui/market');
+  await import('./ui/learning');
+  await import('./ui/dash');
+  await import('./ui/diagnostics');
+  await import('./ui/themes');
+  await import('./ui/settings');
+
+  // 2. Ждем 1 секунду, чтобы пользователь насладился сплэшем со звездами
+  await new Promise(r => setTimeout(r, 1000));
+
+  // 3. Скрываем сплэш, чтобы показать окно пароля
+  const splash = document.getElementById('nebula-splash');
+  if (splash) splash.style.display = 'none';
+
+  // 4. Ждем ввода пароля
+  await initAuth();
+
+  // 5. Загружаем торговый модуль (он возьмет пароль)
+  await import('./trading');
+
+  // 6. Запускаем интерфейс
+  const { initApp } = await import('./ui/init');
+  initApp();
+}
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp, { once: true });
+  document.addEventListener('DOMContentLoaded', bootstrap, { once: true });
 } else {
-  initApp();
+  bootstrap();
 }

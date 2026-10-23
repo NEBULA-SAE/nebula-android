@@ -235,7 +235,8 @@
     </div>
 
     <div class="card chart-card">
-      <div class="chart-stats" id="chart-stats">
+  <div id="tf-bar" class="tf-bar"></div>
+  <div class="chart-stats" id="chart-stats">
         <span>— : <b>—</b></span>
         <span class="cur">— : <b>—</b></span>
         <span>— : <b>—</b></span>
@@ -636,7 +637,7 @@
   <div class="sheet-body" id="sheet-body"></div>
 </div>
 
-<!-- ═══════════ APP LOCK ═══════════ -->
+<!-- ═══════════ APP LOCK (Единый вход) ═══════════ -->
 <div class="terms-overlay" id="app-lock-overlay">
   <div class="terms-modal" style="max-width:400px">
     <div class="terms-head">
@@ -644,20 +645,30 @@
     </div>
     <div class="terms-body">
       <p id="al-desc">Введи пароль для продолжения.</p>
+      
       <div class="form-row">
         <label class="form-lbl">Пароль</label>
-        <input class="form-input" type="password" id="al-input" placeholder="Минимум 4 символа" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*">
+        <input class="form-input" type="password" id="al-input" 
+               placeholder="Минимум 4 цифры" autocomplete="new-password" 
+               inputmode="numeric" pattern="[0-9]*">
       </div>
+      
       <div class="form-row" id="al-confirm-row" style="display:none">
         <label class="form-lbl">Повторите пароль</label>
-        <input class="form-input" type="password" id="al-input2" placeholder="Ещё раз" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*">
+        <input class="form-input" type="password" id="al-input2" 
+               placeholder="Ещё раз" autocomplete="new-password" 
+               inputmode="numeric" pattern="[0-9]*">
       </div>
+      
       <div class="calc-result" id="al-error" style="display:none"></div>
     </div>
     <div class="terms-foot" style="display:flex;flex-direction:column;gap:8px">
-      <button class="terms-accept" id="al-submit" onclick="appLockSubmit()">Войти</button>
-      <button class="terms-accept" id="al-skip" onclick="appLockSkip()" style="background:transparent;color:var(--dim);border:1px solid var(--border);padding:12px 18px;font-size:10px">
-        Пропустить и работать без пароля
+      <button class="terms-accept" id="al-submit">Войти</button>
+      <button class="terms-accept" id="al-biometric" style="display:none; background:rgba(167,139,250,.15); color:var(--violet); border:1px solid var(--violet); padding:12px 18px; font-size:12px; margin-top:4px;">
+        👆 Войти по отпечатку
+      </button>
+      <button class="terms-accept" id="al-reset" style="background:transparent; color:var(--coral); border:1px solid rgba(255,101,132,.3); padding:12px 18px; font-size:11px; margin-top:4px;">
+        🗑️ Забыли пароль? Сбросить ключи
       </button>
     </div>
   </div>

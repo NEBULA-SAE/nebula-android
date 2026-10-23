@@ -1,246 +1,280 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · AUTH
-// Простой пароль для входа в приложение (не шифрование!)
-// Хранится SHA-256 хеш в localStorage. Проверка при запуске.
+// Единый пароль + Нативная биометрия (только Android)
 // ═══════════════════════════════════════════════════════════════
 
 import { toast } from './utils';
+import { Capacitor } from '@capacitor/core';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 
-const AUTH_KEY = 'nebulaAppPasswordHash';
+const APP_PWD_HASH = 'nebulaAppPasswordHash';
+const BIOMETRIC_SAVED_PWD = 'nebulaBiometricPwd';
+const BIOMETRIC_REJECTED = 'nebulaBiometricRejected';
+const SESSION_PWD = 'nebula_session_pwd';
 
-let _mode: 'setup' | 'unlock' = 'unlock';
-let _resolve: ((ok: boolean) => void) | null = null;
-let _attempts = 0;
-let _blockedUntil = 0;
+let _currentPassword: string | null = null;
 
-// ─── Хеш пароля ───
-
-async function sha256(text: string): Promise<string> {
-  const enc = new TextEncoder();
-  const buf = await crypto.subtle.digest('SHA-256', enc.encode('nebula:auth:' + text));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+export function getAuthPassword(): string | null {
+  if (_currentPassword) return _currentPassword;
+  try {
+    const sess = sessionStorage.getItem(SESSION_PWD);
+    if (sess) {
+      _currentPassword = sess;
+      return sess;
+    }
+  } catch { /* silent */ }
+  return null;
 }
-
-// ─── Публичное API ───
 
 export function hasAppPassword(): boolean {
-  try { return !!localStorage.getItem(AUTH_KEY); } catch { return false; }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// USER_ID — уникальный ID устройства для авторизации в поддержке
-// ═══════════════════════════════════════════════════════════════
-
-const USER_ID_KEY = 'nebulaUserId';
-
-/** Получить или сгенерировать постоянный USER_ID */
-export function getOrCreateUserId(): string {
-  try {
-    let id = localStorage.getItem(USER_ID_KEY);
-    if (id && id.length >= 32) return id;
-
-    // Генерируем UUID v4
-    id = 'u_' + generateUuid();
-    localStorage.setItem(USER_ID_KEY, id);
-    return id;
-  } catch {
-    // Fallback если localStorage недоступен
-    return 'u_' + generateUuid();
-  }
-}
-
-function generateUuid(): string {
-  // Простая генерация UUID v4 без зависимостей
-  const hex = '0123456789abcdef';
-  let uuid = '';
-  for (let i = 0; i < 32; i++) {
-    if (i === 8 || i === 12 || i === 16 || i === 20) uuid += '-';
-    uuid += hex[Math.floor(Math.random() * 16)];
-  }
-  return uuid;
-}
-
-export async function setAppPassword(pwd: string): Promise<void> {
-  const hash = await sha256(pwd);
-  localStorage.setItem(AUTH_KEY, hash);
+  return !!localStorage.getItem(APP_PWD_HASH);
 }
 
 export function clearAppPassword(): void {
-  try { localStorage.removeItem(AUTH_KEY); } catch { /* silent */ }
+  localStorage.removeItem(APP_PWD_HASH);
+  localStorage.removeItem(BIOMETRIC_SAVED_PWD);
+  localStorage.removeItem(BIOMETRIC_REJECTED);
+  localStorage.removeItem('nebulaConfig');
+  localStorage.removeItem('nebulaGroqKey');
+  sessionStorage.removeItem(SESSION_PWD);
+  _currentPassword = null;
 }
 
-export async function verifyAppPassword(pwd: string): Promise<boolean> {
+export function getOrCreateUserId(): string {
+  let id = localStorage.getItem('nebula_user_id');
+  if (!id) {
+    id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+    localStorage.setItem('nebula_user_id', id);
+  }
+  return id;
+}
+
+async function hashPwd(pwd: string): Promise<string> {
+  const msg = new TextEncoder().encode(pwd + 'NEBULA_SALT_2025');
+  const hash = await crypto.subtle.digest('SHA-256', msg);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ─── Биометрия (только Android) ───
+
+export function isBiometricsSupported(): boolean {
+  return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+}
+
+export async function checkBiometricsAvailable(): Promise<boolean> {
+  if (!isBiometricsSupported()) return false;
   try {
-    const stored = localStorage.getItem(AUTH_KEY);
-    if (!stored) return true;
-    const hash = await sha256(pwd);
-    return hash === stored;
-  } catch { return false; }
+    const result = await NativeBiometric.isAvailable();
+    return result.isAvailable;
+  } catch {
+    return false;
+  }
 }
 
-// ─── UI ───
-
-function showAppLock(): void {
-  const ov = document.getElementById('app-lock-overlay');
-  const title = document.getElementById('al-title');
-  const desc = document.getElementById('al-desc');
-  const inp = document.getElementById('al-input') as HTMLInputElement | null;
-  const inp2 = document.getElementById('al-input2') as HTMLInputElement | null;
-  const confRow = document.getElementById('al-confirm-row');
-  const err = document.getElementById('al-error');
-  const skip = document.getElementById('al-skip');
-  const btn = document.getElementById('al-submit') as HTMLButtonElement | null;
-
-  if (!ov || !inp) return;
-
-  inp.value = '';
-  if (inp2) inp2.value = '';
-  if (err) { err.style.display = 'none'; err.innerHTML = ''; }
-  if (btn) { btn.disabled = false; btn.textContent = _mode === 'setup' ? 'Создать' : 'Войти'; }
-
-  if (_mode === 'setup') {
-    if (title) title.textContent = '🔐 Создай пароль';
-    if (desc) desc.textContent = 'Установи пароль для входа в NEBULA. Он не шифрует данные — просто не пускает посторонних в приложение.';
-    if (confRow) confRow.style.display = '';
-    if (skip) skip.style.display = '';
-  } else {
-    if (title) title.textContent = '🔐 Вход в NEBULA';
-    if (desc) desc.textContent = 'Введи пароль для продолжения.';
-    if (confRow) confRow.style.display = 'none';
-    if (skip) skip.style.display = 'none';
+export async function enableBiometrics(): Promise<boolean> {
+  if (!getAuthPassword()) {
+    toast('Сначала войдите в приложение', 'warn');
+    return false;
   }
 
-  ov.classList.add('open');
-  setTimeout(() => inp.focus(), 150);
+  if (!isBiometricsSupported()) {
+    toast('Биометрия не поддерживается на этом устройстве', 'warn');
+    return false;
+  }
+
+  try {
+    await NativeBiometric.setCredentials({
+      username: 'nebula_user',
+      password: getAuthPassword()!,
+      server: 'com.nebula.oracle',
+    });
+
+    localStorage.setItem(BIOMETRIC_SAVED_PWD, '1');
+    localStorage.removeItem(BIOMETRIC_REJECTED);
+    toast('Вход по отпечатку включен', 'success');
+    return true;
+  } catch (e: any) {
+    console.warn('[auth] biometrics setup failed', e);
+    toast('Не удалось настроить биометрию: ' + (e.message || 'ошибка'), 'error');
+    return false;
+  }
 }
 
-function hideAppLock(): void {
-  const ov = document.getElementById('app-lock-overlay');
-  if (ov) ov.classList.remove('open');
-}
-
-export async function appLockSubmit(): Promise<void> {
-  const inp = document.getElementById('al-input') as HTMLInputElement | null;
-  const inp2 = document.getElementById('al-input2') as HTMLInputElement | null;
-  const err = document.getElementById('al-error');
-  const btn = document.getElementById('al-submit') as HTMLButtonElement | null;
-
-  const pwd = (inp?.value || '').trim();
-
-  if (pwd.length < 4) {
-    if (err) {
-      err.style.display = 'block';
-      err.innerHTML = '<span style="color:var(--coral)">Минимум 4 символа</span>';
+// ⚡️ ДОБАВЛЕНО: Функция для полного удаления биометрии
+export async function disableBiometrics(): Promise<void> {
+  try {
+    if (isBiometricsSupported()) {
+      await NativeBiometric.deleteCredentials({ server: 'com.nebula.oracle' });
     }
-    return;
+  } catch (e) {
+    console.warn('[auth] failed to delete native credentials', e);
   }
+  localStorage.removeItem(BIOMETRIC_SAVED_PWD);
+  toast('Вход по отпечатку отключен', 'info');
+}
 
-  // ─── SETUP ───
-  if (_mode === 'setup') {
-    const pwd2 = (inp2?.value || '').trim();
-    if (pwd !== pwd2) {
-      if (err) {
-        err.style.display = 'block';
-        err.innerHTML = '<span style="color:var(--coral)">Пароли не совпадают</span>';
-      }
-      return;
+async function tryBiometricLogin(): Promise<boolean> {
+  if (!isBiometricsSupported()) return false;
+  if (localStorage.getItem(BIOMETRIC_SAVED_PWD) !== '1') return false;
+
+  try {
+    await NativeBiometric.verifyIdentity({
+      reason: 'Вход в NEBULA',
+      title: 'NEBULA',
+      subtitle: 'Подтвердите личность',
+      description: 'Приложите палец или посмотрите в камеру',
+    });
+
+    const credentials = await NativeBiometric.getCredentials({
+      server: 'com.nebula.oracle',
+    });
+
+    if (credentials.password) {
+      _currentPassword = credentials.password;
+      sessionStorage.setItem(SESSION_PWD, _currentPassword);
+      return true;
     }
-    await setAppPassword(pwd);
-    hideAppLock();
-    toast('✅ Пароль установлен', 'success');
-    const r = _resolve; _resolve = null;
-    if (r) r(true);
-    return;
-  }
-
-  // ─── UNLOCK ───
-  const now = Date.now();
-  if (now < _blockedUntil) {
-    const sec = Math.ceil((_blockedUntil - now) / 1000);
-    if (err) {
-      err.style.display = 'block';
-      err.innerHTML = `<span style="color:var(--coral)">Подожди ${sec} сек</span>`;
-    }
-    return;
-  }
-
-  if (btn) btn.disabled = true;
-  const ok = await verifyAppPassword(pwd);
-  if (btn) btn.disabled = false;
-
-  if (ok) {
-    _attempts = 0;
-    hideAppLock();
-    const r = _resolve; _resolve = null;
-    if (r) r(true);
-  } else {
-    _attempts++;
-    if (_attempts >= 5) {
-      _blockedUntil = Date.now() + 30_000;
-      _attempts = 0;
-      if (err) {
-        err.style.display = 'block';
-        err.innerHTML = '<span style="color:var(--coral)">Слишком много попыток. Подожди 30 сек.</span>';
-      }
-    } else {
-      if (err) {
-        err.style.display = 'block';
-        err.innerHTML = `<span style="color:var(--coral)">Неверный пароль (${5 - _attempts} попыток)</span>`;
-      }
-    }
-    if (inp) inp.value = '';
+    return false;
+  } catch (e: any) {
+    console.warn('[auth] biometric verify failed', e);
+    return false;
   }
 }
 
-export function appLockSkip(): void {
-  // Разрешено только в setup-режиме
-  if (_mode !== 'setup') return;
-  hideAppLock();
-  toast('Приложение работает без пароля', 'info');
-  const r = _resolve; _resolve = null;
-  if (r) r(true);
-}
+// ─── ИНИЦИАЛИЗАЦИЯ ВХОДА ───
 
-/**
- * Главная функция — вызывается при старте.
- * Возвращает промис, который резолвится после входа (или setup).
- */
-export function requireAppPassword(): Promise<boolean> {
+export async function initAuth(): Promise<void> {
+  if (getAuthPassword()) return;
+
+  const savedHash = localStorage.getItem(APP_PWD_HASH);
+
   return new Promise((resolve) => {
-    if (!hasAppPassword()) {
-      _mode = 'setup';
+    const overlay = document.getElementById('app-lock-overlay') as HTMLDivElement;
+    if (!overlay) { resolve(); return; }
+
+    const input = document.getElementById('al-input') as HTMLInputElement;
+    const input2 = document.getElementById('al-input2') as HTMLInputElement;
+    const btnSubmit = document.getElementById('al-submit') as HTMLButtonElement;
+    const btnBio = document.getElementById('al-biometric') as HTMLButtonElement;
+    const btnReset = document.getElementById('al-reset') as HTMLButtonElement;
+    const err = document.getElementById('al-error') as HTMLDivElement;
+    const title = document.getElementById('al-title') as HTMLHeadingElement;
+    const desc = document.getElementById('al-desc') as HTMLParagraphElement;
+    const confirmRow = document.getElementById('al-confirm-row') as HTMLDivElement;
+
+    input.value = '';
+    input2.value = '';
+    err.style.display = 'none';
+
+    if (!savedHash) {
+      title.textContent = '🔐 Создать пароль';
+      desc.textContent = 'Придумай пароль. Он будет использоваться для шифрования API-ключей.';
+      confirmRow.style.display = 'block';
+      btnBio.style.display = 'none';
+      btnReset.style.display = 'none';
     } else {
-      _mode = 'unlock';
+      title.textContent = '🔐 Вход в NEBULA';
+      desc.textContent = 'Введи пароль для разблокировки.';
+      confirmRow.style.display = 'none';
+      btnReset.style.display = 'block';
+
+      if (localStorage.getItem(BIOMETRIC_SAVED_PWD) === '1' && isBiometricsSupported()) {
+        btnBio.style.display = 'block';
+      } else {
+        btnBio.style.display = 'none';
+      }
     }
-    _resolve = resolve;
-    showAppLock();
-  });
-}
 
-// ─── Установка / смена / удаление из настроек ───
+    overlay.classList.add('open');
+    setTimeout(() => input.focus(), 200);
 
-export function openSetPasswordDialog(): void {
-  _mode = hasAppPassword() ? 'unlock' : 'setup';
-  _resolve = null;
-  showAppLock();
-}
+    btnReset.onclick = () => {
+      if (confirm('Сбросить пароль? ВСЕ сохраненные API-ключи будут удалены навсегда.')) {
+        clearAppPassword();
+        toast('Пароль сброшен', 'info');
+        location.reload();
+      }
+    };
 
-export function openChangePasswordDialog(): void {
-  _mode = 'setup'; // после ввода старого пароля? — упрощённо: просто задать новый
-  _resolve = null;
-  showAppLock();
-}
+    btnSubmit.onclick = async () => {
+      const pwd = input.value.trim();
 
-// ─── Экспорт в window ───
+      if (pwd.length < 4) {
+        err.style.display = 'block';
+        err.innerHTML = '<span style="color:var(--coral)">Минимум 4 символа</span>';
+        return;
+      }
 
-if (typeof window !== 'undefined') {
-  Object.assign(window as any, {
-    requireAppPassword,
-    appLockSubmit,
-    appLockSkip,
-    hasAppPassword,
-    setAppPassword,
-    clearAppPassword,
-    verifyAppPassword,
+      btnSubmit.disabled = true;
+      err.style.display = 'none';
+
+      try {
+        if (!savedHash) {
+          const pwd2 = input2.value.trim();
+          if (pwd !== pwd2) {
+            err.style.display = 'block';
+            err.innerHTML = '<span style="color:var(--coral)">Пароли не совпадают</span>';
+            btnSubmit.disabled = false;
+            return;
+          }
+
+          const hash = await hashPwd(pwd);
+          localStorage.setItem(APP_PWD_HASH, hash);
+          _currentPassword = pwd;
+          sessionStorage.setItem(SESSION_PWD, pwd);
+
+          const bioRejected = localStorage.getItem(BIOMETRIC_REJECTED) === '1';
+          if (isBiometricsSupported() && !bioRejected) {
+            const bioAvail = await checkBiometricsAvailable();
+            if (bioAvail) {
+              if (confirm('Включить вход по отпечатку пальца / Face ID?')) {
+                await enableBiometrics();
+              } else {
+                localStorage.setItem(BIOMETRIC_REJECTED, '1');
+              }
+            }
+          }
+
+          unlockApp();
+
+        } else {
+          const hash = await hashPwd(pwd);
+          if (hash === savedHash) {
+            _currentPassword = pwd;
+            sessionStorage.setItem(SESSION_PWD, pwd);
+            unlockApp();
+          } else {
+            err.style.display = 'block';
+            err.innerHTML = '<span style="color:var(--coral)">Неверный пароль</span>';
+            btnSubmit.disabled = false;
+          }
+        }
+      } catch (e) {
+        err.style.display = 'block';
+        err.innerHTML = '<span style="color:var(--coral)">Ошибка проверки</span>';
+        btnSubmit.disabled = false;
+      }
+    };
+
+    btnBio.onclick = async () => {
+      const success = await tryBiometricLogin();
+      if (success) {
+        unlockApp();
+      } else {
+        toast('Биометрия не пройдена. Введите пароль.', 'error');
+      }
+    };
+
+    function unlockApp() {
+      overlay.classList.remove('open');
+      resolve();
+    }
+
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') btnSubmit.click();
+    });
+    input2.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') btnSubmit.click();
+    });
   });
 }
