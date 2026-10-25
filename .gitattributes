@@ -1,0 +1,18 @@
+# Normalize line endings - no CRLF warnings
+* text=auto eol=lf
+
+# Windows-specific binaries
+*.exe binary
+*.msi binary
+*.apk binary
+*.dll binary
+*.keystore binary
+*.jks binary
+
+# Generated files - no CRLF conversion needed
+PROJECT_MAP.md text eol=lf
+package-lock.json text eol=lf
+
+# Shell scripts always LF
+*.sh text eol=lf
+*.ps1 text eol=crlf
