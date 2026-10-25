@@ -1,14 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · PULL TO REFRESH v2
-// SVG ring indicator with progress + haptic feedback
+// NEBULA v2 · PULL TO REFRESH v3
+// Clean SVG ring, centered, no vibration
 // ═══════════════════════════════════════════════════════════════
 
 import { state } from '../utils';
 
-const THRESHOLD = 70;      // pixels to trigger (after resistance)
+const THRESHOLD = 70;
 const MAX_PULL = 110;
 const RESISTANCE = 0.55;
-const INDICATOR_HEIGHT = 60;  // px, ring + text
+const HIDDEN_Y = -100;   // hidden above screen
+const VISIBLE_Y = 20;    // fully visible (top offset)
 
 let startX = 0;
 let startY = 0;
@@ -16,15 +17,12 @@ let active = false;
 let currentPull = 0;
 let refreshing = false;
 let refreshInFlight = false;
-let thresholdHit = false;
 let indicator: HTMLElement | null = null;
 let ringCircle: SVGCircleElement | null = null;
 let textEl: HTMLElement | null = null;
 
 const RING_RADIUS = 18;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
-// ─── Indicator ───
 
 function ensureIndicator(): HTMLElement {
   if (indicator) return indicator;
@@ -58,9 +56,9 @@ function ensureIndicator(): HTMLElement {
     style.textContent = `
       .ptr-indicator {
         position: fixed;
-        top: 8px;
+        top: 0;
         left: 50%;
-        transform: translate(-50%, -80px);
+        transform: translate(-50%, ${HIDDEN_Y}px);
         width: 120px;
         display: flex;
         flex-direction: column;
@@ -70,13 +68,18 @@ function ensureIndicator(): HTMLElement {
         pointer-events: none;
         will-change: transform;
         opacity: 0;
-        transition: opacity 0.2s ease-out;
+        transition: opacity 0.12s ease-out;
       }
       .ptr-indicator.visible { opacity: 1; }
       .ptr-ring-wrap {
         position: relative;
         width: 48px;
         height: 48px;
+        border-radius: 50%;
+        background: rgba(12, 20, 35, 0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
       }
       .ptr-ring {
         width: 48px;
@@ -85,7 +88,7 @@ function ensureIndicator(): HTMLElement {
       }
       .ptr-ring-bg {
         fill: none;
-        stroke: rgba(140, 170, 220, 0.15);
+        stroke: rgba(140, 170, 220, 0.2);
         stroke-width: 3;
       }
       .ptr-ring-fg {
@@ -93,7 +96,7 @@ function ensureIndicator(): HTMLElement {
         stroke: var(--cyan, #5ecbff);
         stroke-width: 3;
         stroke-linecap: round;
-        transition: stroke-dashoffset 0.1s linear, stroke 0.2s;
+        transition: stroke-dashoffset 0.08s linear, stroke 0.15s;
       }
       .ptr-arrow {
         position: absolute;
@@ -120,9 +123,14 @@ function ensureIndicator(): HTMLElement {
         font-weight: 600;
         letter-spacing: 0.3px;
         color: var(--cyan, #5ecbff);
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
         white-space: nowrap;
-        transition: color 0.2s;
+        transition: color 0.15s;
+        padding: 3px 8px;
+        background: rgba(12, 20, 35, 0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 10px;
       }
       .ptr-indicator.ready .ptr-text { color: var(--mint, #45e0a8); }
       @keyframes ptr-rotate {
@@ -134,8 +142,6 @@ function ensureIndicator(): HTMLElement {
 
   return indicator;
 }
-
-// ─── Helpers ───
 
 function getActiveScreen(): HTMLElement | null {
   return document.querySelector('.screen.active') as HTMLElement | null;
@@ -159,25 +165,24 @@ function shouldIgnore(target: HTMLElement | null): boolean {
   return false;
 }
 
-function vibrate(ms: number): void {
-  if (navigator.vibrate) {
-    try { navigator.vibrate(ms); } catch { /* silent */ }
-  }
-}
-
-// ─── Update visual state ───
-
 function updateVisual(pulled: number): void {
   if (!indicator || !ringCircle || !textEl) return;
 
   const progress = Math.min(1, pulled / THRESHOLD);
+
+  // Position: HIDDEN_Y (-100) -> VISIBLE_Y (+20)
+  // Fast appearance: reaches full position at 40% pull
+  const eased = Math.min(1, progress * 2.5);
+  const y = HIDDEN_Y + (VISIBLE_Y - HIDDEN_Y) * eased;
+  indicator.style.transform = `translate(-50%, ${y}px)`;
+
+  // Opacity: fast fade-in
+  const opacity = Math.min(1, pulled / 20);
+  indicator.classList.toggle('visible', opacity > 0.1);
+
+  // Ring fill: linear with progress
   const offset = RING_CIRCUMFERENCE * (1 - progress);
   ringCircle.style.strokeDashoffset = String(offset);
-
-  // translateY: from -80 (hidden) to -8 (fully visible at top: 8px)
-  const visibleOffset = -80 + (72 * progress);
-  indicator.style.transform = `translate(-50%, ${visibleOffset}px)`;
-  indicator.classList.toggle('visible', pulled > 8);
 
   const ready = pulled >= THRESHOLD;
   indicator.classList.toggle('ready', ready);
@@ -185,32 +190,19 @@ function updateVisual(pulled: number): void {
   if (!refreshing) {
     textEl.textContent = ready ? 'Отпусти' : 'Потяни вниз';
   }
-
-  // Haptic once when threshold crossed
-  if (ready && !thresholdHit) {
-    thresholdHit = true;
-    vibrate(10);
-    console.log('[ptr] threshold reached - release to refresh');
-  }
-  else if (!ready && thresholdHit) {
-    thresholdHit = false;
-  }
 }
 
 function resetVisual(): void {
   if (!indicator) return;
   indicator.classList.remove('ready', 'visible', 'loading');
-  indicator.style.transform = 'translate(-50%, -80px)';
+  indicator.style.transform = `translate(-50%, ${HIDDEN_Y}px)`;
   if (ringCircle) {
     ringCircle.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
     ringCircle.style.animation = '';
   }
   if (textEl) textEl.textContent = 'Потяни вниз';
-  thresholdHit = false;
   currentPull = 0;
 }
-
-// ─── Touch handlers ───
 
 function onTouchStart(e: TouchEvent): void {
   if (refreshing) return;
@@ -247,10 +239,6 @@ function onTouchMove(e: TouchEvent): void {
     e.preventDefault();
     ensureIndicator();
     updateVisual(pulled);
-    // Debug log every 15px to avoid spam
-    if (Math.round(pulled) % 15 === 0) {
-      console.log(`[ptr] pull ${Math.round(pulled)}/${THRESHOLD} px`);
-    }
   }
 }
 
@@ -269,8 +257,6 @@ function onTouchEnd(): void {
   }
 }
 
-// ─── Trigger refresh ───
-
 async function triggerRefresh(): Promise<void> {
   if (refreshing) return;
   refreshing = true;
@@ -280,11 +266,8 @@ async function triggerRefresh(): Promise<void> {
 
   indicator.classList.remove('ready');
   indicator.classList.add('loading', 'visible');
-  indicator.style.transform = 'translate(-50%, -8px)';
+  indicator.style.transform = `translate(-50%, ${VISIBLE_Y}px)`;
   if (textEl) textEl.textContent = 'Обновление...';
-
-  vibrate(15);
-  console.log('[ptr] refreshing...');
 
   try {
     await refreshCurrentScreen();
@@ -293,13 +276,10 @@ async function triggerRefresh(): Promise<void> {
     console.warn('[ptr] refresh failed:', e);
   }
   finally {
-    // Min visible time so spinner isn't flashing
     await new Promise(r => setTimeout(r, 400));
-
     indicator.classList.remove('loading');
     resetVisual();
     refreshing = false;
-    console.log('[ptr] done');
   }
 }
 
@@ -331,9 +311,7 @@ async function refreshCurrentScreen(): Promise<void> {
         break;
       }
       case 'screen-scanner': {
-        if ((window as any).runScanner) {
-          await (window as any).runScanner();
-        }
+        if ((window as any).runScanner) await (window as any).runScanner();
         break;
       }
       case 'screen-fav': {
@@ -360,9 +338,7 @@ async function refreshCurrentScreen(): Promise<void> {
         break;
       }
       case 'screen-pro': {
-        if ((window as any).mobileAnalyze) {
-          await (window as any).mobileAnalyze();
-        }
+        if ((window as any).mobileAnalyze) await (window as any).mobileAnalyze();
         break;
       }
     }
@@ -371,8 +347,6 @@ async function refreshCurrentScreen(): Promise<void> {
     refreshInFlight = false;
   }
 }
-
-// ─── Init ───
 
 let attached = false;
 
@@ -393,7 +367,7 @@ export function initPullToRefresh(): void {
     if (!refreshing) resetVisual();
   }, { passive: true });
 
-  console.log('[ptr] initialized (v2, SVG ring)');
+  console.log('[ptr] initialized (v3, centered, no vibration)');
 }
 
 if (typeof window !== 'undefined') {

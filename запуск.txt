@@ -1,1 +1,20 @@
-npm run dev
+Команда для всего
+powershell
+
+.\scripts\release.ps1
+
+Из корня C:\Users\Semen\nebula-v2. Одна команда — полный цикл релиза.
+Что делает по шагам
+#	Шаг	Время
+1	Проверка окружения (node, npm, git, keystore)	~1 сек
+2	Показ изменений в git	~1 сек
+3	Скан на секреты (Groq/PAT/пароли/keystore)	~1 сек
+4	TypeScript (npm run check)	~5 сек
+5	Bump версии во всех 8 файлах + versionCode	~1 сек
+6	Сборка Windows + Android (build-all.ps1)	3–15 мин
+7	Проверка артефактов в dist_release/	~2 сек
+7.5	Перегенерация PROJECT_MAP.md	~1 сек
+8	Git commit + tag	~2 сек
+9	Push + push tags на GitHub	~5 сек
+
+Итого: ~5 минут (если Rust кэш прогрет), ~15 минут (первая сборка).
