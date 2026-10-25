@@ -1,13 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · PULL TO REFRESH
-// Свайп вниз от верха экрана → обновление данных текущего экрана
+// NEBULA v2 · PULL TO REFRESH v2
+// SVG ring indicator with progress + haptic feedback
 // ═══════════════════════════════════════════════════════════════
 
 import { state } from '../utils';
 
-const THRESHOLD = 70;      // пикселей до срабатывания (после сопротивления)
-const MAX_PULL = 110;      // максимум визуального сдвига
-const RESISTANCE = 0.55;   // чем меньше — тем "туже" тянется
+const THRESHOLD = 70;      // pixels to trigger (after resistance)
+const MAX_PULL = 110;
+const RESISTANCE = 0.55;
+const INDICATOR_HEIGHT = 60;  // px, ring + text
 
 let startX = 0;
 let startY = 0;
@@ -15,9 +16,15 @@ let active = false;
 let currentPull = 0;
 let refreshing = false;
 let refreshInFlight = false;
+let thresholdHit = false;
 let indicator: HTMLElement | null = null;
+let ringCircle: SVGCircleElement | null = null;
+let textEl: HTMLElement | null = null;
 
-// ─── Индикатор ───
+const RING_RADIUS = 18;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+// ─── Indicator ───
 
 function ensureIndicator(): HTMLElement {
   if (indicator) return indicator;
@@ -25,14 +32,25 @@ function ensureIndicator(): HTMLElement {
   indicator = document.createElement('div');
   indicator.className = 'ptr-indicator';
   indicator.innerHTML = `
-    <div class="ptr-spinner">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3v12"/>
-        <path d="M7 8l5-5 5 5"/>
+    <div class="ptr-ring-wrap">
+      <svg class="ptr-ring" viewBox="0 0 48 48">
+        <circle class="ptr-ring-bg" cx="24" cy="24" r="${RING_RADIUS}" />
+        <circle class="ptr-ring-fg" cx="24" cy="24" r="${RING_RADIUS}"
+                stroke-dasharray="${RING_CIRCUMFERENCE}"
+                stroke-dashoffset="${RING_CIRCUMFERENCE}" />
+      </svg>
+      <svg class="ptr-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 4v12"/>
+        <path d="M7 11l5 5 5-5"/>
       </svg>
     </div>
+    <div class="ptr-text">Потяни вниз</div>
   `;
   document.body.appendChild(indicator);
+
+  ringCircle = indicator.querySelector('.ptr-ring-fg') as SVGCircleElement;
+  textEl = indicator.querySelector('.ptr-text') as HTMLElement;
 
   if (!document.getElementById('ptr-styles')) {
     const style = document.createElement('style');
@@ -40,40 +58,75 @@ function ensureIndicator(): HTMLElement {
     style.textContent = `
       .ptr-indicator {
         position: fixed;
-        top: -60px;
+        top: 8px;
         left: 50%;
-        transform: translateX(-50%);
-        width: 44px; height: 44px;
-        border-radius: 50%;
-        background: rgba(20, 30, 50, 0.92);
-        border: 1px solid rgba(94, 203, 255, 0.35);
-        display: flex; align-items: center; justify-content: center;
+        transform: translate(-50%, -80px);
+        width: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
         z-index: 9999;
         pointer-events: none;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        will-change: top, transform;
+        will-change: transform;
+        opacity: 0;
+        transition: opacity 0.2s ease-out;
       }
-      .ptr-indicator svg {
-        width: 22px; height: 22px;
+      .ptr-indicator.visible { opacity: 1; }
+      .ptr-ring-wrap {
+        position: relative;
+        width: 48px;
+        height: 48px;
+      }
+      .ptr-ring {
+        width: 48px;
+        height: 48px;
+        transform: rotate(-90deg);
+      }
+      .ptr-ring-bg {
+        fill: none;
+        stroke: rgba(140, 170, 220, 0.15);
+        stroke-width: 3;
+      }
+      .ptr-ring-fg {
+        fill: none;
+        stroke: var(--cyan, #5ecbff);
+        stroke-width: 3;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.1s linear, stroke 0.2s;
+      }
+      .ptr-arrow {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%) rotate(0deg);
+        width: 20px; height: 20px;
         color: var(--cyan, #5ecbff);
-        transition: transform 0.15s ease-out;
+        transition: transform 0.2s, opacity 0.2s, color 0.2s;
       }
-      .ptr-indicator.ready .ptr-spinner {
-        animation: ptr-bounce 0.6s ease-in-out infinite;
+      .ptr-indicator.ready .ptr-ring-fg { stroke: var(--mint, #45e0a8); }
+      .ptr-indicator.ready .ptr-arrow {
+        color: var(--mint, #45e0a8);
+        transform: translate(-50%, -50%) rotate(180deg);
       }
-      .ptr-indicator.loading {
-        top: 20px !important;
-        transition: top 0.3s ease-out;
+      .ptr-indicator.loading .ptr-arrow { opacity: 0; }
+      .ptr-indicator.loading .ptr-ring-fg {
+        stroke: var(--cyan, #5ecbff);
+        animation: ptr-rotate 1s linear infinite;
+        transform-origin: 24px 24px;
       }
-      .ptr-indicator.loading svg {
-        animation: ptr-spin 0.9s linear infinite;
+      .ptr-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        color: var(--cyan, #5ecbff);
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        white-space: nowrap;
+        transition: color 0.2s;
       }
-      @keyframes ptr-spin {
+      .ptr-indicator.ready .ptr-text { color: var(--mint, #45e0a8); }
+      @keyframes ptr-rotate {
         to { transform: rotate(360deg); }
-      }
-      @keyframes ptr-bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(3px); }
       }
     `;
     document.head.appendChild(style);
@@ -82,7 +135,7 @@ function ensureIndicator(): HTMLElement {
   return indicator;
 }
 
-// ─── Проверки ───
+// ─── Helpers ───
 
 function getActiveScreen(): HTMLElement | null {
   return document.querySelector('.screen.active') as HTMLElement | null;
@@ -91,24 +144,70 @@ function getActiveScreen(): HTMLElement | null {
 function isAtTop(screen: HTMLElement | null): boolean {
   if (!screen) return true;
   if (screen.scrollTop > 0) return false;
-
   const main = document.querySelector('.screens') as HTMLElement | null;
   if (main && main.scrollTop > 0) return false;
-
   if (window.scrollY > 0) return false;
   return true;
 }
 
 function shouldIgnore(target: HTMLElement | null): boolean {
   if (!target) return true;
-  // Не мешаем графику — у lightweight-charts свой зум/пан
   if (target.closest('#chart-container')) return true;
-  // Горизонтальный скролл таймфреймов
   if (target.closest('.tf-bar')) return true;
-  // Поля ввода и элементы управления
   if (target.closest('input, textarea, select')) return true;
   if (target.closest('button[type="range"]')) return true;
   return false;
+}
+
+function vibrate(ms: number): void {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(ms); } catch { /* silent */ }
+  }
+}
+
+// ─── Update visual state ───
+
+function updateVisual(pulled: number): void {
+  if (!indicator || !ringCircle || !textEl) return;
+
+  const progress = Math.min(1, pulled / THRESHOLD);
+  const offset = RING_CIRCUMFERENCE * (1 - progress);
+  ringCircle.style.strokeDashoffset = String(offset);
+
+  // translateY: from -80 (hidden) to -8 (fully visible at top: 8px)
+  const visibleOffset = -80 + (72 * progress);
+  indicator.style.transform = `translate(-50%, ${visibleOffset}px)`;
+  indicator.classList.toggle('visible', pulled > 8);
+
+  const ready = pulled >= THRESHOLD;
+  indicator.classList.toggle('ready', ready);
+
+  if (!refreshing) {
+    textEl.textContent = ready ? 'Отпусти' : 'Потяни вниз';
+  }
+
+  // Haptic once when threshold crossed
+  if (ready && !thresholdHit) {
+    thresholdHit = true;
+    vibrate(10);
+    console.log('[ptr] threshold reached - release to refresh');
+  }
+  else if (!ready && thresholdHit) {
+    thresholdHit = false;
+  }
+}
+
+function resetVisual(): void {
+  if (!indicator) return;
+  indicator.classList.remove('ready', 'visible', 'loading');
+  indicator.style.transform = 'translate(-50%, -80px)';
+  if (ringCircle) {
+    ringCircle.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
+    ringCircle.style.animation = '';
+  }
+  if (textEl) textEl.textContent = 'Потяни вниз';
+  thresholdHit = false;
+  currentPull = 0;
 }
 
 // ─── Touch handlers ───
@@ -137,99 +236,70 @@ function onTouchMove(e: TouchEvent): void {
   const dx = t.clientX - startX;
   const dy = t.clientY - startY;
 
-  // Горизонтальный жест — отдаём другим обработчикам
-  if (Math.abs(dx) > Math.abs(dy) * 1.2) {
-    active = false;
-    return;
-  }
+  if (Math.abs(dx) > Math.abs(dy) * 1.2) { active = false; return; }
+  if (dy < 0) { active = false; resetVisual(); return; }
+  if (!isAtTop(getActiveScreen())) { active = false; resetVisual(); return; }
 
-  // Свайп вверх — обычный скролл, не трогаем
-  if (dy < 0) {
-    active = false;
-    return;
-  }
-
-  // Пользователь уже начал скроллить вниз? — не мешаем
-  if (!isAtTop(getActiveScreen())) {
-    active = false;
-    return;
-  }
-
-  // Сопротивление
   const pulled = Math.min(dy * RESISTANCE, MAX_PULL);
   currentPull = pulled;
 
-  if (pulled > 5) {
-    // Начинаем "оттягивать" — блокируем нативный скролл
+  if (pulled > 3) {
     e.preventDefault();
-
-    const ind = ensureIndicator();
-    ind.style.top = `${Math.max(-60 + pulled, -60)}px`;
-    ind.classList.toggle('ready', pulled >= THRESHOLD);
-
-    const svg = ind.querySelector('svg');
-    if (svg) {
-      if (pulled >= THRESHOLD) {
-        (svg as SVGElement).style.transform = 'rotate(180deg)';
-      } else {
-        const angle = (pulled / THRESHOLD) * 180;
-        (svg as SVGElement).style.transform = `rotate(${angle}deg)`;
-      }
+    ensureIndicator();
+    updateVisual(pulled);
+    // Debug log every 15px to avoid spam
+    if (Math.round(pulled) % 15 === 0) {
+      console.log(`[ptr] pull ${Math.round(pulled)}/${THRESHOLD} px`);
     }
   }
 }
 
 function onTouchEnd(): void {
   if (!active) return;
-
   const shouldRefresh = currentPull >= THRESHOLD;
   active = false;
-  currentPull = 0;
 
   if (refreshing) return;
 
-  const ind = ensureIndicator();
-
   if (shouldRefresh) {
     triggerRefresh();
-  } else {
-    ind.style.top = '-60px';
-    ind.classList.remove('ready');
-    const svg = ind.querySelector('svg');
-    if (svg) (svg as SVGElement).style.transform = 'rotate(0deg)';
+  }
+  else {
+    resetVisual();
   }
 }
 
-// ─── Само обновление ───
+// ─── Trigger refresh ───
 
 async function triggerRefresh(): Promise<void> {
   if (refreshing) return;
   refreshing = true;
 
-  const ind = ensureIndicator();
-  ind.classList.remove('ready');
-  ind.classList.add('loading');
-  ind.style.top = '20px';
+  ensureIndicator();
+  if (!indicator) return;
 
-  const svg = ind.querySelector('svg');
-  if (svg) (svg as SVGElement).style.transform = 'rotate(0deg)';
+  indicator.classList.remove('ready');
+  indicator.classList.add('loading', 'visible');
+  indicator.style.transform = 'translate(-50%, -8px)';
+  if (textEl) textEl.textContent = 'Обновление...';
 
-  // Тактильный отклик
-  if (navigator.vibrate) {
-    try { navigator.vibrate(15); } catch { /* silent */ }
-  }
+  vibrate(15);
+  console.log('[ptr] refreshing...');
 
   try {
     await refreshCurrentScreen();
-  } catch (e) {
+  }
+  catch (e) {
     console.warn('[ptr] refresh failed:', e);
-  } finally {
-    // Минимальная видимость спиннера, чтобы не мигал
+  }
+  finally {
+    // Min visible time so spinner isn't flashing
     await new Promise(r => setTimeout(r, 400));
 
-    ind.classList.remove('loading');
-    ind.style.top = '-60px';
+    indicator.classList.remove('loading');
+    resetVisual();
     refreshing = false;
+    console.log('[ptr] done');
   }
 }
 
@@ -246,67 +316,58 @@ async function refreshCurrentScreen(): Promise<void> {
       case 'screen-home': {
         const vd = document.getElementById('verdict');
         const isAnalyzing = vd?.classList.contains('loading');
-
         const jobs: Promise<any>[] = [];
 
-        // Переанализ — только если сейчас ничего не грузится
         if (!isAnalyzing && (window as any).mobileAnalyze) {
           jobs.push(Promise.resolve((window as any).mobileAnalyze()));
         }
-
-        // BTC-карточка — всегда
         try {
           const screensMod = await import('./screens');
           if (screensMod.loadBTC) jobs.push(Promise.resolve(screensMod.loadBTC()));
-        } catch { /* silent */ }
+        }
+        catch { /* silent */ }
 
         await Promise.allSettled(jobs);
         break;
       }
-
       case 'screen-scanner': {
         if ((window as any).runScanner) {
           await (window as any).runScanner();
         }
         break;
       }
-
       case 'screen-fav': {
         try {
           const m = await import('./scanner');
           m.renderFavorites?.();
-        } catch { /* silent */ }
+        }
+        catch { /* silent */ }
         break;
       }
-
       case 'screen-oracle': {
         try {
           const m = await import('./oracle');
           const fn = (m as any).renderOracleDashboard;
           if (typeof fn === 'function') await fn();
-        } catch { /* silent */ }
+        }
+        catch { /* silent */ }
         break;
       }
-
       case 'screen-portfolio': {
         if ((window as any).mobileSyncPortfolio) {
           await (window as any).mobileSyncPortfolio(true);
         }
         break;
       }
-
       case 'screen-pro': {
         if ((window as any).mobileAnalyze) {
           await (window as any).mobileAnalyze();
         }
         break;
       }
-
-      default:
-        // Неизвестный экран — просто индикатор покрутится и уедет
-        break;
     }
-  } finally {
+  }
+  finally {
     refreshInFlight = false;
   }
 }
@@ -319,7 +380,6 @@ export function initPullToRefresh(): void {
   if (attached) return;
   attached = true;
 
-  // Только touch-устройства (Android / мобильный браузер)
   if (!('ontouchstart' in window)) {
     console.log('[ptr] skipped (no touch support)');
     return;
@@ -330,14 +390,10 @@ export function initPullToRefresh(): void {
   document.addEventListener('touchend', onTouchEnd, { passive: true });
   document.addEventListener('touchcancel', () => {
     active = false;
-    currentPull = 0;
-    if (!refreshing && indicator) {
-      indicator.style.top = '-60px';
-      indicator.classList.remove('ready');
-    }
+    if (!refreshing) resetVisual();
   }, { passive: true });
 
-  console.log('[ptr] pull-to-refresh initialized');
+  console.log('[ptr] initialized (v2, SVG ring)');
 }
 
 if (typeof window !== 'undefined') {

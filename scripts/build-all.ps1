@@ -19,6 +19,34 @@ if (-not (Test-Path "package.json")) {
     exit 1
 }
 
+# ----- READ VERSION FROM package.json -----
+$ver = "0.0.0"
+try {
+    $pkgRaw = [System.IO.File]::ReadAllText((Join-Path (Get-Location) "package.json"), [System.Text.Encoding]::UTF8)
+    if ($pkgRaw -match '"version"\s*:\s*"(\d+\.\d+\.\d+)"') {
+        $ver = [string]$Matches[1]
+    }
+    else {
+        Write-Host "[ERROR] Cannot parse version from package.json" -ForegroundColor Red
+        exit 1
+    }
+}
+catch {
+    Write-Host "[ERROR] Failed to read package.json: $_" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "  Version: $ver" -ForegroundColor White
+Write-Host ""
+
+# Helper: read file as UTF-8 without BOM
+function Write-FileUtf8 {
+    param([string]$Path, [string]$Content)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $full = Join-Path (Get-Location) $Path
+    [System.IO.File]::WriteAllText($full, $Content, $utf8NoBom)
+}
+
 # ===== 1. PC RELEASE =====
 Write-Host "[1/2] PC build (release)..." -ForegroundColor Yellow
 Write-Host "      First time 5-15 min, then ~1 min." -ForegroundColor DarkGray
@@ -70,57 +98,73 @@ $outDir = "dist_release"
 if (Test-Path $outDir) { Remove-Item $outDir -Recurse -Force }
 New-Item -ItemType Directory -Path $outDir | Out-Null
 
-# PC MSI
+# PC MSI - Tauri produces NEBULA_<ver>_x64_ru-RU.msi
 $msi = Get-ChildItem "src-tauri\target\release\bundle\msi\*.msi" -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($msi) {
-    Copy-Item $msi.FullName "$outDir\NEBULA-2.0.0-x64.msi"
-    Write-Host "  [OK] NEBULA-2.0.0-x64.msi" -ForegroundColor Gray
+    $target = "$outDir\NEBULA-$ver-x64.msi"
+    Copy-Item $msi.FullName $target
+    Write-Host "  [OK] NEBULA-$ver-x64.msi" -ForegroundColor Gray
+}
+else {
+    Write-Host "  [WARN] MSI not found in src-tauri\target\release\bundle\msi\" -ForegroundColor Yellow
 }
 
-# PC NSIS installer
+# PC NSIS installer - Tauri produces NEBULA_<ver>_x64-setup.exe
 $nsis = Get-ChildItem "src-tauri\target\release\bundle\nsis\*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($nsis) {
-    Copy-Item $nsis.FullName "$outDir\NEBULA-2.0.0-Setup.exe"
-    Write-Host "  [OK] NEBULA-2.0.0-Setup.exe" -ForegroundColor Gray
+    $target = "$outDir\NEBULA-$ver-Setup.exe"
+    Copy-Item $nsis.FullName $target
+    Write-Host "  [OK] NEBULA-$ver-Setup.exe" -ForegroundColor Gray
+}
+else {
+    Write-Host "  [WARN] Setup.exe not found in src-tauri\target\release\bundle\nsis\" -ForegroundColor Yellow
 }
 
 # PC portable
 $portable = "src-tauri\target\release\nebula.exe"
 if (Test-Path $portable) {
-    Copy-Item $portable "$outDir\NEBULA-2.0.0-Portable.exe"
-    Write-Host "  [OK] NEBULA-2.0.0-Portable.exe" -ForegroundColor Gray
+    $target = "$outDir\NEBULA-$ver-Portable.exe"
+    Copy-Item $portable $target
+    Write-Host "  [OK] NEBULA-$ver-Portable.exe" -ForegroundColor Gray
+}
+else {
+    Write-Host "  [WARN] Portable EXE not found" -ForegroundColor Yellow
 }
 
 # Android APK
 $apk = "android\app\build\outputs\apk\release\app-release.apk"
 if (Test-Path $apk) {
-    Copy-Item $apk "$outDir\NEBULA-2.0.0.apk"
-    Write-Host "  [OK] NEBULA-2.0.0.apk" -ForegroundColor Gray
+    $target = "$outDir\NEBULA-$ver.apk"
+    Copy-Item $apk $target
+    Write-Host "  [OK] NEBULA-$ver.apk" -ForegroundColor Gray
+}
+else {
+    Write-Host "  [WARN] APK not found at $apk" -ForegroundColor Yellow
 }
 
-# README (ASCII only to avoid encoding issues)
-$readme = @'
-# NEBULA Oracle Terminal v2.0.0
+# README (with real version, UTF-8 without BOM)
+$readme = @"
+# NEBULA Oracle Terminal v$ver
 
 ## What is inside
 
 | File | Purpose |
 |------|---------|
-| NEBULA-2.0.0-Setup.exe    | Windows installer (recommended) |
-| NEBULA-2.0.0-Portable.exe | Portable version (no install) |
-| NEBULA-2.0.0-x64.msi      | MSI package for organizations |
-| NEBULA-2.0.0.apk          | Android APK |
+| NEBULA-$ver-Setup.exe    | Windows installer (recommended) |
+| NEBULA-$ver-Portable.exe | Portable version (no install) |
+| NEBULA-$ver-x64.msi      | MSI package for organizations |
+| NEBULA-$ver.apk          | Android APK |
 
 ## Install on Windows
 
-1. Run NEBULA-2.0.0-Setup.exe
+1. Run NEBULA-$ver-Setup.exe
 2. Windows may warn -> "More info" -> "Run anyway"
 3. Follow the installer wizard
 4. Shortcut appears in Start menu
 
 ## Install on Android
 
-1. Copy NEBULA-2.0.0.apk to your phone (USB / Telegram / Google Drive)
+1. Copy NEBULA-$ver.apk to your phone (USB / Telegram / Google Drive)
 2. Open the file in a file manager
 3. Android asks for permission -> "Allow"
 4. Tap "Install"
@@ -130,8 +174,8 @@ $readme = @'
 
 - Windows 10 or 11 (WebView2 built-in)
 - Android 7.0+
-'@
-$readme | Out-File -FilePath "$outDir\README.md" -Encoding utf8
+"@
+Write-FileUtf8 -Path "$outDir\README.md" -Content $readme
 
 # ===== 4. SUMMARY =====
 $totalTime = [math]::Round(((Get-Date) - $startTime).TotalMinutes, 1)
@@ -142,6 +186,7 @@ Write-Host "  DONE! Total: $totalTime min." -ForegroundColor Green
 Write-Host "===================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Folder: $outDir\" -ForegroundColor White
+Write-Host "Version: $ver" -ForegroundColor White
 Write-Host ""
 
 Get-ChildItem $outDir | ForEach-Object {
@@ -151,5 +196,5 @@ Get-ChildItem $outDir | ForEach-Object {
 }
 
 Write-Host ""
-Write-Host "Share: NEBULA-2.0.0-Setup.exe (PC) + NEBULA-2.0.0.apk (Android)" -ForegroundColor Cyan
+Write-Host "Share: NEBULA-$ver-Setup.exe (PC) + NEBULA-$ver.apk (Android)" -ForegroundColor Cyan
 Write-Host ""

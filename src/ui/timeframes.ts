@@ -1,33 +1,37 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · TIMEFRAMES
-// Панель переключения таймфреймов + автообновление графика
+// NEBULA v2 · TIMEFRAMES + WEBSOCKET real-time
+// WS primary, REST fallback
 // ═══════════════════════════════════════════════════════════════
 
 import { state } from '../utils';
 import { fetchCandlesWithSource, TF_CONFIG } from '../sources/candles';
 import type { Timeframe } from '../sources/candles';
-import { setCandlesAndFit, drawNowLine } from '../chart';
+import { updateCandles, updateLastCandle, drawNowLine } from '../chart';
+import { PriceStream } from '../sources/stream';
 
 const LS_KEY = 'nebulaTimeframe';
 const ORDER: Timeframe[] = ['1m', '15m', '1h', '1d', '1w', '1M', 'max'];
 
-// ─── Автообновление: как часто дёргать сеть для текущего tf ───
-// Короткие tf — чаще, длинные — реже, max — почти никогда.
+const WS_FALLBACK_MS = 8_000;
+const NOW_LINE_THROTTLE_MS = 3_000;
 
 function refreshIntervalMs(tf: Timeframe): number {
   switch (tf) {
-    case '1m':  return 20_000;    // 20 сек
-    case '15m': return 45_000;    // 45 сек
-    case '1h':  return 120_000;   // 2 мин
-    case '1d':  return 300_000;   // 5 мин
-    case '1w':  return 900_000;   // 15 мин
-    case '1M':  return 1_800_000; // 30 мин
-    case 'max': return 3_600_000; // 1 час
-    default:    return 60_000;
+    case '1m': return 15_000;
+    case '15m': return 30_000;
+    case '1h': return 60_000;
+    case '1d': return 300_000;
+    case '1w': return 900_000;
+    case '1M': return 1_800_000;
+    case 'max': return 3_600_000;
+    default: return 60_000;
   }
 }
 
-// ─── Публичное API ───
+let _stream: PriceStream | null = null;
+let _restTimer: ReturnType<typeof setInterval> | null = null;
+let _wsFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+let _lastNowLineUpdate = 0;
 
 export function getCurrentTimeframe(): Timeframe {
   return (state as any).currentTimeframe || '1d';
@@ -36,56 +40,118 @@ export function getCurrentTimeframe(): Timeframe {
 export function setTimeframe(tf: Timeframe): void {
   if (!ORDER.includes(tf)) tf = '1d';
   (state as any).currentTimeframe = tf;
-  try { localStorage.setItem(LS_KEY, tf); } catch { /* silent */ }
+  try { localStorage.setItem(LS_KEY, tf); }
+  catch { /* silent */ }
 
-  // Подсвечиваем активную кнопку
   document.querySelectorAll<HTMLElement>('[data-tf]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tf === tf);
   });
 
-  // Перезапускаем анализ с новым tf
   (window as any).mobileAnalyze?.();
-
-  // Перезапускаем автообновление
-  startAutoRefresh();
+  reconnectStream();
 }
 
-// ─── Тихий refresh: только график, без Oracle/Pro/Whale ───
-
-async function refreshChartSilently(): Promise<void> {
+async function refreshChartViaRest(): Promise<void> {
   const ticker = (state as any).currentTicker;
   if (!ticker) return;
-
-  // Не обновляем, если вкладка в фоне — экономим батарею
   if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
 
   const tf = getCurrentTimeframe();
   try {
     const { data } = await fetchCandlesWithSource(ticker, tf, undefined, true);
     if (!data || data.length < 25) return;
-    const price = data[data.length - 1].close;
-    setCandlesAndFit(data as any);
-    drawNowLine(price);
-  } catch { /* silent */ }
+    updateCandles(data as any);
+  }
+  catch { /* silent */ }
 }
 
-// ─── Таймер ───
-
-let _timer: ReturnType<typeof setInterval> | null = null;
-
-export function startAutoRefresh(): void {
-  stopAutoRefresh();
+function startRestFallback(): void {
+  stopRestFallback();
   const tf = getCurrentTimeframe();
   const ms = refreshIntervalMs(tf);
-  _timer = setInterval(refreshChartSilently, ms);
-  console.log(`[tf] auto-refresh ${tf} → каждые ${Math.round(ms / 1000)}с`);
+  _restTimer = setInterval(refreshChartViaRest, ms);
+  console.log(`[tf] REST fallback ${tf} -> every ${Math.round(ms / 1000)}s`);
+}
+
+function stopRestFallback(): void {
+  if (_restTimer) { clearInterval(_restTimer); _restTimer = null; }
+}
+
+function connectStream(): void {
+  disconnectStream();
+
+  const ticker = (state as any).currentTicker;
+  const tf = getCurrentTimeframe();
+
+  if (!ticker) return;
+  if (tf === 'max') {
+    startRestFallback();
+    return;
+  }
+
+  _stream = new PriceStream({
+    ticker,
+    timeframe: tf,
+    onCandle: (candle) => {
+      updateLastCandle(candle);
+
+      const now = Date.now();
+      if (now - _lastNowLineUpdate > NOW_LINE_THROTTLE_MS) {
+        _lastNowLineUpdate = now;
+        drawNowLine(candle.close);
+      }
+    },
+    onOpen: () => {
+      stopRestFallback();
+      if (_wsFallbackTimer) {
+        clearTimeout(_wsFallbackTimer);
+        _wsFallbackTimer = null;
+      }
+      console.log('[tf] WebSocket connected - real-time mode');
+    },
+    onClose: () => {
+      if (!_restTimer) startRestFallback();
+    },
+    onError: (err) => {
+      console.warn('[tf] stream error:', err);
+    },
+  });
+
+  _wsFallbackTimer = setTimeout(() => {
+    if (!_stream?.isOpen() && !_restTimer) {
+      console.log('[tf] WS slow - starting REST fallback');
+      startRestFallback();
+    }
+  }, WS_FALLBACK_MS);
+}
+
+function disconnectStream(): void {
+  if (_wsFallbackTimer) {
+    clearTimeout(_wsFallbackTimer);
+    _wsFallbackTimer = null;
+  }
+  if (_stream) {
+    try { _stream.destroy(); }
+    catch { /* silent */ }
+    _stream = null;
+  }
+}
+
+function reconnectStream(): void {
+  stopRestFallback();
+  connectStream();
+}
+
+export function startAutoRefresh(): void {
+  connectStream();
 }
 
 export function stopAutoRefresh(): void {
-  if (_timer) { clearInterval(_timer); _timer = null; }
+  disconnectStream();
+  stopRestFallback();
 }
 
-// ─── UI ───
+// ─── UI bar ───
 
 function injectStyles(): void {
   if (document.getElementById('tf-styles')) return;
@@ -125,7 +191,6 @@ function injectStyles(): void {
 function buildBar(): void {
   const host = document.getElementById('tf-bar');
   if (!host) return;
-
   injectStyles();
   const current = getCurrentTimeframe();
 
@@ -142,33 +207,35 @@ function buildBar(): void {
   });
 }
 
-// ─── Инициализация ───
-
 export function initTimeframeBar(): void {
-  // Восстанавливаем сохранённый tf
-  let saved: Timeframe = '1d';
-  try {
-    const ls = localStorage.getItem(LS_KEY) as Timeframe | null;
-    if (ls && ORDER.includes(ls)) saved = ls;
-  } catch { /* silent */ }
-  (state as any).currentTimeframe = saved;
-
   buildBar();
   startAutoRefresh();
 
-  // Останавливаем при скрытии вкладки, запускаем при появлении
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') startAutoRefresh();
-    else stopAutoRefresh();
+    if (document.visibilityState === 'visible') {
+      reconnectStream();
+      setTimeout(() => refreshChartViaRest(), 500);
+    }
+    else {
+      stopAutoRefresh();
+    }
   });
 
-  // При закрытии приложения — гасим таймер
   window.addEventListener('beforeunload', stopAutoRefresh);
 
-  console.log(`[tf] init: ${saved}`);
+  console.log(`[tf] init: ${getCurrentTimeframe()} (real-time stream)`);
 }
 
-// Экспорт в window для inline-обработчиков
+// Poll ticker changes to reconnect WS
+let _lastTicker = (state as any).currentTicker;
+setInterval(() => {
+  const t = (state as any).currentTicker;
+  if (t && t !== _lastTicker) {
+    _lastTicker = t;
+    reconnectStream();
+  }
+}, 1000);
+
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     setTimeframe,

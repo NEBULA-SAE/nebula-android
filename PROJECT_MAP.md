@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.1** | Branch: `main` | Commit: `8234933`
-> Generated: 2026-10-25 09:26
+> Version: **2.0.2** | Branch: `main` | Commit: `d94ff8f`
+> Generated: 2026-10-25 09:48
 
 ---
 
@@ -37,17 +37,33 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Stats
 
-- TypeScript files in `src/`: 40
-- Total LOC in `src/`: 11725
-- Bundle (`dist/`): 54 files, 449.9 KB
+- TypeScript files in `src/`: 41
+- Total LOC in `src/`: 12018
+- Bundle (`dist/`): 54 files, 454.6 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.1**
-- Last git tag: (none)
-- Status: **no tags yet**
+- `package.json` version: **2.0.2**
+- Last git tag: `v2.0.1`
+- Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `d94ff8f` - 2026-10-25 - chore(release): v2.0.1
+
+Files:
+- `.gitattributes`
+- `PROJECT_MAP.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `scripts/context.ps1`
+- `scripts/project-map.ps1`
+- `scripts/release.ps1`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
 
 ### `8234933` - 2026-10-23 - fix(android): AbortSignal в fetch-патче + таймфреймы + pull-to-refresh
 
@@ -99,24 +115,13 @@ Files:
 Files:
 - `public/styles/screens.css`
 
-### `aa430bf` - 2026-10-19 - feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
-
-Files:
-- `index.html`
-- `public/styles/components.css`
-- `public/styles/screens.css`
-- `src/demo.ts`
-- `src/ui/oracle.ts`
-- `src/ui/screens.ts`
-- `src/utils.ts`
-
 ## Last release diff
 
-(no tags yet)
+No changes since `v2.0.1`
 
 ## Recent tags
 
-(none)
+- `v2.0.1`
 
 ## File tree (src/)
 
@@ -131,6 +136,7 @@ src/
 |   +--    66 funding.ts
 |   +--   331 mexc.ts
 |   +--   178 orderbook.ts
+|   +--   171 stream.ts
 |   +--   246 whale-futures.ts
 +-- styles/
 |   +--   136 main.css
@@ -141,19 +147,19 @@ src/
 |   +--   132 learning.ts
 |   +--    76 market.ts
 |   +--   717 oracle.ts
-|   +--   346 pull-refresh.ts
+|   +--   402 pull-refresh.ts
 |   +--   256 scanner.ts
 |   +--   455 screens.ts
 |   +--   504 settings.ts
 |   +--   212 splash.ts
 |   +--   150 terms.ts
 |   +--   383 themes.ts
-|   +--   180 timeframes.ts
+|   +--   247 timeframes.ts
 |   +--   113 tooltip.ts
 |   +--   581 whale.ts
 +--   394 ai.ts
 +--   280 auth.ts
-+--   275 chart.ts
++--   274 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
 +--   330 demo.ts
@@ -212,6 +218,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - drawNowLine()
 - setCandlesAndFit()
 - updateCandles()
+- updateLastCandle()
 - Candle (iface)
 - WallsData (iface)
 
@@ -344,6 +351,10 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 ### `src/sources/orderbook.ts`
 - getAggregatedOrderbook()
 - OrderbookResult (iface)
+
+### `src/sources/stream.ts`
+- PriceStreamOptions (iface)
+- PriceStream (class)
 
 ### `src/sources/whale-futures.ts`
 - getWhaleFuturesMetrics()
@@ -532,9 +543,9 @@ Same interface/type declared in multiple files. Candidates for refactor into sha
 
 Functions/objects assigned to `window` for inline HTML handlers.
 
-### `src/chart.ts` (9)
+### `src/chart.ts` (10)
 
-clearLines, clearOrderbookLines, drawNowLine, drawOrderbookWalls, fetchCandles, initChart, mapCandleArray, setCandlesAndFit, updateCandles
+clearLines, clearOrderbookLines, drawNowLine, drawOrderbookWalls, fetchCandles, initChart, mapCandleArray, setCandlesAndFit, updateCandles, updateLastCandle
 
 ### `src/i18n.ts` (5)
 
@@ -705,6 +716,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- d94ff8f  2026-10-25  chore(release): v2.0.1
 - 8234933  2026-10-23  fix(android): AbortSignal в fetch-патче + таймфреймы + pull-to-refresh
 - eb6d48b  2026-10-22  feat: about page, reset demo, tauri fix, UI updates
 - 352b9ca  2026-10-21  feat: mobile radial HUD, demo sandbox fixes, NEBUL core button
@@ -719,7 +731,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 1cf6a91  2026-10-14  v2.0.3: fix splash on Android (prefers-reduced-motion, star count, DPR), fix donate sheet z-index
 - cecc1c0  2026-10-13  v2.0.2: new splash screen (canvas + wolf + stars), window show-after-load
 - d296ac7  2026-10-13  v2.0.1: extended themes (17 colors), mini-mode drag, titlebar theming
-- 31d063d  2026-10-13  Add themes data + hotkeys + mini-mode + tray + Android fixes
 
 ---
 

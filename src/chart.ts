@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · CHART
-// Фикс утечки памяти: убран двойной resize (autoSize + ResizeObserver)
-// + updateCandles() для тихого автообновления без сброса зума
+// + updateLastCandle() для WebSocket real-time
 // ═══════════════════════════════════════════════════════════════
 
 import { LineStyle } from 'lightweight-charts';
@@ -23,7 +22,6 @@ export interface WallsData {
   sourcesFailed?: string[];
 }
 
-// ─── Размер контейнера ───
 function getContainerSize(): { w: number; h: number } {
   const c = document.getElementById('chart-container');
   if (!c) return { w: 0, h: 0 };
@@ -33,15 +31,13 @@ function getContainerSize(): { w: number; h: number } {
   return { w, h };
 }
 
-// ─── Только autoScale цены. НЕ трогаем width/height — это ломает autoSize ───
 function refreshAutoScale(): void {
   if (!state.chart) return;
   try {
     state.chart.priceScale('right').applyOptions({ autoScale: true });
-  } catch { /* silent */ }
+  }
+  catch { /* silent */ }
 }
-
-// ─── INIT CHART ───
 
 export function initChart(): void {
   const c = document.getElementById('chart-container');
@@ -59,7 +55,6 @@ export function initChart(): void {
     return;
   }
 
-  // Ждём, пока контейнер получит реальный размер (после применения desktop-CSS)
   let tries = 0;
   const waitAndInit = () => {
     const { w, h } = getContainerSize();
@@ -75,11 +70,8 @@ export function initChart(): void {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createChartNow(LW: any, c: HTMLElement, w: number, h: number): void {
-  console.log(`[chart] init with container size ${w}×${h}`);
+  console.log(`[chart] init with container size ${w}x${h}`);
 
-  // autoSize: true — библиотека сама следит за размером контейнера.
-  // НЕ добавляем свой ResizeObserver — это вызывает бесконечный цикл
-  // (chart меняет canvas → observer реагирует → applyOptions → canvas меняется → ...).
   state.chart = LW.createChart(c, {
     autoSize: true,
     layout: {
@@ -116,16 +108,13 @@ function createChartNow(LW: any, c: HTMLElement, w: number, h: number): void {
     borderVisible: false,
   });
 
-  // Один отложенный проход — на случай, если CSS/шрифты применились позже.
-  // Никаких [100, 300, 800, 1500, 3000] — это лишняя нагрузка.
   setTimeout(refreshAutoScale, 300);
 }
 
-// ─── CLEAR LINES ───
-
 export function clearLines(): void {
   state.priceLines.forEach((l: any) => {
-    try { state.candleSeries?.removePriceLine(l); } catch { /* silent */ }
+    try { state.candleSeries?.removePriceLine(l); }
+    catch { /* silent */ }
   });
   state.priceLines = [];
   clearOrderbookLines();
@@ -133,7 +122,8 @@ export function clearLines(): void {
 
 export function clearOrderbookLines(): void {
   state.orderbookLines.forEach((l: any) => {
-    try { state.candleSeries?.removePriceLine(l); } catch { /* silent */ }
+    try { state.candleSeries?.removePriceLine(l); }
+    catch { /* silent */ }
   });
   state.orderbookLines = [];
 }
@@ -183,7 +173,8 @@ export function drawOrderbookWalls(wallsData: WallsData | null): void {
       title: '🧱 SELL',
     });
     state.orderbookLines.push(bidLine, askLine);
-  } catch (e) {
+  }
+  catch (e) {
     console.warn('drawOrderbookWalls failed', e);
   }
 }
@@ -200,39 +191,30 @@ export function drawNowLine(price: number): void {
       title: 'NOW',
     });
     state.priceLines.push(line);
-  } catch { /* silent */ }
+  }
+  catch { /* silent */ }
 }
-
-// ─── ПОЛНОЕ ОБНОВЛЕНИЕ (новый тикер / смена tf) ───
-// Сбрасывает зум на «показать всё», перерисовывает NOW.
-// Вызывается из mobileAnalyze после clearLines().
 
 export function setCandlesAndFit(candles: Candle[]): void {
   if (!state.candleSeries) return;
   try {
     state.candleSeries.setData(candles as any);
-  } catch (e) {
+  }
+  catch (e) {
     console.warn('[chart] setData failed:', e);
     return;
   }
 
-  // Один проход сразу
-  try { state.chart?.timeScale().fitContent(); } catch { /* silent */ }
+  try { state.chart?.timeScale().fitContent(); }
+  catch { /* silent */ }
   refreshAutoScale();
 
-  // Один отложенный проход — на случай поздних CSS/размеров.
-  // Раньше тут было 5 вызовов подряд — это и грузило WebView2.
   setTimeout(() => {
-    try { state.chart?.timeScale().fitContent(); } catch { /* silent */ }
+    try { state.chart?.timeScale().fitContent(); }
+    catch { /* silent */ }
     refreshAutoScale();
   }, 400);
 }
-
-// ─── ТИХОЕ ОБНОВЛЕНИЕ (авто-refresh каждые N сек) ───
-// НЕ трогает time-axis zoom — пользователь сохраняет свой масштаб.
-// Обновляет данные + пересоздаёт единственную NOW-линию (без утечки),
-// orderbook-стены остаются на месте.
-// Вызывается из ui/timeframes.ts::refreshChartSilently().
 
 export function updateCandles(candles: Candle[]): void {
   if (!state.candleSeries) return;
@@ -240,23 +222,39 @@ export function updateCandles(candles: Candle[]): void {
 
   try {
     state.candleSeries.setData(candles as any);
-  } catch (e) {
+  }
+  catch (e) {
     console.warn('[chart] updateCandles failed:', e);
     return;
   }
 
-  // Убираем старую NOW-линию (только из priceLines, не трогаем orderbook)
+  // Remove old NOW line (only from priceLines, keep orderbook)
   state.priceLines.forEach((l: any) => {
-    try { state.candleSeries.removePriceLine(l); } catch { /* silent */ }
+    try { state.candleSeries.removePriceLine(l); }
+    catch { /* silent */ }
   });
   state.priceLines = [];
 
-  // Ставим новую NOW по последней цене
   const price = candles[candles.length - 1].close;
   if (price > 0) drawNowLine(price);
 
-  // Только price-axis autoScale, без fitContent — зум сохраняется
   refreshAutoScale();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REAL-TIME: update single last bar (WebSocket)
+// <1ms, uses lightweight-charts update() which only touches last bar
+// ═══════════════════════════════════════════════════════════════
+
+export function updateLastCandle(candle: Candle): void {
+  if (!state.candleSeries) return;
+  if (!candle || !candle.time || candle.close <= 0) return;
+  try {
+    state.candleSeries.update(candle as any);
+  }
+  catch (e) {
+    console.warn('[chart] updateLastCandle failed:', e);
+  }
 }
 
 if (typeof window !== 'undefined') {
@@ -271,5 +269,6 @@ if (typeof window !== 'undefined') {
     drawNowLine,
     setCandlesAndFit,
     updateCandles,
+    updateLastCandle,
   });
 }
