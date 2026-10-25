@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.3** | Branch: `main` | Commit: `fdf138a`
-> Generated: 2026-10-25 10:13
+> Version: **2.0.4** | Branch: `main` | Commit: `00f81af`
+> Generated: 2026-10-25 10:24
 
 ---
 
@@ -38,16 +38,32 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 41
-- Total LOC in `src/`: 11992
-- Bundle (`dist/`): 54 files, 454.8 KB
+- Total LOC in `src/`: 12009
+- Bundle (`dist/`): 54 files, 455 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.3**
-- Last git tag: `v2.0.2`
+- `package.json` version: **2.0.4**
+- Last git tag: `v2.0.3`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `00f81af` - 2026-10-25 - chore(release): v2.0.3
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ui/pull-refresh.ts`
+- `"\320\267\320\260\320\277\321\203\321\201\320\272.txt"`
 
 ### `fdf138a` - 2026-10-25 - chore(release): v2.0.2
 
@@ -121,19 +137,13 @@ Files:
 - `src/demo.ts`
 - `src/ui/screens.ts`
 
-### `352b9ca` - 2026-10-21 - feat: mobile radial HUD, demo sandbox fixes, NEBUL core button
-
-Files:
-- `index.html`
-- `public/styles/screens.css`
-- `src/ui/screens.ts`
-
 ## Last release diff
 
-No changes since `v2.0.2`
+No changes since `v2.0.3`
 
 ## Recent tags
 
+- `v2.0.3`
 - `v2.0.2`
 - `v2.0.1`
 
@@ -161,7 +171,7 @@ src/
 |   +--   132 learning.ts
 |   +--    76 market.ts
 |   +--   717 oracle.ts
-|   +--   376 pull-refresh.ts
+|   +--   393 pull-refresh.ts
 |   +--   256 scanner.ts
 |   +--   455 screens.ts
 |   +--   504 settings.ts
@@ -730,6 +740,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 00f81af  2026-10-25  chore(release): v2.0.3
 - fdf138a  2026-10-25  chore(release): v2.0.2
 - d94ff8f  2026-10-25  chore(release): v2.0.1
 - 8234933  2026-10-23  fix(android): AbortSignal в fetch-патче + таймфреймы + pull-to-refresh
@@ -744,7 +755,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - d47b36f  2026-10-14  fix(market): CoinGecko основной, Coinpaprika фоллбэк (лимит 60 req/h)
 - f606dd2  2026-10-14  feat(settings): единый sheet настроек в топбаре, About без дублей
 - 1cf6a91  2026-10-14  v2.0.3: fix splash on Android (prefers-reduced-motion, star count, DPR), fix donate sheet z-index
-- cecc1c0  2026-10-13  v2.0.2: new splash screen (canvas + wolf + stars), window show-after-load
 
 ---
 

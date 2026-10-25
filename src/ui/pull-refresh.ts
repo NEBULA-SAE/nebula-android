@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · PULL TO REFRESH v3
-// Clean SVG ring, centered, no vibration
+// NEBULA v2 · PULL TO REFRESH v3.1
+// Positioned BELOW top-bar (dynamic height), no vibration
 // ═══════════════════════════════════════════════════════════════
 
 import { state } from '../utils';
@@ -8,8 +8,6 @@ import { state } from '../utils';
 const THRESHOLD = 70;
 const MAX_PULL = 110;
 const RESISTANCE = 0.55;
-const HIDDEN_Y = -100;   // hidden above screen
-const VISIBLE_Y = 20;    // fully visible (top offset)
 
 let startX = 0;
 let startY = 0;
@@ -23,6 +21,27 @@ let textEl: HTMLElement | null = null;
 
 const RING_RADIUS = 18;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+// How far BELOW top-bar to place the ring (px)
+const MARGIN_BELOW_TOP_BAR = 24;
+
+// Reads the actual top-bar height, so the indicator always appears
+// below it regardless of theme / mobile / desktop layout.
+function getTopBarHeight(): number {
+  const topBar = document.querySelector('.top-bar') as HTMLElement | null;
+  if (topBar && topBar.offsetHeight > 0) return topBar.offsetHeight;
+  return 100; // fallback if layout not ready
+}
+
+function getHiddenY(): number {
+  // Slightly above top-bar bottom, hidden by opacity
+  return Math.max(0, getTopBarHeight() - 40);
+}
+
+function getVisibleY(): number {
+  // Clearly below top-bar
+  return getTopBarHeight() + MARGIN_BELOW_TOP_BAR;
+}
 
 function ensureIndicator(): HTMLElement {
   if (indicator) return indicator;
@@ -58,32 +77,32 @@ function ensureIndicator(): HTMLElement {
         position: fixed;
         top: 0;
         left: 50%;
-        transform: translate(-50%, ${HIDDEN_Y}px);
+        transform: translate(-50%, 0px);
         width: 120px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         z-index: 9999;
         pointer-events: none;
-        will-change: transform;
+        will-change: transform, opacity;
         opacity: 0;
-        transition: opacity 0.12s ease-out;
+        transition: opacity 0.15s ease-out;
       }
       .ptr-indicator.visible { opacity: 1; }
       .ptr-ring-wrap {
         position: relative;
-        width: 48px;
-        height: 48px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
-        background: rgba(12, 20, 35, 0.75);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        background: rgba(12, 20, 35, 0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(94, 203, 255, 0.2);
       }
       .ptr-ring {
-        width: 48px;
-        height: 48px;
+        width: 52px;
+        height: 52px;
         transform: rotate(-90deg);
       }
       .ptr-ring-bg {
@@ -102,7 +121,7 @@ function ensureIndicator(): HTMLElement {
         position: absolute;
         top: 50%; left: 50%;
         transform: translate(-50%, -50%) rotate(0deg);
-        width: 20px; height: 20px;
+        width: 22px; height: 22px;
         color: var(--cyan, #5ecbff);
         transition: transform 0.2s, opacity 0.2s, color 0.2s;
       }
@@ -115,22 +134,23 @@ function ensureIndicator(): HTMLElement {
       .ptr-indicator.loading .ptr-ring-fg {
         stroke: var(--cyan, #5ecbff);
         animation: ptr-rotate 1s linear infinite;
-        transform-origin: 24px 24px;
+        transform-origin: 26px 26px;
       }
       .ptr-text {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 10px;
+        font-size: 10.5px;
         font-weight: 600;
         letter-spacing: 0.3px;
         color: var(--cyan, #5ecbff);
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
         white-space: nowrap;
         transition: color 0.15s;
-        padding: 3px 8px;
-        background: rgba(12, 20, 35, 0.75);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        padding: 4px 10px;
+        background: rgba(12, 20, 35, 0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
       }
       .ptr-indicator.ready .ptr-text { color: var(--mint, #45e0a8); }
       @keyframes ptr-rotate {
@@ -168,19 +188,16 @@ function shouldIgnore(target: HTMLElement | null): boolean {
 function updateVisual(pulled: number): void {
   if (!indicator || !ringCircle || !textEl) return;
 
-  const progress = Math.min(1, pulled / THRESHOLD);
+  const HIDDEN_Y = getHiddenY();
+  const VISIBLE_Y = getVisibleY();
 
-  // Position: HIDDEN_Y (-100) -> VISIBLE_Y (+20)
-  // Fast appearance: reaches full position at 40% pull
+  const progress = Math.min(1, pulled / THRESHOLD);
   const eased = Math.min(1, progress * 2.5);
   const y = HIDDEN_Y + (VISIBLE_Y - HIDDEN_Y) * eased;
+
   indicator.style.transform = `translate(-50%, ${y}px)`;
+  indicator.classList.toggle('visible', pulled > 3);
 
-  // Opacity: fast fade-in
-  const opacity = Math.min(1, pulled / 20);
-  indicator.classList.toggle('visible', opacity > 0.1);
-
-  // Ring fill: linear with progress
   const offset = RING_CIRCUMFERENCE * (1 - progress);
   ringCircle.style.strokeDashoffset = String(offset);
 
@@ -195,7 +212,7 @@ function updateVisual(pulled: number): void {
 function resetVisual(): void {
   if (!indicator) return;
   indicator.classList.remove('ready', 'visible', 'loading');
-  indicator.style.transform = `translate(-50%, ${HIDDEN_Y}px)`;
+  indicator.style.transform = `translate(-50%, ${getHiddenY()}px)`;
   if (ringCircle) {
     ringCircle.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
     ringCircle.style.animation = '';
@@ -266,7 +283,7 @@ async function triggerRefresh(): Promise<void> {
 
   indicator.classList.remove('ready');
   indicator.classList.add('loading', 'visible');
-  indicator.style.transform = `translate(-50%, ${VISIBLE_Y}px)`;
+  indicator.style.transform = `translate(-50%, ${getVisibleY()}px)`;
   if (textEl) textEl.textContent = 'Обновление...';
 
   try {
@@ -367,7 +384,7 @@ export function initPullToRefresh(): void {
     if (!refreshing) resetVisual();
   }, { passive: true });
 
-  console.log('[ptr] initialized (v3, centered, no vibration)');
+  console.log('[ptr] initialized (v3.1, below top-bar)');
 }
 
 if (typeof window !== 'undefined') {
