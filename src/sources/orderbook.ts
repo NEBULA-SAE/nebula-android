@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · СТАКАН + ПРАВДИВОЕ ДАВЛЕНИЕ
-// Gate.io, Binance SPOT, Bybit, OKX, MEXC
-// Всё напрямую, кроме MEXC (прокси). Параллельно.
+// Gate.io, Binance, Bybit, OKX, MEXC, KuCoin
 // ═══════════════════════════════════════════════════════════════
 
 export interface OrderbookResult {
@@ -68,12 +67,27 @@ async function getMexc(t: string): Promise<[string[][], string[][]]> {
   return [d.bids, d.asks];
 }
 
+async function getKucoin(t: string): Promise<[string[][], string[][]]> {
+  const base = IS_DEV ? '/proxy/kucoin' : 'https://api.kucoin.com';
+  const r = await fetch(
+    `${base}/api/v1/market/orderbook/level2_100?symbol=${t}-USDT`,
+    { signal: AbortSignal.timeout(TIMEOUT) }
+  );
+  if (!r.ok) throw new Error(`kucoin ${r.status}`);
+  const j = await r.json();
+  if (j.code !== '200000') throw new Error(`kucoin ${j.msg}`);
+  const d = j.data;
+  if (!d?.bids?.length || !d?.asks?.length) throw new Error('kucoin empty');
+  return [d.bids, d.asks];
+}
+
 const EXCHANGES = [
   { name: 'gateio',  fetch: getGateio },
   { name: 'binance', fetch: getBinance },
   { name: 'bybit',   fetch: getBybit },
   { name: 'okx',     fetch: getOkx },
   { name: 'mexc',    fetch: getMexc },
+  { name: 'kucoin',  fetch: getKucoin },
 ];
 
 function cleanSpoof(levels: [number, number][], mid: number): [number, number][] {

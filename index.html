@@ -110,7 +110,15 @@
   <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
   <symbol id="i-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></symbol>
-  
+
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </symbol>
+
   <symbol id="i-radar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="9" />
     <circle cx="12" cy="12" r="5" />
@@ -134,7 +142,7 @@
       <button class="chip amber hide-on-mobile" onclick="openMarketPulse()" title="Market"><svg class="ico-sm"><use href="#i-globe"/></svg></button>
       <button class="chip mint hide-on-mobile" onclick="openLearning()" title="Learning"><svg class="ico-sm"><use href="#i-brain"/></svg></button>
       <button class="chip violet hide-on-mobile" onclick="openOrdersSheet()" title="Orders"><svg class="ico-sm"><use href="#i-bolt"/></svg></button>
-      
+
       <button class="chip cyan" onclick="openSettings()" title="Settings"><svg class="ico-sm"><use href="#i-settings"/></svg></button>
       <div class="lang-mini">
         <button id="lang-ru" onclick="setLanguage('ru')">RU</button>
@@ -242,6 +250,20 @@
         <span>— : <b>—</b></span>
       </div>
       <div id="chart-container"></div>
+    </div>
+
+        <!-- ═══ MULTI-TF CONFLUENCE ═══ -->
+    <div class="card" id="confluence-card" style="display:none;border-color:rgba(94,203,255,.2);">
+      <div class="card-head" style="padding:10px 14px;">
+        <div class="card-head-icon">
+          <svg style="color:var(--cyan);"><use href="#i-pulse"/></svg>
+          <span id="lbl-confluence">Мульти-ТФ</span>
+          <!-- НОВАЯ КНОПКА ВОПРОСА -->
+          <button onclick="showConfluenceHelp()" style="background:none;border:none;color:var(--mut);font-size:16px;cursor:pointer;padding:0 0 0 6px;display:flex;align-items:center;" title="Что это?">❓</button>
+        </div>
+        <span id="confluence-badge" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;"></span>
+      </div>
+      <div class="card-body" id="confluence-content" style="padding:10px 14px;"></div>
     </div>
 
     <div class="verdict" id="verdict" style="display:none;">
@@ -425,6 +447,18 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-risk">
+    <div class="risk-page-header">
+      <div class="risk-page-title">
+        <svg style="width:22px;height:22px;color:var(--cyan);"><use href="#i-shield"/></svg>
+        <span id="risk-page-title-text">Риски</span>
+      </div>
+    </div>
+    <div id="risk-content">
+      <div class="loader">...</div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-portfolio">
     <div class="port-stats">
       <div class="port-stat">
@@ -471,6 +505,12 @@
     <span class="lbl" id="nav-oracle">Оракул</span>
   </button>
 
+  <!-- Кнопка Риски (видна только на ПК) -->
+  <button class="nav-btn hide-on-mobile" data-tab="risk" onclick="switchTab('risk')">
+    <svg><use href="#i-shield"/></svg>
+    <span class="lbl" id="nav-risk">Риски</span>
+  </button>
+
   <button class="nav-btn hide-on-mobile" data-tab="fav" onclick="switchTab('fav')">
     <svg><use href="#i-star"/></svg>
     <span class="lbl" id="nav-fav">Избранное</span>
@@ -485,33 +525,46 @@
   </button>
 </nav>
 
-<!-- ═══ РАДАРНОЕ МЕНЮ (ПОЛУКРУГ + ЛАЗЕР) ═══ -->
+<!-- ═══ РАДАРНОЕ МЕНЮ (ЦЕНТРАЛЬНЫЙ ПУЗЫРЬ + ЛАЗЕР) ═══ -->
 <div class="radar-overlay" id="radar-overlay">
+  <div class="radar-center-orb" id="radar-center-orb">NEBUL</div>
+
   <svg class="radar-laser-line" id="radar-laser-line">
     <line x1="0" y1="0" x2="0" y2="0" stroke="var(--cyan)" stroke-width="2" stroke-dasharray="4 4" />
   </svg>
 
   <div class="radar-items-container" id="radar-items">
+    <!-- 0 deg -->
     <div class="radar-item" data-action="func" data-value="openMarketPulse">
       <div class="radar-icon-wrap" style="color:var(--amber);"><svg><use href="#i-globe"/></svg></div>
       <span class="radar-label">Рынок</span>
     </div>
 
+    <!-- 60 deg -->
     <div class="radar-item" data-action="tab" data-value="fav">
       <div class="radar-icon-wrap" style="color:var(--amber);"><svg><use href="#i-star"/></svg></div>
       <span class="radar-label">Избранное</span>
     </div>
 
+    <!-- 120 deg -->
+    <div class="radar-item" data-action="tab" data-value="risk">
+      <div class="radar-icon-wrap" style="color:var(--coral);"><svg><use href="#i-shield"/></svg></div>
+      <span class="radar-label">Риски</span>
+    </div>
+
+    <!-- 180 deg -->
     <div class="radar-item" data-action="tab" data-value="portfolio">
       <div class="radar-icon-wrap" style="color:var(--cyan);"><svg><use href="#i-wallet"/></svg></div>
       <span class="radar-label">Баланс</span>
     </div>
 
+    <!-- 240 deg -->
     <div class="radar-item" data-action="func" data-value="openOrdersSheet">
       <div class="radar-icon-wrap" style="color:var(--violet);"><svg><use href="#i-bolt"/></svg></div>
       <span class="radar-label">Ордера</span>
     </div>
 
+    <!-- 300 deg -->
     <div class="radar-item" data-action="func" data-value="openLearning">
       <div class="radar-icon-wrap" style="color:var(--mint);"><svg><use href="#i-brain"/></svg></div>
       <span class="radar-label">Обучение</span>
@@ -553,7 +606,7 @@
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.4</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.5</div>
     </div>
 
     <div class="terms-body">
@@ -569,11 +622,14 @@
       <ul>
         <li><b>Анализ с 5 бирж</b> — Gate.io, Binance, Bybit, OKX, MEXC одновременно;</li>
         <li><b>Whale-радар</b> — Z-score объёмов, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
+        <li><b>Risk Command Center</b> — 5 индикаторов риска в едином светофоре;</li>
+        <li><b>Уведомления</b> — Price / Whale / Funding алерты с push;</li>
         <li><b>AI-наставник</b> — объясняет простым языком, что происходит с монетой (Groq API);</li>
         <li><b>AI-Агент</b> — принимает торговые команды на естественном языке («Купи DASH на 10% депо»);</li>
         <li><b>Сканер дна</b> — по топ-200 монетам находит точки входа по алгоритму;</li>
         <li><b>Технический анализ</b> — MACD, Bollinger, ADX, Stoch RSI, дивергенции, S/R уровни, Volume Profile;</li>
         <li><b>Торговый план</b> — автоматический расчёт TP/SL и калькулятор сетки;</li>
+        <li><b>Таймфреймы</b> — 1m / 15m / 1h / 1d / 7d / 1M / ALL + WebSocket real-time;</li>
         <li><b>TWAP</b> — плавное исполнение крупных ордеров без проскальзывания;</li>
         <li><b>Портфель</b> — синхронизация через API биржи + курс USDT/RUB;</li>
         <li><b>Демо-режим</b> — виртуальная торговля на $10 000 без риска потери реальных средств;</li>
@@ -599,7 +655,7 @@
 
       <h4>Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.4</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.5</b><br>
         Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
@@ -645,21 +701,21 @@
     </div>
     <div class="terms-body">
       <p id="al-desc">Введи пароль для продолжения.</p>
-      
+
       <div class="form-row">
         <label class="form-lbl">Пароль</label>
-        <input class="form-input" type="password" id="al-input" 
-               placeholder="Минимум 4 цифры" autocomplete="new-password" 
+        <input class="form-input" type="password" id="al-input"
+               placeholder="Минимум 4 цифры" autocomplete="new-password"
                inputmode="numeric" pattern="[0-9]*">
       </div>
-      
+
       <div class="form-row" id="al-confirm-row" style="display:none">
         <label class="form-lbl">Повторите пароль</label>
-        <input class="form-input" type="password" id="al-input2" 
-               placeholder="Ещё раз" autocomplete="new-password" 
+        <input class="form-input" type="password" id="al-input2"
+               placeholder="Ещё раз" autocomplete="new-password"
                inputmode="numeric" pattern="[0-9]*">
       </div>
-      
+
       <div class="calc-result" id="al-error" style="display:none"></div>
     </div>
     <div class="terms-foot" style="display:flex;flex-direction:column;gap:8px">

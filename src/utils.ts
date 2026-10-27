@@ -76,11 +76,20 @@ export const state = {
   lastMarketData: null as any,
   lastWhaleData: null as any,
 
-    // ─── DEMO MODE ───
+  // ─── RISK COMMAND CENTER ───
+  riskSnapshot: null as any,
+  alerts: JSON.parse(localStorage.getItem('nebulaAlerts') || '[]') as any[],
+  alertsLastCheck: 0,
+
+  // Последние raw-метрики для Risk Center
+  lastFuturesMetrics: null as any,      // funding_rate, oi, lsr
+  lastMarketContext: null as any,       // fear_greed, regime, btc_trend
+
+  // ─── DEMO MODE ───
   isDemoMode: false,
-  demoBalance: 10000, // Стартовый баланс $10,000
-  demoActiveOrders: [] as any[], // Открытые виртуальные сделки
-  demoHistory: [] as any[], // Закрытые сделки (для статистики)
+  demoBalance: 10000,
+  demoActiveOrders: [] as any[],
+  demoHistory: [] as any[],
 };
 
 // ─── СОХРАНЕНИЕ ИЗБРАННОГО ───
@@ -166,6 +175,35 @@ export function toast(msg: string, type: 'info' | 'success' | 'warn' | 'error' =
   }, duration);
 }
 
+// ─── RISK / ALERTS ТИПЫ ───
+
+export type RiskLevel = 'low' | 'medium' | 'high';
+
+export interface RiskIndicator {
+  key: string;
+  label: string;
+  level: RiskLevel;
+  value: string;
+  hint: string;
+}
+
+export interface RiskSnapshot {
+  overall: RiskLevel;
+  indicators: RiskIndicator[];
+  updated: number;
+}
+
+export type AlertKind = 'price_above' | 'price_below' | 'whale' | 'funding';
+
+export interface Alert {
+  id: string;
+  kind: AlertKind;
+  ticker: string;
+  threshold?: number;
+  createdAt: number;
+  triggeredAt?: number;
+  active: boolean;
+}
 // ─── ЯЗЫК ───
 // isEN, setLang, getLang, tm теперь живут в i18n.ts.
 // Здесь только ре-экспорт для удобства (чтобы не менять импорты везде).

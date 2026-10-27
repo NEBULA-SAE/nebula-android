@@ -1,30 +1,26 @@
 // ============================================================
 // NEBULA v2 - PRICE STREAM (WebSocket)
-// Real-time candles from Binance WS.
-// Auto-reconnect with exponential backoff + heartbeat.
-// Fallback to REST handled by caller (timeframes.ts).
+// Binance + KuCoin real-time candles.
 // ============================================================
 
 import type { Candle, Timeframe } from './candles';
 
-// Map our tf to Binance WS interval strings
 const BINANCE_INTERVAL: Record<Timeframe, string> = {
-  '1m':  '1m',
-  '15m': '15m',
-  '1h':  '1h',
-  '1d':  '1d',
-  '1w':  '1w',
-  '1M':  '1M',
-  'max': '',   // not supported - caller should use REST
+  '1m': '1m', '15m': '15m', '1h': '1h', '1d': '1d', '1w': '1w', '1M': '1M', 'max': '',
 };
 
-const HEARTBEAT_MS = 30_000;    // keep connection alive through NAT
-const MAX_BACKOFF_MS = 30_000;  // max delay between reconnects
-const MAX_ATTEMPTS = 10;        // give up after 10 failed reconnects
+const KUCOIN_INTERVAL: Record<Timeframe, string> = {
+  '1m': '1min', '15m': '15min', '1h': '1hour', '1d': '1day', '1w': '1week', '1M': '1month', 'max': '',
+};
+
+const HEARTBEAT_MS = 30_000;
+const MAX_BACKOFF_MS = 30_000;
+const MAX_ATTEMPTS = 10;
 
 export interface PriceStreamOptions {
   ticker: string;
   timeframe: Timeframe;
+  exchange?: 'binance' | 'kucoin';
   onCandle: (candle: Candle) => void;
   onOpen?: () => void;
   onClose?: () => void;
@@ -38,15 +34,25 @@ export class PriceStream {
   private reconnectAttempts = 0;
   private destroyed = false;
   private opts: PriceStreamOptions;
+  private exchange: 'binance' | 'kucoin';
 
   constructor(opts: PriceStreamOptions) {
     this.opts = opts;
+    this.exchange = opts.exchange || 'binance';
     this.connect();
   }
 
   private connect(): void {
     if (this.destroyed) return;
 
+    if (this.exchange === 'kucoin') {
+      this.connectKucoin();
+    } else {
+      this.connectBinance();
+    }
+  }
+
+  private connectBinance(): void {
     const interval = BINANCE_INTERVAL[this.opts.timeframe];
     if (!interval) {
       this.opts.onError?.('no-stream-for-tf');
@@ -58,22 +64,18 @@ export class PriceStream {
 
     try {
       this.ws = new WebSocket(url);
-    }
-    catch {
+    } catch {
       this.opts.onError?.('ws-constructor-failed');
       this.scheduleReconnect();
       return;
     }
 
     this.ws.onopen = () => {
-      if (this.destroyed) {
-        try { this.ws?.close(); } catch { /* silent */ }
-        return;
-      }
+      if (this.destroyed) { try { this.ws?.close(); } catch {} return; }
       this.reconnectAttempts = 0;
       this.startHeartbeat();
       this.opts.onOpen?.();
-      console.log(`[stream] open ${symbol} ${interval}`);
+      console.log(`[stream] Binance open ${symbol} ${interval}`);
     };
 
     this.ws.onmessage = (ev) => {
@@ -89,27 +91,85 @@ export class PriceStream {
             close: parseFloat(k.c),
             volume: parseFloat(k.v),
           };
-          if (candle.time > 0 && candle.close > 0) {
-            this.opts.onCandle(candle);
-          }
+          if (candle.time > 0 && candle.close > 0) this.opts.onCandle(candle);
         }
-      }
-      catch { /* silent */ }
+      } catch { /* silent */ }
     };
 
-    this.ws.onerror = () => {
-      this.opts.onError?.('ws-error');
-    };
+    this.ws.onerror = () => this.opts.onError?.('ws-error');
 
     this.ws.onclose = (ev) => {
       if (this.destroyed) return;
       this.stopHeartbeat();
       this.opts.onClose?.();
-      console.log(`[stream] close code=${ev.code}`);
-      // 1000 = normal closure (do not reconnect)
-      if (ev.code !== 1000) {
-        this.scheduleReconnect();
-      }
+      console.log(`[stream] Binance close code=${ev.code}`);
+      if (ev.code !== 1000) this.scheduleReconnect();
+    };
+  }
+
+  private connectKucoin(): void {
+    const interval = KUCOIN_INTERVAL[this.opts.timeframe];
+    if (!interval) {
+      this.opts.onError?.('no-stream-for-tf');
+      return;
+    }
+
+    const symbol = this.opts.ticker.replace('/', '-').toUpperCase();
+    const url = `wss://x-push-spot.kucoin.com`;
+
+    try {
+      this.ws = new WebSocket(url);
+    } catch {
+      this.opts.onError?.('ws-constructor-failed');
+      this.scheduleReconnect();
+      return;
+    }
+
+    this.ws.onopen = () => {
+      if (this.destroyed) { try { this.ws?.close(); } catch {} return; }
+      this.reconnectAttempts = 0;
+      // KuCoin требует отправить subscribe
+      const subMsg = {
+        id: String(Date.now()),
+        action: 'SUBSCRIBE',
+        channel: 'kline',
+        tradeType: 'SPOT',
+        symbol,
+        interval,
+      };
+      try { this.ws?.send(JSON.stringify(subMsg)); } catch {}
+      this.startHeartbeat();
+      this.opts.onOpen?.();
+      console.log(`[stream] KuCoin open ${symbol} ${interval}`);
+    };
+
+    this.ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        // KuCoin kline: { T: "kline.SPOT", d: { o, c, h, l, v, O } }
+        if (msg.T === 'kline.SPOT' && msg.d) {
+          const d = msg.d;
+          const candle: Candle = {
+            time: parseInt(d.O, 10) || Math.floor(Date.now() / 1000),
+            open: parseFloat(d.o),
+            high: parseFloat(d.h),
+            low: parseFloat(d.l),
+            close: parseFloat(d.c),
+            volume: parseFloat(d.v),
+          };
+          if (candle.close > 0) this.opts.onCandle(candle);
+        }
+      } catch { /* silent */ }
+    };
+
+    this.ws.onerror = () => this.opts.onError?.('ws-error');
+
+    this.ws.onclose = (ev) => {
+      if (this.destroyed) return;
+      this.stopHeartbeat();
+      this.opts.onClose?.();
+      console.log(`[stream] KuCoin close code=${ev.code}`);
+      if (ev.code !== 1000) this.scheduleReconnect();
     };
   }
 
@@ -122,7 +182,6 @@ export class PriceStream {
     }
 
     this.reconnectAttempts++;
-    // 1s, 2s, 4s, 8s, 16s, 30s, 30s...
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), MAX_BACKOFF_MS);
 
     console.log(`[stream] reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
@@ -138,8 +197,7 @@ export class PriceStream {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         try {
           this.ws.send(JSON.stringify({ method: 'ping' }));
-        }
-        catch { /* silent */ }
+        } catch { /* silent */ }
       }
     }, HEARTBEAT_MS);
   }
@@ -163,8 +221,7 @@ export class PriceStream {
       this.reconnectTimer = null;
     }
     if (this.ws) {
-      try { this.ws.close(1000, 'destroy'); }
-      catch { /* silent */ }
+      try { this.ws.close(1000, 'destroy'); } catch { /* silent */ }
       this.ws = null;
     }
   }

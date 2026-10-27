@@ -18,6 +18,8 @@ const TAURI_PROXY_HOSTS = [
   'www.dashcentral.org',
   'api.blockchair.com',
   'api.dexpaprika.com',
+  'api.kucoin.com',
+  'api-futures.kucoin.com',
 ];
 
 // ─── Особые пути (okx: только rubik требует обхода) ───

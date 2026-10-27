@@ -29,6 +29,9 @@ export function switchTab(tab: string): void {
   if (tab === 'fav') renderFavorites();
   if (tab === 'portfolio') mobileSyncPortfolio(true);
   if (tab === 'oracle') renderOracleDashboard();
+  if (tab === 'risk') {
+    import('./risk').then(m => m.renderRiskCenter()).catch(() => { /* silent */ });
+  }
 
   if (state.chart && tab === 'home') {
     setTimeout(() => {
@@ -61,6 +64,9 @@ export function setLanguage(lang: 'ru' | 'en'): void {
   if (document.getElementById('screen-oracle')?.classList.contains('active')) {
     renderOracleDashboard();
   }
+  if (document.getElementById('screen-risk')?.classList.contains('active')) {
+    import('./risk').then(m => m.renderRiskCenter()).catch(() => { /* silent */ });
+  }
 
   toast(lang === 'en' ? 'Language: English' : 'Язык: Русский', 'success', 1500);
 }
@@ -69,6 +75,8 @@ export function applyStaticTranslations(): void {
   const map: Record<string, string> = {
     'nav-home': 'dashboard', 'nav-pro': 'analytics', 'nav-scanner': 'scanner',
     'nav-fav': 'favorites', 'nav-oracle': 'oracle', 'nav-portfolio': 'portfolio',
+    'nav-risk': 'nav_risk',
+    'risk-page-title-text': 'risk',
     'lbl-rebound': 'rebound', 'lbl-drop': 'drop', 'lbl-trend': 'trend',
     'lbl-plan': 'plan', 'lbl-agent': 'agent', 'lbl-xray': 'xray', 'lbl-walls': 'walls',
     'lbl-whale': 'whale', 'lbl-monitor': 'monitor', 'lbl-scan-acc': 'acc',
@@ -316,22 +324,40 @@ export function renderDemoPlan() {
   `;
 }
 
-// ═══ РАДАРНОЕ МЕНЮ (ПОЛУКРУГ + ЛАЗЕР) ═══
+// ═══ РАДАРНОЕ МЕНЮ (ЦЕНТРАЛЬНЫЙ ПУЗЫРЬ + ЛАЗЕР) ═══
 
 export function initRadarMenu() {
   const trigger = document.getElementById('radar-trigger');
   const overlay = document.getElementById('radar-overlay');
-  const items = document.querySelectorAll<HTMLElement>('.radar-item');
+  const items = Array.from(document.querySelectorAll<HTMLElement>('.radar-item'));
   const laserLine = document.querySelector('.radar-laser-line line') as SVGLineElement;
+  const centerOrb = document.getElementById('radar-center-orb');
   
-  if (!trigger || !overlay || !laserLine) return;
+  if (!trigger || !overlay || !laserLine || items.length === 0) return;
 
+  // ─── 1. РАССТАНОВКА СТРОГО ПО КРУГУ ───
+  // Удаляем старые кривые сохранения из памяти
+  localStorage.removeItem('nebulaRadarPositions_v1');
+
+  const total = items.length;
+  const radius = 140; // Радиус круга
+
+  items.forEach((item, index) => {
+    // Считаем идеальный угол (360 / кол-во кнопок)
+    const angle = (360 / total) * index;
+    
+    // Применяем координаты
+    item.style.setProperty('--angle', `${angle}deg`);
+    item.style.setProperty('--radius', `${radius}px`);
+  });
+
+  // ─── 2. ЛОГИКА ОТКРЫТИЯ И ЛАЗЕРА ───
   let isDragging = false;
   let currentActiveIndex = -1;
-  let startX = 0;
-  let startY = 0;
+  let centerX = 0;
+  let centerY = 0;
 
-  // Нажали на кнопку
+  // Нажали на кнопку NEBUL
   trigger.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     isDragging = true;
@@ -339,21 +365,25 @@ export function initRadarMenu() {
     currentActiveIndex = -1;
     items.forEach(i => i.classList.remove('active'));
 
-    // Точка старта лазера = центр кнопки-триггера
-    const rect = trigger.getBoundingClientRect();
-    startX = rect.left + rect.width / 2;
-    startY = rect.top + rect.height / 2;
+    centerX = window.innerWidth / 2;
+    centerY = window.innerHeight / 2;
 
-    laserLine.setAttribute('x1', startX.toString());
-    laserLine.setAttribute('y1', startY.toString());
-    laserLine.setAttribute('x2', startX.toString());
-    laserLine.setAttribute('y2', startY.toString());
+    laserLine.setAttribute('x1', centerX.toString());
+    laserLine.setAttribute('y1', centerY.toString());
+    laserLine.setAttribute('x2', centerX.toString());
+    laserLine.setAttribute('y2', centerY.toString());
     laserLine.style.opacity = '1';
+
+    if (centerOrb) {
+      centerOrb.style.left = centerX + 'px';
+      centerOrb.style.top = centerY + 'px';
+      centerOrb.classList.add('visible');
+    }
 
     if (navigator.vibrate) navigator.vibrate(20);
   });
 
-  // Ведем пальцем
+  // Ведем пальцем или мышкой
   document.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
 
@@ -379,8 +409,8 @@ export function initRadarMenu() {
       }
     });
 
-    // Магнитный эффект (если палец ближе 100px к иконке)
-    if (minDistance < 100) {
+    // Магнитный эффект
+    if (minDistance < 80) {
       if (currentActiveIndex !== closestIndex) {
         currentActiveIndex = closestIndex;
         
@@ -427,6 +457,7 @@ export function initRadarMenu() {
 
     overlay.classList.remove('open');
     items.forEach(i => i.classList.remove('active'));
+    if (centerOrb) centerOrb.classList.remove('visible');
   });
 
   trigger.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });

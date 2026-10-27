@@ -180,6 +180,26 @@ export function initApp(): void {
     }
   }, 400);
 
+    // ─── 14. Alerts engine (price / whale / funding) ───
+  setTimeout(async () => {
+    try {
+      const m = await import('../alerts');
+      m.startAlertsLoop();
+    } catch (e) {
+      console.warn('[init] alerts failed:', e);
+    }
+  }, 1000);
+
+  // ─── 15. Risk Center — первый рендер (когда данные уже есть) ───
+  setTimeout(async () => {
+    try {
+      const m = await import('./risk');
+      m.renderRiskCenter();
+    } catch (e) {
+      console.warn('[init] risk failed:', e);
+    }
+  }, 3000);
+
   console.log('[init] NEBULA v2 готов ✓');
 }
 

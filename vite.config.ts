@@ -35,11 +35,16 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/proxy\/gb-shared/, ''),
       },
 
-      // ─── Локальные прокси (для dev) ───
+      // ─── Биржи (spot) ───
       '/proxy/mexc': {
         target: 'https://api.mexc.com',
         changeOrigin: true, secure: true,
         rewrite: (p) => p.replace(/^\/proxy\/mexc/, ''),
+      },
+      '/proxy/binance-spot': {
+        target: 'https://api.binance.com',
+        changeOrigin: true, secure: true,
+        rewrite: (p) => p.replace(/^\/proxy\/binance-spot/, ''),
       },
       '/proxy/okx': {
         target: 'https://www.okx.com',
@@ -48,6 +53,38 @@ export default defineConfig({
         cookieDomainRewrite: '',
         rewrite: (p) => p.replace(/^\/proxy\/okx/, ''),
       },
+      '/proxy/gateio': {
+        target: 'https://api.gateio.ws',
+        changeOrigin: true, secure: true,
+        rewrite: (p) => p.replace(/^\/proxy\/gateio/, ''),
+      },
+      '/proxy/bybit': {
+        target: 'https://api.bybit.com',
+        changeOrigin: true, secure: true,
+        rewrite: (p) => p.replace(/^\/proxy\/bybit/, ''),
+      },
+
+      // ─── KuCoin ───
+      '/proxy/kucoin': {
+        target: 'https://api.kucoin.com',
+        changeOrigin: true,
+        secure: true,
+        cookieDomainRewrite: '', // ← ДОБАВИТЬ ЭТО: убирает ошибку Cookie __cf_bm
+        rewrite: (path: string) => path.replace(/^\/proxy\/kucoin/, ''),
+      },
+      '/proxy/kucoin-futures': {
+        target: 'https://api-futures.kucoin.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path: string) => path.replace(/^\/proxy\/kucoin-futures/, ''),
+      },
+      '/proxy/ws-kucoin': {
+        target: 'wss://x-push-spot.kucoin.com',
+        ws: true,
+        changeOrigin: true,
+      },
+
+      // ─── Market data ───
       '/proxy/coinpaprika': {
         target: 'https://api.coinpaprika.com',
         changeOrigin: true,
@@ -69,16 +106,6 @@ export default defineConfig({
         changeOrigin: true, secure: true,
         rewrite: (p) => p.replace(/^\/proxy\/cbr/, ''),
       },
-      '/proxy/gateio': {
-        target: 'https://api.gateio.ws',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/gateio/, ''),
-      },
-      '/proxy/bybit': {
-        target: 'https://api.bybit.com',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/bybit/, ''),
-      },
       '/proxy/dashcentral': {
         target: 'https://www.dashcentral.org',
         changeOrigin: true, secure: true,
@@ -90,7 +117,7 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/proxy\/blockchair/, ''),
       },
 
-      // ─── VPS-прокси (через Caddy) — для источников, блокируемых из РФ ───
+      // ─── VPS-прокси ───
       '/proxy/binance-futures': {
         target: 'https://nebula-oracle.duckdns.org:8443',
         changeOrigin: true, secure: true,

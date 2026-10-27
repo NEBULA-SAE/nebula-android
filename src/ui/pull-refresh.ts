@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · PULL TO REFRESH v3.1
-// Positioned BELOW top-bar (dynamic height), no vibration
+// NEBULA v2 · PULL TO REFRESH v3.2
+// Fixed: не блокирует клики по кнопкам
 // ═══════════════════════════════════════════════════════════════
 
 import { state } from '../utils';
@@ -8,6 +8,7 @@ import { state } from '../utils';
 const THRESHOLD = 70;
 const MAX_PULL = 110;
 const RESISTANCE = 0.55;
+const PREVENT_DEFAULT_AT = 20; // начинаем блокировать скролл только после 20px
 
 let startX = 0;
 let startY = 0;
@@ -22,24 +23,19 @@ let textEl: HTMLElement | null = null;
 const RING_RADIUS = 18;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-// How far BELOW top-bar to place the ring (px)
 const MARGIN_BELOW_TOP_BAR = 24;
 
-// Reads the actual top-bar height, so the indicator always appears
-// below it regardless of theme / mobile / desktop layout.
 function getTopBarHeight(): number {
   const topBar = document.querySelector('.top-bar') as HTMLElement | null;
   if (topBar && topBar.offsetHeight > 0) return topBar.offsetHeight;
-  return 100; // fallback if layout not ready
+  return 100;
 }
 
 function getHiddenY(): number {
-  // Slightly above top-bar bottom, hidden by opacity
   return Math.max(0, getTopBarHeight() - 40);
 }
 
 function getVisibleY(): number {
-  // Clearly below top-bar
   return getTopBarHeight() + MARGIN_BELOW_TOP_BAR;
 }
 
@@ -176,12 +172,44 @@ function isAtTop(screen: HTMLElement | null): boolean {
   return true;
 }
 
+// ⚠️ КЛЮЧЕВОЙ ФИКС: не перехватываем жесты на интерактивных элементах
 function shouldIgnore(target: HTMLElement | null): boolean {
   if (!target) return true;
   if (target.closest('#chart-container')) return true;
   if (target.closest('.tf-bar')) return true;
-  if (target.closest('input, textarea, select')) return true;
+  if (target.closest('input, textarea, select, [contenteditable]')) return true;
   if (target.closest('button[type="range"]')) return true;
+
+  // Любые кликабельные элементы — не перехватываем, они должны получать click!
+  if (target.closest([
+    'button',
+    'a',
+    '[onclick]',
+    '[role="button"]',
+    '.chip',
+    '.nav-btn',
+    '.radar-trigger',
+    '.radar-item',
+    '.radar-overlay',
+    '.settings-row',
+    '.order-tab',
+    '.exec-mode-tab',
+    '.demo-amount-pct',
+    '.demo-strat-btn',
+    '.sheet-close',
+    '.terms-accept',
+    '.oracle-action-btn',
+    '.btn-primary',
+    '.btn-go',
+    '.btn-star',
+    '.toast',
+    '.sheet',
+    '.sheet-overlay',
+    '.terms-overlay',
+    '.diag-overlay',
+    '.tauri-titlebar',
+  ].join(', '))) return true;
+
   return false;
 }
 
@@ -253,9 +281,14 @@ function onTouchMove(e: TouchEvent): void {
   currentPull = pulled;
 
   if (pulled > 3) {
-    e.preventDefault();
     ensureIndicator();
     updateVisual(pulled);
+  }
+
+  // ⚠️ Блокируем скролл только когда юзер реально тянет (20+ px),
+  // иначе мелкий дрейф пальца убивает click по кнопкам
+  if (pulled > PREVENT_DEFAULT_AT) {
+    e.preventDefault();
   }
 }
 
@@ -358,6 +391,16 @@ async function refreshCurrentScreen(): Promise<void> {
         if ((window as any).mobileAnalyze) await (window as any).mobileAnalyze();
         break;
       }
+      case 'screen-risk': {
+        if ((window as any).mobileAnalyze) {
+          await (window as any).mobileAnalyze();
+        }
+        try {
+          const m = await import('./risk');
+          m.renderRiskCenter();
+        } catch { /* silent */ }
+        break;
+      }
     }
   }
   finally {
@@ -384,7 +427,7 @@ export function initPullToRefresh(): void {
     if (!refreshing) resetVisual();
   }, { passive: true });
 
-  console.log('[ptr] initialized (v3.1, below top-bar)');
+  console.log('[ptr] initialized (v3.2, buttons-safe)');
 }
 
 if (typeof window !== 'undefined') {

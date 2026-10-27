@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · СВЕЧИ — Gate.io, Binance SPOT, OKX, Bybit, MEXC
+// NEBULA v2 · СВЕЧИ — Gate.io, Binance, OKX, Bybit, MEXC, KuCoin
 // Поддержка таймфреймов: 1m / 15m / 1h / 1d / 1w / 1M / max
 // ═══════════════════════════════════════════════════════════════
 
@@ -19,16 +19,17 @@ interface TfConfig {
   okx: string;
   bybit: string;
   mexc: string;
+  kucoin: string;
 }
 
 export const TF_CONFIG: Record<Timeframe, TfConfig> = {
-  '1m':  { label: '1m',  limit: 300,  gateio: '1m',  binance: '1m',  okx: '1m',  bybit: '1',   mexc: '1m'  },
-  '15m': { label: '15m', limit: 300,  gateio: '15m', binance: '15m', okx: '15m', bybit: '15',  mexc: '15m' },
-  '1h':  { label: '1h',  limit: 300,  gateio: '1h',  binance: '1h',  okx: '1H',  bybit: '60',  mexc: '60m' },
-  '1d':  { label: '1d',  limit: 300,  gateio: '1d',  binance: '1d',  okx: '1D',  bybit: 'D',   mexc: '1d'  },
-  '1w':  { label: '7d',  limit: 300,  gateio: '7d',  binance: '1w',  okx: '1W',  bybit: 'W',   mexc: '1W'  },
-  '1M':  { label: '1M',  limit: 200,  gateio: '30d', binance: '1M',  okx: '1M',  bybit: 'M',   mexc: '1M'  },
-  'max': { label: 'ALL', limit: 1000, gateio: '7d',  binance: '1w',  okx: '1W',  bybit: 'W',   mexc: '1W'  },
+  '1m':  { label: '1m',  limit: 300,  gateio: '1m',  binance: '1m',  okx: '1m',  bybit: '1',   mexc: '1m',  kucoin: '1min'   },
+  '15m': { label: '15m', limit: 300,  gateio: '15m', binance: '15m', okx: '15m', bybit: '15',  mexc: '15m', kucoin: '15min'  },
+  '1h':  { label: '1h',  limit: 300,  gateio: '1h',  binance: '1h',  okx: '1H',  bybit: '60',  mexc: '60m', kucoin: '1hour'  },
+  '1d':  { label: '1d',  limit: 300,  gateio: '1d',  binance: '1d',  okx: '1D',  bybit: 'D',   mexc: '1d',  kucoin: '1day'   },
+  '1w':  { label: '7d',  limit: 300,  gateio: '7d',  binance: '1w',  okx: '1W',  bybit: 'W',   mexc: '1W',  kucoin: '1week'  },
+  '1M':  { label: '1M',  limit: 200,  gateio: '30d', binance: '1M',  okx: '1M',  bybit: 'M',   mexc: '1M',  kucoin: '1month' },
+  'max': { label: 'ALL', limit: 1000, gateio: '7d',  binance: '1w',  okx: '1W',  bybit: 'W',   mexc: '1W',  kucoin: '1week'  },
 };
 
 export function getTfConfig(tf: Timeframe = '1d'): TfConfig {
@@ -39,7 +40,6 @@ const TIMEOUT = 8000;
 const CACHE_TTL_MS = 15_000;
 
 // ─── ИСТОЧНИКИ ───
-// Каждый принимает интервал в своём формате и AbortSignal для отмены.
 
 async function fromGateio(t: string, interval: string, limit: number, signal: AbortSignal): Promise<Candle[]> {
   const r = await fetch(
@@ -71,7 +71,6 @@ async function fromBinance(t: string, interval: string, limit: number, signal: A
 
 async function fromOkx(t: string, interval: string, limit: number, signal: AbortSignal): Promise<Candle[]> {
   const base = P('okx', 'https://www.okx.com');
-  // OKX отдаёт максимум 300 свечей за один запрос
   const safeLimit = Math.min(limit, 300);
   const r = await fetch(
     `${base}/api/v5/market/candles?instId=${t}-USDT&bar=${interval}&limit=${safeLimit}`,
@@ -120,6 +119,28 @@ async function fromMexc(t: string, interval: string, limit: number, signal: Abor
   }));
 }
 
+async function fromKucoin(t: string, interval: string, limit: number, signal: AbortSignal): Promise<Candle[]> {
+  const base = P('kucoin', 'https://api.kucoin.com');
+  const r = await fetch(
+    `${base}/api/v1/market/candles?symbol=${t}-USDT&type=${interval}`,
+    { signal }
+  );
+  if (!r.ok) throw new Error(`kucoin ${r.status}`);
+  const j = await r.json();
+  if (j.code !== '200000') throw new Error(`kucoin ${j.msg}`);
+
+  // KuCoin: [time (ms), open, close, high, low, volume, turnover]
+  const list = (j.data || []).slice(-limit);
+  return list.map((d: any) => ({
+    time: Math.floor(parseInt(d[0]) / 1000),
+    open: parseFloat(d[1]),
+    close: parseFloat(d[2]),
+    high: parseFloat(d[3]),
+    low: parseFloat(d[4]),
+    volume: parseFloat(d[5]),
+  }));
+}
+
 // ─── ОДИН ИСТОЧНИК С ТАЙМАУТОМ + ВНЕШНЕЙ ОТМЕНОЙ ───
 
 function runSource(
@@ -143,7 +164,6 @@ function runSource(
     (async () => {
       try {
         const data = await fn(ticker, interval, limit, ctrl.signal);
-        // Минимальный порог — для 15m+ свечей нужно хотя бы 25 точек
         const minCandles = 25;
         if (!data || data.length < minCandles) throw new Error('мало данных');
         cleanup();
@@ -156,7 +176,7 @@ function runSource(
   });
 }
 
-// ─── ПЕРВЫЙ УСПЕШНЫЙ ВЫИГРЫВАЕТ, ОСТАЛЬНЫЕ ОТМЕНЯЮТСЯ ───
+// ─── ПЕРВЫЙ УСПЕШНЫЙ ВЫИГРЫВАЕТ ───
 
 async function trySources(
   ticker: string,
@@ -172,6 +192,7 @@ async function trySources(
     runSource('okx',     fromOkx,     ticker, cfg.okx,     cfg.limit, outerCtrl.signal),
     runSource('bybit',   fromBybit,   ticker, cfg.bybit,   cfg.limit, outerCtrl.signal),
     runSource('mexc',    fromMexc,    ticker, cfg.mexc,    cfg.limit, outerCtrl.signal),
+    runSource('kucoin',  fromKucoin,  ticker, cfg.kucoin,  cfg.limit, outerCtrl.signal),
   ];
 
   try {
@@ -186,8 +207,6 @@ async function trySources(
 }
 
 // ─── КЭШ (15 сек) ───
-// Короткий TTL: защищает от двойного запроса внутри одного анализа
-// (mobileAnalyze → getAdvancedAnalytics), но не мешает автообновлению.
 
 const _candleCache = new Map<string, { value: { data: Candle[]; source: string }; ts: number }>();
 
@@ -197,7 +216,6 @@ export async function fetchCandlesWithSource(
   tfParam?: Timeframe,
   force = false
 ): Promise<{ data: Candle[]; source: string }> {
-  // Обратная совместимость: старый вызов fetchCandlesWithSource('BTC', 120)
   let tf: Timeframe;
   if (typeof limitOrTf === 'string') {
     tf = limitOrTf;

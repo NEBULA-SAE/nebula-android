@@ -465,7 +465,7 @@ body.in-demo-mode #screen-home {
 @media (max-width: 380px) { .demo-trade-right { flex-direction: column; align-items: flex-end; gap: 6px; } }
 
 /* ═══════════════════════════════════════════════════════════════
-   RADAR MENU (MOBILE ONLY) - ПОЛУКРУГ + ЛАЗЕР
+   RADAR MENU (MOBILE ONLY) - ЦЕНТРАЛЬНЫЙ ПУЗЫРЬ + ХАОС
    ═══════════════════════════════════════════════════════════════ */
 .radar-center-wrap { display: none; }
 .hide-on-mobile { display: flex; }
@@ -533,53 +533,56 @@ body.in-demo-mode #screen-home {
   pointer-events: none;
 }
 
-/* ═══ ОВЕРЛЕЙ РАДАРА — ИДЕАЛЬНЫЙ ПОЛУКРУГ + ЛАЗЕР ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   РАДАР (ЦЕНТРАЛЬНЫЙ ПУЗЫРЬ + ДИНАМИЧЕСКОЕ РАСПОЛОЖЕНИЕ)
+   ═══════════════════════════════════════════════════════════════ */
+
 .radar-overlay {
   position: fixed;
   inset: 0;
-  background: transparent;
-  z-index: 99;
+  z-index: 999;
+  background: rgba(3, 5, 9, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity .25s;
+  transition: opacity 0.25s ease-out;
 }
 .radar-overlay.open {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Стеклянный полукруг — идеальная форма через aspect-ratio */
-.radar-overlay::before {
-  content: '';
+/* Центральный пузырь */
+.radar-center-orb {
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 92vw;
-  max-width: 420px;
-  aspect-ratio: 2 / 1; /* Высота всегда ровно половина ширины — идеальный полукруг */
-  background: rgba(10, 16, 28, 0.65);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-top-left-radius: 50% 100%;
-  border-top-right-radius: 50% 100%;
-  border: 1px solid rgba(94, 203, 255, 0.25);
-  border-bottom: none;
-  box-shadow: 0 -10px 60px rgba(0, 0, 0, 0.6), inset 0 0 80px rgba(94, 203, 255, 0.06);
+  transform: translate(-50%, -50%) scale(0.5);
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(94,203,255,0.15) 0%, rgba(10,16,28,0.95) 70%);
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 50px rgba(94,203,255,0.4), inset 0 0 30px rgba(94,203,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--cyan);
+  text-shadow: 0 0 12px var(--cyan);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   pointer-events: none;
+  z-index: 10;
+}
+.radar-center-orb.visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
-/* Затемнение фона */
-.radar-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(3, 5, 9, 0.6);
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* Луч лазера */
+/* Линия лазера */
 .radar-laser-line {
   position: absolute;
   inset: 0;
@@ -589,11 +592,11 @@ body.in-demo-mode #screen-home {
   z-index: 2;
 }
 .radar-laser-line line {
-  transition: all .05s linear;
-  filter: drop-shadow(0 0 6px var(--cyan));
+  transition: x2 0.05s linear, y2 0.05s linear;
+  filter: drop-shadow(0 0 8px var(--cyan));
 }
 
-/* Контейнер для кнопок */
+/* Контейнер для иконок */
 .radar-items-container {
   position: absolute;
   inset: 0;
@@ -601,60 +604,69 @@ body.in-demo-mode #screen-home {
   pointer-events: none;
 }
 
-/* Кнопки в арке */
+/* 
+  Иконки по кругу.
+  ВАЖНО: --angle и --radius задаются динамически из JS.
+  Мы убрали жесткие nth-child, чтобы можно было добавлять любое количество кнопок.
+*/
 .radar-item {
   position: absolute;
+  top: 50%;
+  left: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   pointer-events: none;
-  --tx: -50%;
-  transform: translateX(var(--tx)) scale(0.75);
+  
+  /* Дефолтные значения на случай, если JS не сработает */
+  --angle: 0deg;
+  --radius: 140px;
+  
+  /* Формула полярных координат: сдвиг в центр -> поворот -> отдаление -> обратный поворот (чтобы текст не был вверх ногами) */
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) rotate(calc(var(--angle) * -1)) scale(0.7);
+  
   opacity: 0.4;
-  transition: transform .2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity .2s;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s;
   will-change: transform, opacity;
 }
 
-/* Пересчитано под новую высоту арки (210px при ширине 420) */
-.radar-item:nth-child(1) { left: 50%; bottom: 175px; --tx: -50%; }  /* Рынок — верх */
-.radar-item:nth-child(2) { left: 22%; bottom: 115px; --tx: -50%; }  /* Избранное */
-.radar-item:nth-child(3) { left: 78%; bottom: 115px; --tx: -50%; }  /* Баланс */
-.radar-item:nth-child(4) { left: 10%; bottom: 40px;  --tx: -50%; }  /* Ордера */
-.radar-item:nth-child(5) { left: 90%; bottom: 40px;  --tx: -50%; }  /* Обучение */
-
-/* Активное состояние */
-.radar-item.active {
+/* Когда меню открыто, они становятся яркими */
+.radar-overlay.open .radar-item {
   opacity: 1;
-  transform: translateX(var(--tx)) scale(1.1);
+}
+
+/* Активная иконка (на которую навели лазер) */
+.radar-item.active {
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) rotate(calc(var(--angle) * -1)) scale(1.15);
 }
 
 .radar-icon-wrap {
-  width: 58px;
-  height: 58px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: rgba(10, 16, 28, 0.95);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
   position: relative;
-  transition: all .2s;
+  transition: all 0.2s;
 }
-.radar-icon-wrap svg { width: 26px; height: 26px; }
+.radar-icon-wrap svg { width: 24px; height: 24px; }
 
 .radar-item.active .radar-icon-wrap {
   border-color: var(--cyan);
   box-shadow: 0 0 30px rgba(94, 203, 255, 0.8), inset 0 0 15px rgba(94, 203, 255, 0.3);
-  background: rgba(94, 203, 255, 0.1);
+  background: rgba(94, 203, 255, 0.15);
 }
 .radar-item.active .radar-icon-wrap::before {
   content: '';
   position: absolute;
-  inset: -8px;
+  inset: -6px;
   border-radius: 50%;
-  border: 1px solid rgba(94, 203, 255, 0.5);
+  border: 1px solid rgba(94, 203, 255, 0.6);
   animation: pulse-ring 1s infinite;
 }
 
@@ -671,4 +683,587 @@ body.in-demo-mode #screen-home {
 @keyframes pulse-ring {
   0% { transform: scale(1); opacity: 1; }
   100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RISK COMMAND CENTER
+   ═══════════════════════════════════════════════════════════════ */
+
+.risk-page-header {
+  padding: 4px 4px 16px;
+}
+.risk-page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--hi);
+  letter-spacing: 0.3px;
+}
+
+/* ─── Hero (общий светофор) ─── */
+
+.risk-hero {
+  position: relative;
+  padding: 22px 18px;
+  border-radius: var(--r-lg, 16px);
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.risk-hero-low {
+  background: linear-gradient(135deg, rgba(69, 224, 168, 0.12), rgba(10, 16, 28, 0.95));
+  border-color: rgba(69, 224, 168, 0.35);
+  box-shadow: 0 0 30px rgba(69, 224, 168, 0.12);
+}
+.risk-hero-medium {
+  background: linear-gradient(135deg, rgba(255, 184, 88, 0.12), rgba(10, 16, 28, 0.95));
+  border-color: rgba(255, 184, 88, 0.35);
+  box-shadow: 0 0 30px rgba(255, 184, 88, 0.12);
+}
+.risk-hero-high {
+  background: linear-gradient(135deg, rgba(255, 101, 132, 0.15), rgba(10, 16, 28, 0.95));
+  border-color: rgba(255, 101, 132, 0.4);
+  box-shadow: 0 0 40px rgba(255, 101, 132, 0.2);
+  animation: riskHeroPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes riskHeroPulse {
+  0%, 100% { box-shadow: 0 0 40px rgba(255, 101, 132, 0.2); }
+  50% { box-shadow: 0 0 60px rgba(255, 101, 132, 0.35); }
+}
+
+.risk-hero-glow {
+  position: absolute;
+  top: -50%;
+  left: -10%;
+  width: 60%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 60%);
+  pointer-events: none;
+  animation: riskGlowSlide 6s ease-in-out infinite;
+}
+
+@keyframes riskGlowSlide {
+  0%, 100% { transform: translateX(-30%); }
+  50% { transform: translateX(30%); }
+}
+
+.risk-hero-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.risk-hero-icon {
+  font-size: 36px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+}
+
+.risk-hero-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.risk-hero-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--hi);
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.risk-hero-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--mut);
+  letter-spacing: 0.4px;
+}
+
+/* ─── Grid индикаторов ─── */
+
+.risk-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 700px) {
+  .risk-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 1024px) {
+  .risk-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.risk-indicator {
+  position: relative;
+  padding: 14px 16px;
+  background: var(--bg-card, rgba(10, 16, 28, 0.92));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 12px);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
+
+.risk-indicator:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hi);
+}
+
+.risk-indicator-low {
+  border-left: 3px solid var(--mint);
+}
+.risk-indicator-medium {
+  border-left: 3px solid var(--amber);
+  background: linear-gradient(135deg, rgba(255, 184, 88, 0.04), rgba(10, 16, 28, 0.92));
+}
+.risk-indicator-high {
+  border-left: 3px solid var(--coral);
+  background: linear-gradient(135deg, rgba(255, 101, 132, 0.06), rgba(10, 16, 28, 0.92));
+}
+
+.risk-pulse::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  margin: 10px;
+  animation: riskPulseDot 1.4s ease-in-out infinite;
+}
+
+@keyframes riskPulseDot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 101, 132, 0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 101, 132, 0); }
+}
+
+.risk-indicator-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.risk-indicator-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.risk-indicator-badge {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.risk-indicator-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--hi);
+  margin-bottom: 4px;
+  letter-spacing: 0.2px;
+}
+
+.risk-indicator-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--dim);
+  line-height: 1.4;
+}
+
+/* ─── Actions / Updated ─── */
+
+.risk-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.risk-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(94, 203, 255, 0.14), rgba(10, 16, 28, 0.9));
+  border: 1px solid rgba(94, 203, 255, 0.35);
+  border-radius: var(--r-md, 12px);
+  color: var(--hi);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.risk-action-btn:hover {
+  background: rgba(94, 203, 255, 0.2);
+  border-color: var(--cyan);
+  transform: translateY(-1px);
+}
+.risk-action-btn:active {
+  transform: scale(0.98);
+}
+
+.risk-updated {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--dim);
+  padding: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ALERTS
+   ═══════════════════════════════════════════════════════════════ */
+
+.alert-form {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(94, 203, 255, 0.06), rgba(10, 16, 28, 0.92));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 12px);
+  margin-bottom: 12px;
+}
+
+.alert-form-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+  margin-bottom: 12px;
+  letter-spacing: 0.3px;
+}
+
+.alert-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm, 8px);
+  margin-bottom: 8px;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.alert-row-triggered {
+  opacity: 0.55;
+  border-left: 3px solid var(--mint);
+}
+
+.alert-row-left {
+  flex: 1;
+  min-width: 0;
+}
+.alert-row-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--hi);
+  margin-bottom: 3px;
+}
+.alert-row-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--mut);
+}
+.alert-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.alert-del-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 101, 132, 0.12);
+  border: 1px solid rgba(255, 101, 132, 0.3);
+  color: var(--coral);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s;
+}
+.alert-del-btn:hover {
+  background: rgba(255, 101, 132, 0.25);
+  transform: scale(1.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI POLISH · современные карточки, анимации
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Fade-in-up при появлении экрана */
+.screen.active {
+  animation: screenFadeIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes screenFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Улучшенный loader — shimmer */
+.loader {
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  color: var(--mut);
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.loader::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(94, 203, 255, 0.06) 50%,
+    transparent 100%
+  );
+  animation: shimmerSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmerSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Кнопки — улучшенный press-state */
+.btn-primary,
+.oracle-action-btn,
+.demo-amount-pct,
+.demo-strat-btn {
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.2s,
+              background 0.2s;
+}
+.btn-primary:active,
+.oracle-action-btn:active,
+.demo-amount-pct:active,
+.demo-strat-btn:active {
+  transform: scale(0.97);
+}
+
+/* Карточки — тонкая тень + hover-lift на десктопе */
+@media (hover: hover) {
+  .card:hover {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    border-color: var(--border-hi);
+  }
+}
+
+/* Bottom-nav активная вкладка — плавный переход и glow */
+.nav-btn {
+  transition: color 0.2s, transform 0.15s, filter 0.2s;
+}
+.nav-btn.active {
+  filter: drop-shadow(0 0 6px rgba(94, 203, 255, 0.5));
+}
+.nav-btn:active {
+  transform: scale(0.92);
+}
+
+/* Sheet — улучшенная анимация выезда */
+.sheet {
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 0.25s ease-out;
+}
+.sheet-overlay {
+  transition: opacity 0.28s ease-out;
+}
+
+/* Тосты — плавное появление с bounce */
+.toast {
+  animation: toastBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes toastBounceIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.toast.removing {
+  animation: toastFadeOut 0.28s ease-in forwards;
+}
+
+@keyframes toastFadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
+/* Ticker input — фокус с плавным glow */
+#ticker:focus,
+.demo-ticker-wrap:focus-within {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(94, 203, 255, 0.12);
+  transition: all 0.2s;
+}
+
+/* Кнопки GO / DEMO — puls при нажатии */
+.btn-go:active,
+.demo-go-btn:active {
+  transform: scale(0.94);
+}
+
+/* Скролл-бар — тонкий и стильный */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(94, 203, 255, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(94, 203, 255, 0.3);
+}
+
+/* Verify empty state с иконкой */
+.empty-msg {
+  padding: 20px 14px;
+  text-align: center;
+  color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+/* ═══ MULTI-TF CONFLUENCE ═══ */
+.conf-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.conf-tf {
+  background: rgba(0,0,0,.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 8px;
+  text-align: center;
+  transition: border-color .2s;
+}
+.conf-tf-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 1.1px;
+  margin-bottom: 4px;
+}
+.conf-tf-rsi {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.conf-tf-verdict {
+  font-size: 13px;
+  line-height: 1;
+}
+.conf-summary {
+  margin-top: 2px;
+}
+.conf-summary-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--mut);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.conf-summary-text b {
+  color: var(--hi);
+}
+.conf-bar {
+  height: 4px;
+  background: rgba(0,0,0,.5);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.conf-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--mint));
+  border-radius: 2px;
+  transition: width .4s cubic-bezier(.2,.8,.2,1);
+}
+
+/* ═══ TRADE JOURNAL ═══ */
+.journal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.journal-cell {
+  background: rgba(0,0,0,.35);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+.j-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.j-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--hi);
 }

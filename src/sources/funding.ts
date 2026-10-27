@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · FUNDING — Bybit + OKX
-// Binance Futures НЕ используем (403 из РФ)
+// NEBULA v2 · FUNDING — Bybit + OKX + KuCoin
 // ═══════════════════════════════════════════════════════════════
+
+const IS_DEV = (import.meta as any).env?.DEV;
 
 export interface FundingResult {
   status: 'success' | 'error';
@@ -34,9 +35,35 @@ async function fromOkx(t: string): Promise<number> {
   return parseFloat(d.fundingRate) * 100;
 }
 
+async function fromKucoin(t: string): Promise<number> {
+  // ✅ Новый Unified API KuCoin — тот же домен, что и spot
+  const base = IS_DEV ? '/proxy/kucoin' : 'https://api.kucoin.com';
+
+  // Символ для USDT-M перпетуалов: DASHUSDTM (M = perpetual)
+  const r = await fetch(
+    `${base}/api/ua/v2/market/funding-rate?symbol=${t}USDTM&productType=USDT-FUTURES`,
+    { signal: AbortSignal.timeout(TIMEOUT) }
+  );
+
+  if (!r.ok) throw new Error(`kucoin HTTP ${r.status}`);
+
+  const j = await r.json();
+  if (j.code !== '200000') {
+    throw new Error(`kucoin ${j.code}: ${j.msg || 'no data'}`);
+  }
+
+  const item = j.data?.[0];
+  if (!item) throw new Error('kucoin empty (maybe no futures for this coin)');
+
+  // В ответе nextFundingRate (доля): 0.000075 → 0.0075%
+  const rate = parseFloat(item.nextFundingRate || '0') * 100;
+  return rate;
+}
+
 const SOURCES = [
-  { name: 'bybit', fetch: fromBybit },
-  { name: 'okx',   fetch: fromOkx },
+  { name: 'bybit',  fetch: fromBybit },
+  { name: 'okx',    fetch: fromOkx },
+  { name: 'kucoin', fetch: fromKucoin },
 ];
 
 export async function getAggregatedFunding(ticker: string): Promise<FundingResult> {
@@ -50,6 +77,8 @@ export async function getAggregatedFunding(ticker: string): Promise<FundingResul
     if (res.status === 'fulfilled') {
       rates[res.value.name] = Math.round(res.value.rate * 10000) / 10000;
       sourcesOk.push(res.value.name);
+    } else {
+      console.warn(`[funding] ${res.reason?.message || 'failed'}`);
     }
   }
 

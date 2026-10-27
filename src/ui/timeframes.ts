@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · TIMEFRAMES + WEBSOCKET real-time
-// WS primary, REST fallback
+// WS primary, REST fallback (Binance / KuCoin)
 // ═══════════════════════════════════════════════════════════════
 
 import { state } from '../utils';
@@ -82,6 +82,8 @@ function connectStream(): void {
 
   const ticker = (state as any).currentTicker;
   const tf = getCurrentTimeframe();
+  const exchange: 'binance' | 'kucoin' =
+    state.currentExchange === 'kucoin' ? 'kucoin' : 'binance';
 
   if (!ticker) return;
   if (tf === 'max') {
@@ -92,6 +94,7 @@ function connectStream(): void {
   _stream = new PriceStream({
     ticker,
     timeframe: tf,
+    exchange,
     onCandle: (candle) => {
       updateLastCandle(candle);
 
@@ -107,7 +110,7 @@ function connectStream(): void {
         clearTimeout(_wsFallbackTimer);
         _wsFallbackTimer = null;
       }
-      console.log('[tf] WebSocket connected - real-time mode');
+      console.log(`[tf] WebSocket (${exchange}) connected - real-time mode`);
     },
     onClose: () => {
       if (!_restTimer) startRestFallback();
@@ -226,12 +229,15 @@ export function initTimeframeBar(): void {
   console.log(`[tf] init: ${getCurrentTimeframe()} (real-time stream)`);
 }
 
-// Poll ticker changes to reconnect WS
+// Poll ticker + exchange changes to reconnect WS
 let _lastTicker = (state as any).currentTicker;
+let _lastExchange = state.currentExchange;
 setInterval(() => {
   const t = (state as any).currentTicker;
-  if (t && t !== _lastTicker) {
+  const ex = state.currentExchange;
+  if ((t && t !== _lastTicker) || ex !== _lastExchange) {
     _lastTicker = t;
+    _lastExchange = ex;
     reconnectStream();
   }
 }, 1000);

@@ -386,15 +386,12 @@ export function oracleGetRecent(limit = 5): any[] {
   try {
     const mem = loadMemory();
     const recent = [...mem.analyses].sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
+    // Возвращаем полную запись (со всеми метриками) для Дневника
     return recent.map(a => ({
+      ...a,
       ticker: a.ticker || '?',
-      timestamp: a.timestamp,
-      verdict: a.verdict || 'hold',
-      score: a.score,
-      confidence: a.confidence,
-      outcome: a.outcome,
-      outcome_pct: a.outcome_pct,
-      market_regime: a.market_regime || 'neutral',
+      score: a.score ?? 0,
+      confidence: a.confidence ?? 0,
     }));
   } catch { return []; }
 }

@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.4** | Branch: `main` | Commit: `00f81af`
-> Generated: 2026-10-25 10:24
+> Version: **2.0.5** | Branch: `main` | Commit: `37763e9`
+> Generated: 2026-10-27 06:07
 
 ---
 
@@ -37,17 +37,31 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Stats
 
-- TypeScript files in `src/`: 41
-- Total LOC in `src/`: 12009
-- Bundle (`dist/`): 54 files, 455 KB
+- TypeScript files in `src/`: 45
+- Total LOC in `src/`: 13600
+- Bundle (`dist/`): 56 files, 506.4 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.4**
-- Last git tag: `v2.0.3`
+- `package.json` version: **2.0.5**
+- Last git tag: `v2.0.4`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `37763e9` - 2026-10-25 - chore(release): v2.0.4
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ui/pull-refresh.ts`
 
 ### `00f81af` - 2026-10-25 - chore(release): v2.0.3
 
@@ -128,21 +142,13 @@ Files:
 - `src/ui/tooltip.ts`
 - `src/utils.ts`
 
-### `eb6d48b` - 2026-10-22 - feat: about page, reset demo, tauri fix, UI updates
-
-Files:
-- `index.html`
-- `public/styles/tauri.css`
-- `src-tauri/tauri.conf.json`
-- `src/demo.ts`
-- `src/ui/screens.ts`
-
 ## Last release diff
 
-No changes since `v2.0.3`
+No changes since `v2.0.4`
 
 ## Recent tags
 
+- `v2.0.4`
 - `v2.0.3`
 - `v2.0.2`
 - `v2.0.1`
@@ -152,50 +158,54 @@ No changes since `v2.0.3`
 ```
 src/
 +-- platform/
-|   +--   101 http.ts
+|   +--   103 http.ts
 |   +--    29 index.ts
 +-- sources/
-|   +--   223 candles.ts
+|   +--   241 candles.ts
+|   +--   147 confluence.ts
 |   +--   158 dash.ts
-|   +--    66 funding.ts
+|   +--    95 funding.ts
+|   +--   336 kucoin.ts
 |   +--   331 mexc.ts
-|   +--   178 orderbook.ts
-|   +--   171 stream.ts
+|   +--   192 orderbook.ts
+|   +--   228 stream.ts
 |   +--   246 whale-futures.ts
 +-- styles/
 |   +--   136 main.css
 +-- ui/
 |   +--   139 dash.ts
 |   +--   498 diagnostics.ts
-|   +--   196 init.ts
+|   +--   216 init.ts
 |   +--   132 learning.ts
 |   +--    76 market.ts
-|   +--   717 oracle.ts
-|   +--   393 pull-refresh.ts
+|   +--   906 oracle.ts
+|   +--   436 pull-refresh.ts
+|   +--   215 risk.ts
 |   +--   256 scanner.ts
-|   +--   455 screens.ts
-|   +--   504 settings.ts
+|   +--   486 screens.ts
+|   +--   609 settings.ts
 |   +--   212 splash.ts
 |   +--   150 terms.ts
 |   +--   383 themes.ts
-|   +--   247 timeframes.ts
+|   +--   253 timeframes.ts
 |   +--   113 tooltip.ts
 |   +--   581 whale.ts
 +--   394 ai.ts
++--   277 alerts.ts
 +--   280 auth.ts
 +--   274 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
 +--   330 demo.ts
-+--   395 i18n.ts
++--   567 i18n.ts
 +--   411 indicators.ts
 +--   266 main.ts
 +--   475 market.ts
-+--   711 oracle.ts
++--   708 oracle.ts
 +--   185 patterns.ts
 +--   282 themes.ts
-+--   792 trading.ts
-+--   187 utils.ts
++--   687 trading.ts
++--   225 utils.ts
 +--   229 worker.ts
 ```
 
@@ -220,6 +230,15 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - TRADE_INTENT_SYSTEM_PROMPT (const)
 - AiMentorResult (iface)
 - TradeIntent (iface)
+
+### `src/alerts.ts`
+- addAlert()
+- removeAlert()
+- checkAlerts()
+- startAlertsLoop()
+- stopAlertsLoop()
+- openAlertsSheet()
+- submitAlertFromSheet()
 
 ### `src/auth.ts`
 - getAuthPassword()
@@ -349,6 +368,12 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - Candle (iface)
 - Timeframe (type)
 
+### `src/sources/confluence.ts`
+- getConfluence()
+- TFSignal (iface)
+- ConfluenceResult (iface)
+- ConfluenceTF (type)
+
 ### `src/sources/dash.ts`
 - getDashNetworkStats()
 - DashNetworkStats (iface)
@@ -356,6 +381,20 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 ### `src/sources/funding.ts`
 - getAggregatedFunding()
 - FundingResult (iface)
+
+### `src/sources/kucoin.ts`
+- getCurrentPrice()
+- executeKucoinOrders()
+- getKucoinOpenOrders()
+- cancelKucoinOrders()
+- placeKucoinMarketOrder()
+- placeKucoinLimitOrder()
+- getKucoinPortfolio()
+- KucoinKeys (iface)
+- OrderResponse (iface)
+- PlanStep (iface)
+- Asset (iface)
+- PortfolioData (iface)
 
 ### `src/sources/mexc.ts`
 - getCurrentPrice()
@@ -406,8 +445,8 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - deleteKeys()
 - switchAiMode()
 - openOrdersSheet()
-- switchExecMode()
 - selectExTab()
+- switchExecMode()
 - mobileLoadKeys()
 - mobileSaveKeys()
 - mobileDeleteKeys()
@@ -445,6 +484,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 ### `src/ui/oracle.ts`
 - mobileAnalyze()
 - renderPro()
+- renderConfluence()
 - askAIMentor()
 - openAISettings()
 - saveGroqKeyFromModal()
@@ -455,9 +495,15 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - openQuiz()
 - answerQuizM()
 - executeDemoTrade()
+- openJournalEntry()
+- showConfluenceHelp()
 
 ### `src/ui/pull-refresh.ts`
 - initPullToRefresh()
+
+### `src/ui/risk.ts`
+- computeRiskSnapshot()
+- renderRiskCenter()
 
 ### `src/ui/scanner.ts`
 - runScanner()
@@ -488,6 +534,9 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - openGroqSheet()
 - saveGroqFromSettings()
 - deleteGroqFromSettings()
+- openExchangeSheet()
+- saveExchangeKeys()
+- deleteExchangeKeys()
 - openThemesFromSettings()
 - openDiagnosticsFromSettings()
 - openAboutFromSettings()
@@ -546,6 +595,11 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - Candle (iface)
 - PlanStep (iface)
 - ToastType (iface)
+- RiskIndicator (iface)
+- RiskSnapshot (iface)
+- Alert (iface)
+- RiskLevel (type)
+- AlertKind (type)
 
 ### `src/worker.ts`
 - wCall()
@@ -559,13 +613,20 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 
 Same interface/type declared in multiple files. Candidates for refactor into shared module.
 
+- **Asset** - src/sources/kucoin.ts, src/sources/mexc.ts
 - **Candle** - src/chart.ts, src/indicators.ts, src/utils.ts, src/sources/candles.ts, src/ui/whale.ts
-- **PlanStep** - src/utils.ts, src/sources/mexc.ts
+- **OrderResponse** - src/sources/kucoin.ts, src/sources/mexc.ts
+- **PlanStep** - src/utils.ts, src/sources/kucoin.ts, src/sources/mexc.ts
+- **PortfolioData** - src/sources/kucoin.ts, src/sources/mexc.ts
 - **WallsData** - src/chart.ts, src/ui/whale.ts
 
 ## Window exports by module
 
 Functions/objects assigned to `window` for inline HTML handlers.
+
+### `src/alerts.ts` (7)
+
+addAlert, checkAlerts, openAlertsSheet, removeAlert, startAlertsLoop, stopAlertsLoop, submitAlertFromSheet
 
 ### `src/chart.ts` (10)
 
@@ -603,13 +664,17 @@ openLearning, refreshLearning
 
 openMarketPulse
 
-### `src/ui/oracle.ts` (13)
+### `src/ui/oracle.ts` (17)
 
-_currentDemoPlan, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, mobileAnalyze, openAISettings, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderOracleDashboard, renderPro, saveGroqKeyFromModal
+_currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, mobileAnalyze, openAISettings, openJournalEntry, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderConfluence, renderOracleDashboard, renderPro, saveGroqKeyFromModal, showConfluenceHelp
 
 ### `src/ui/pull-refresh.ts` (2)
 
 initPullToRefresh, triggerPullRefresh
+
+### `src/ui/risk.ts` (2)
+
+computeRiskSnapshot, renderRiskCenter
 
 ### `src/ui/scanner.ts` (8)
 
@@ -619,9 +684,9 @@ initAutocomplete, pickCoin, removeFav, renderFavorites, runScanner, suggestPick,
 
 _currentDemoPlan, applyStaticTranslations, cancelDemoOrder, closeSheet, enterDemoMode, exitDemoMode, initRadarMenu, loadBTC, openSheet, renderDemoPlan, resetDemo, setDemoAmount, setLanguage, switchTab
 
-### `src/ui/settings.ts` (14)
+### `src/ui/settings.ts` (17)
 
-deleteGroqFromSettings, openAboutFromSettings, openCommunityChat, openDiagnosticsFromSettings, openDonateFromSettings, openFunChat, openGroqSheet, openSettings, openSupportChat, openThemesFromSettings, resetAllKeys, saveGroqFromSettings, setupBiometrics, toggleAppPassword
+deleteExchangeKeys, deleteGroqFromSettings, openAboutFromSettings, openCommunityChat, openDiagnosticsFromSettings, openDonateFromSettings, openExchangeSheet, openFunChat, openGroqSheet, openSettings, openSupportChat, openThemesFromSettings, resetAllKeys, saveExchangeKeys, saveGroqFromSettings, setupBiometrics, toggleAppPassword
 
 ### `src/ui/splash.ts` (1)
 
@@ -665,6 +730,7 @@ wCall
 - `api.dexpaprika.com` (in `market.ts`)
 - `api.gateio.ws` (in `chart.ts`)
 - `api.groq.com` (in `ai.ts`)
+- `api.kucoin.com` (in `candles.ts`)
 - `api.mexc.com` (in `candles.ts`)
 - `api.qrserver.com` (in `terms.ts`)
 - `dash-rpc.publicnode.com` (in `dash.ts`)
@@ -675,6 +741,7 @@ wCall
 - `shared.eu-central-1.getblock.io` (in `diagnostics.ts`)
 - `t.me` (in `settings.ts`)
 - `WS stream.binance.com` (in `trading.ts`)
+- `WS x-push-spot.kucoin.com` (in `stream.ts`)
 - `www.cbr-xml-daily.ru` (in `market.ts`)
 - `www.dashcentral.org` (in `dash.ts`)
 - `www.okx.com` (in `market.ts`)
@@ -703,6 +770,11 @@ quizAnswers: {}
 lastOracleResult: null
 lastMarketData: null
 lastWhaleData: null
+riskSnapshot: null
+alerts: JSON.parse(localStorage.getItem('nebulaAlerts') || '[]')
+alertsLastCheck: 0
+lastFuturesMetrics: null
+lastMarketContext: null
 isDemoMode: false
 demoBalance: 10000
 demoActiveOrders: []
@@ -716,9 +788,9 @@ demoHistory: []
 
 Critical list: ticker, chart-container, chart-stats, tf-bar, verdict, verdict-title, verdict-text, plan-card, agent-card, whale-card, dash-section, dash-network-content, screen-home, screen-pro, screen-scanner, sheet, sheet-overlay, sheet-title, sheet-body, toast-wrap, app-lock-overlay, al-input, al-submit
 
-All IDs in index.html (168 total):
+All IDs in index.html (179 total):
 
-about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, btc-advice, btc-change, btc-drop, btc-price, btc-rebound, btc-rsi, btc-trend, chart-container, chart-stats, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-oracle-content, demo-orders-list, demo-panel, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, fav-count, fav-list, i-bolt, i-brain, i-chart, i-check, i-clock, i-flask, i-globe, i-info, i-lock, i-oracle, i-play, i-pulse, i-radar, i-refresh, i-scan, i-search, i-settings, i-star, i-star-fill, i-target, i-trending, i-wallet, i-whale, i-x, lang-en, lang-ru, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-drop, lbl-fav, lbl-monitor, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-trend, lbl-walls, lbl-whale, lbl-xray, main-nav, monitor-content, monitor-panel, mon-price, mon-sym, nav-fav, nav-home, nav-oracle, nav-portfolio, nav-pro, nav-scanner, nebula-splash, ofg1, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, radar-items, radar-laser-line, radar-overlay, radar-trigger, radar-trigger-wrap, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, star-btn, star-icon, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
+about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, btc-advice, btc-change, btc-drop, btc-price, btc-rebound, btc-rsi, btc-trend, chart-container, chart-stats, confluence-badge, confluence-card, confluence-content, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-oracle-content, demo-orders-list, demo-panel, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, fav-count, fav-list, i-bell, i-bolt, i-brain, i-chart, i-check, i-clock, i-flask, i-globe, i-info, i-lock, i-oracle, i-play, i-pulse, i-radar, i-refresh, i-scan, i-search, i-settings, i-shield, i-star, i-star-fill, i-target, i-trending, i-wallet, i-whale, i-x, lang-en, lang-ru, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-confluence, lbl-drop, lbl-fav, lbl-monitor, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-trend, lbl-walls, lbl-whale, lbl-xray, main-nav, monitor-content, monitor-panel, mon-price, mon-sym, nav-fav, nav-home, nav-oracle, nav-portfolio, nav-pro, nav-risk, nav-scanner, nebula-splash, ofg1, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, radar-center-orb, radar-items, radar-laser-line, radar-overlay, radar-trigger, radar-trigger-wrap, risk-content, risk-page-title-text, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-risk, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, star-btn, star-icon, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
 
 ## Key dependencies
 
@@ -732,14 +804,17 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Tech debt
 
-3 markers found (TODO / FIXME / HACK / XXX):
+5 markers found (TODO / FIXME / HACK / XXX):
 
+- `src/sources/kucoin.ts:282` - const rate = 95; // TODO: подтягивать из market.ts, как в mexc.ts
+- `src/sources/kucoin.ts:303` - // TODO: fetch price
 - `src/ui/learning.ts:5` - // TODO: oracle_get_stats пока не перенесён — заглушка.
 - `src/ui/learning.ts:32` - // TODO: заменить на реальный источник, когда перенесём oracle.py
 - `src/ui/learning.ts:117` - // TODO: заменить на реальные oracle_update_outcomes / oracle_learn_patterns
 
 ## Release history (last 15 commits)
 
+- 37763e9  2026-10-25  chore(release): v2.0.4
 - 00f81af  2026-10-25  chore(release): v2.0.3
 - fdf138a  2026-10-25  chore(release): v2.0.2
 - d94ff8f  2026-10-25  chore(release): v2.0.1
@@ -754,7 +829,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 0cf98ce  2026-10-15  feat(infra): VPS-прокси через Caddy, Coinpaprika основной источник, Binance Futures через обход блокировки
 - d47b36f  2026-10-14  fix(market): CoinGecko основной, Coinpaprika фоллбэк (лимит 60 req/h)
 - f606dd2  2026-10-14  feat(settings): единый sheet настроек в топбаре, About без дублей
-- 1cf6a91  2026-10-14  v2.0.3: fix splash on Android (prefers-reduced-motion, star count, DPR), fix donate sheet z-index
 
 ---
 

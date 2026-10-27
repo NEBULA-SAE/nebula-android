@@ -11,6 +11,8 @@ import { fetchCandlesWithSource } from '../sources/candles';
 import { getWhaleFuturesMetrics } from '../sources/whale-futures';
 import { getAdvancedAnalytics } from '../market';
 import type { AdvancedAnalytics } from '../market';
+import { getConfluence } from '../sources/confluence';
+import type { ConfluenceResult } from '../sources/confluence';
 import {
   oracleAnalyze as engineOracleAnalyze,
   loadRiskProfile,
@@ -52,13 +54,21 @@ export async function mobileAnalyze(): Promise<void> {
   document.getElementById('ticker-suggest')?.classList.remove('open');
   document.getElementById('demo-ticker-suggest')?.classList.remove('open');
 
+  // Скрываем старую карточку Confluence до прихода новых данных
+  const confCard = document.getElementById('confluence-card');
+  if (confCard) confCard.style.display = 'none';
+
   try {
     // ── Параллельный старт: candles + futures + extras ──
     const tf = ((state as any).currentTimeframe || '1d') as import('../sources/candles').Timeframe;
-const [candlesResult, futuresMetrics] = await Promise.all([
-  fetchCandlesWithSource(raw, tf),
-  getWhaleFuturesMetrics(raw).catch(() => null),
-]);
+    const [candlesResult, futuresMetrics] = await Promise.all([
+      fetchCandlesWithSource(raw, tf),
+      getWhaleFuturesMetrics(raw).catch(() => null),
+    ]);
+
+    // Сохраняем для Risk Center
+    (state as any).lastFuturesMetrics = futuresMetrics;
+
     // fetchExtras — параллельно, не блокирует рендер
     const extrasPromise = fetchExtras(raw);
 
@@ -72,9 +82,10 @@ const [candlesResult, futuresMetrics] = await Promise.all([
     const price = closes[closes.length - 1];
 
     const rsiVal = await Promise.race([
-  wCall('rsi', { closes }),
-  new Promise<number>((_, rej) => setTimeout(() => rej(new Error('rsi timeout')), 5000)),
-]).catch(() => 50);
+      wCall('rsi', { closes }),
+      new Promise<number>((_, rej) => setTimeout(() => rej(new Error('rsi timeout')), 5000)),
+    ]).catch(() => 50);
+    
     const rebound = ((price - min120) / min120) * 100;
     const drop = ((max120 - price) / max120) * 100;
 
@@ -218,6 +229,15 @@ const [candlesResult, futuresMetrics] = await Promise.all([
         vd2.appendChild(oracleDiv);
       }
       state.lastOracleResult = oracleResult;
+
+      // Для Risk Center — контекст рынка (Fear & Greed, regime)
+      if (oracleResult.market_context) {
+        (state as any).lastMarketContext = {
+          fear_greed: oracleResult.market_context.fear_greed,
+          fear_greed_text: oracleResult.market_context.desc,
+          regime: oracleResult.market_context.regime,
+        };
+      }
     }
 
     if (adv.status === 'success') {
@@ -239,6 +259,13 @@ const [candlesResult, futuresMetrics] = await Promise.all([
       const ds = document.getElementById('dash-section');
       if (ds) ds.style.display = 'none';
     }
+
+    // ═══ Multi-TF Confluence (не блокируем основной рендер) ═══
+    getConfluence(raw).then(conf => {
+      if (state.currentTicker === raw) {
+        renderConfluence(conf);
+      }
+    }).catch(() => { /* silent */ });
 
     // ⚠️ ОБНОВЛЕНИЕ ДЕМО-РЕЖИМА: если мы в песочнице, перерисовываем её
     if (state.isDemoMode) {
@@ -394,6 +421,63 @@ export function renderPro(adv: AdvancedAnalytics): void {
   `;
 }
 
+// ═══ MULTI-TF CONFLUENCE RENDERER ═══
+
+export function renderConfluence(result: ConfluenceResult): void {
+  const card = document.getElementById('confluence-card');
+  const content = document.getElementById('confluence-content');
+  const badge = document.getElementById('confluence-badge');
+  if (!card || !content) return;
+
+  if (result.status !== 'success' || result.overall === 'no_data') {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+
+  if (badge) {
+    const labels: Record<string, string> = {
+      strong_buy: '🟢 STRONG BUY',
+      buy: '🟢 BUY',
+      hold: '🟡 HOLD',
+      avoid: '🔴 AVOID',
+      no_data: '—',
+    };
+    badge.textContent = labels[result.overall] || '—';
+    badge.style.color =
+      result.overall === 'strong_buy' || result.overall === 'buy' ? 'var(--mint)' :
+      result.overall === 'avoid' ? 'var(--coral)' : 'var(--amber)';
+  }
+
+  const tfHtml = result.signals.map(s => {
+    const color = !s.ok ? 'var(--dim)' :
+      s.verdict === 'buy' ? 'var(--mint)' :
+      s.verdict === 'avoid' ? 'var(--coral)' : 'var(--amber)';
+    const icon = !s.ok ? '—' :
+      s.verdict === 'buy' ? '✅' :
+      s.verdict === 'avoid' ? '❌' : '⚖️';
+    return `
+      <div class="conf-tf" style="border-color:${s.ok ? color : 'var(--border)'}">
+        <div class="conf-tf-label">${s.tf.toUpperCase()}</div>
+        <div class="conf-tf-rsi" style="color:${color}">RSI ${s.rsi.toFixed(0)}</div>
+        <div class="conf-tf-verdict" style="color:${color}">${icon}</div>
+      </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="conf-grid">${tfHtml}</div>
+    <div class="conf-summary">
+      <div class="conf-summary-text">
+        ${result.buyCount}/${result.totalCount} buy · ${tm('journal_confidence')} <b>${result.confidence}%</b>
+      </div>
+      <div class="conf-bar">
+        <div class="conf-fill" style="width:${result.confidence}%"></div>
+      </div>
+    </div>
+  `;
+}
+
 // ═══ AI MENTOR ═══
 
 export async function askAIMentor(): Promise<void> {
@@ -449,7 +533,6 @@ export function openAISettings(): void {
 
   (window as any).openSheet?.(tm('ai_settings'), html);
 
-  // ИЗМЕНЕНО ТУТ: trading -> crypto
   import('../crypto').then(async (m) => {
     const key = await m.loadGroqKey();
     const inp = document.getElementById('groq-key-input') as HTMLInputElement | null;
@@ -462,7 +545,6 @@ export function saveGroqKeyFromModal(): void {
   const key = (inp?.value || '').trim();
   if (!key) return;
 
-  // ИЗМЕНЕНО ТУТ: trading -> crypto
   import('../crypto').then(async (m) => {
     await m.saveGroqKey(key);
     toast(tm('ai_key_saved'), 'success');
@@ -471,7 +553,6 @@ export function saveGroqKeyFromModal(): void {
 }
 
 export function deleteGroqKeyFromModal(): void {
-  // ИЗМЕНЕНО ТУТ: trading -> crypto
   import('../crypto').then((m) => {
     m.deleteGroqKey();
     toast(tm('ai_key_deleted'), 'info');
@@ -560,7 +641,10 @@ export async function renderOracleDashboard(): Promise<void> {
     if (!rc || !rc.length) {
       list.innerHTML = `<div class="empty-msg" style="padding:20px 10px">${tm('no_recent')}<br><span style="font-size:10.5px;color:var(--dim);margin-top:8px;display:block">${tm('no_recent_hint')}</span></div>`;
     } else {
-      list.innerHTML = rc.map(r => {
+      // Сохраняем полный массив для Дневника
+      (window as any)._journalRecords = rc;
+      
+      list.innerHTML = rc.map((r, i) => {
         const v = r.verdict || 'hold';
         const verdictMap: Record<string, string> = { strong_buy: 'buy', buy: 'buy', hold: 'hold', avoid: 'avoid' };
         const cls = verdictMap[v] || 'hold';
@@ -579,7 +663,7 @@ export async function renderOracleDashboard(): Promise<void> {
           outcomeHtml = `<div class="recent-outcome pending">⏳ ${tm('pending')}</div>`;
         }
         return `
-          <div class="recent-item" onclick="pickCoin('${r.ticker}')">
+          <div class="recent-item" onclick="openJournalEntry(${i})">
             <div class="recent-left">
               <div class="recent-ticker">${r.ticker}</div>
               <div class="recent-time">${relTime(r.timestamp)}</div>
@@ -685,7 +769,7 @@ function computeQuiz(): void {
 export async function executeDemoTrade(): Promise<void> {
   const plan = (window as any)._currentDemoPlan;
   if (!plan || !plan.entry || !plan.tp1 || !plan.stop) {
-    toast('Сначала сделай анализ (GO), чтобы Оракул составил план', 'warn');
+    toast(tm('demo_need_analysis'), 'warn');
     return;
   }
 
@@ -697,6 +781,108 @@ export async function executeDemoTrade(): Promise<void> {
   await executeDemoPlan(plan.entry, plan, steps);
 }
 
+// ═══ TRADE JOURNAL (ДНЕВНИК ОРАКУЛА) ═══
+
+export function openJournalEntry(index: number): void {
+  const records = (window as any)._journalRecords || [];
+  const r = records[index];
+  if (!r) return;
+
+  const date = new Date(r.timestamp * 1000).toLocaleString();
+
+  const isWin = ['win', 'win_big'].includes(r.outcome);
+  const isLoss = ['loss', 'loss_big'].includes(r.outcome);
+  const isPending = !r.outcome;
+
+  const statusColor = isWin ? 'var(--mint)' : isLoss ? 'var(--coral)' : 'var(--amber)';
+  const statusText = isWin ? '✅ WIN' : isLoss ? '❌ LOSS' : '⏳ PENDING';
+  const pnlText = r.outcome_pct != null ? `${r.outcome_pct > 0 ? '+' : ''}${r.outcome_pct}%` : '—';
+
+  const html = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;">${date}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;color:var(--hi);margin:6px 0;">${r.ticker}</div>
+      <div style="display:inline-block;padding:6px 14px;border-radius:20px;background:rgba(0,0,0,.4);border:1px solid ${statusColor};color:${statusColor};font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;">
+        ${statusText} ${!isPending ? `· ${pnlText}` : ''}
+      </div>
+    </div>
+
+    <!-- Оценка Оракула -->
+    <div class="card" style="margin-bottom:12px;border-color:var(--border-hi);">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;">${tm('journal_verdict')}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--cyan);">${r.score > 0 ? '+' : ''}${r.score} / 100</div>
+        </div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--hi);margin-bottom:4px;">
+          ${r.verdict === 'buy' ? '🟢 BUY' : r.verdict === 'strong_buy' ? '🟢 STRONG BUY' : r.verdict === 'avoid' ? '🔴 AVOID' : '🟡 HOLD'}
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);">
+          ${tm('journal_confidence')}: ${r.confidence}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Метрики на момент входа -->
+    <div class="settings-section-title" style="margin-top:16px;">${tm('journal_snapshot')}</div>
+    <div class="journal-grid">
+      <div class="journal-cell">
+        <div class="j-lbl">RSI</div>
+        <div class="j-val" style="color:${r.rsi < 35 ? 'var(--mint)' : r.rsi > 65 ? 'var(--coral)' : 'var(--hi)'}">${r.rsi.toFixed(1)}</div>
+      </div>
+      <div class="journal-cell">
+        <div class="j-lbl">${tm('journal_whale')}</div>
+        <div class="j-val" style="color:${r.whale_active ? 'var(--cyan)' : 'var(--mut)'}">${r.whale_active ? tm('journal_whale_act') : '—'}</div>
+      </div>
+      <div class="journal-cell">
+        <div class="j-lbl">Funding</div>
+        <div class="j-val">${(r.funding_rate || 0).toFixed(4)}%</div>
+      </div>
+      <div class="journal-cell">
+        <div class="j-lbl">${tm('journal_price')}</div>
+        <div class="j-val">$${fmtP(r.price_at_analysis)}</div>
+      </div>
+    </div>
+
+    <button class="btn-primary btn-mint" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top:20px;">
+      ${tm('journal_close')}
+    </button>
+  `;
+
+  (window as any).openSheet?.(tm('journal_title'), html);
+}
+
+// ═══ MULTI-TF CONFLUENCE HELP ═══
+
+export function showConfluenceHelp(): void {
+  const html = `
+    <div style="font-size:13.5px;color:var(--tx);line-height:1.6;padding-bottom:10px;">
+      ${tm('conf_help_desc')}
+    </div>
+
+    <div style="background:rgba(94,203,255,.08);border-left:3px solid var(--cyan);padding:12px;border-radius:8px;margin-bottom:14px;font-size:12.5px;line-height:1.5;color:var(--tx);">
+      <b>${tm('conf_help_why_title')}</b><br>
+      ${tm('conf_help_why_desc')}
+    </div>
+
+    <div style="font-size:12.5px;line-height:1.7;color:var(--tx);">
+      <b>${tm('conf_help_how')}</b><br>
+      🟢 ${tm('conf_help_strong')}<br>
+      🟡 ${tm('conf_help_hold')}<br>
+      🔴 ${tm('conf_help_avoid')}<br><br>
+      
+      <b>${tm('conf_help_rsi')}</b><br>
+      ${tm('conf_help_rsi_desc')}
+    </div>
+
+    <button class="btn-primary btn-mint" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top:20px;">
+      ${tm('conf_help_ok')}
+    </button>
+  `;
+
+  (window as any).openSheet?.(tm('conf_help_title'), html);
+}
+
 // ═══ Экспорт в window ═══
 
 if (typeof window !== 'undefined') {
@@ -704,6 +890,9 @@ if (typeof window !== 'undefined') {
     mobileAnalyze,
     askAIMentor,
     renderPro,
+    renderConfluence,
+    showConfluenceHelp,
+    openJournalEntry,
     openQuiz,
     answerQuizM,
     renderOracleDashboard,
