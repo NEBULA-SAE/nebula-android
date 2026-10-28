@@ -4,7 +4,7 @@
 > Обновляется вручную при значимых изменениях архитектуры, бизнес-логики, роадмапа.
 > Структурная карта проекта — отдельный файл `PROJECT_MAP.md` (генерируется автоматически).
 >
-> **Версия этого файла:** соответствует релизу **v2.0.5+** (2026-10-27)
+> **Версия этого файла:** соответствует релизу **v2.0.7+** (2026-10-28)
 > **Актуальная версия кода:** см. `package.json` → `version`
 > **При расхождении:** верь `PROJECT_MAP.md` и `package.json`, они новее
 
@@ -30,7 +30,7 @@
 
 **Задача приложения:** дать розничному трейдеру то, что обычно доступно только профессионалам — глубокий анализ монеты с 6 бирж, метрики крупных игроков (киты, funding, OI), AI-наставник, который объясняет «что происходит» простым языком.
 
-**Ключевая фишка:** алгоритм **Oracle** — скоринг от -100 до +100, который агрегирует технические индикаторы, поведение китов, стакан, funding rate, on-chain активность и историческое обучение. На основе скоринга выдаёт вердикт (strong_buy / buy / hold / avoid) и рекомендует размер позиции.
+**Ключевая фишка:** алгоритм **Oracle** — скоринг от -100 до +100, который агрегирует технические индикаторы, поведение китов, стакан, funding rate, on-chain активность и историческое обучение. На основе скоринга выдаёт вердикт (strong_buy / buy / hold / avoid) и рекомендует размер позиции. Плюс визуальный **Oracle Overlay** на графике.
 
 **Не является:** финансовым советником, торговым ботом с автоисполнением без подтверждения. Все ордера размещаются только после явного клика пользователя.
 
@@ -62,7 +62,7 @@
 │ User action (GO button / ticker Enter) │
 └────────────────────────┬────────────────────────────────────┘
 ▼
-mobileAnalyze() [src/ui/oracle.ts]
+mobileAnalyze() [src/ui/oracle.ts]  <-- Защищен _analyzeGen
 │
 ┌────────────────┼────────────────┐
 ▼ ▼ ▼
@@ -94,15 +94,14 @@ verdict + confidence + plan
 ▼ ▼ ▼ ▼ ▼ ▼
 renderPro setCandles whale- renderOracle agent-card Multi-TF
 (pro tab) +drawNow radar Dashboard (AI Mentor) Confluence
-text
-
+          +overlay
 
 Параллельно при старте:
 - `loadBTC()` — карточка BTC каждые 90 сек
-- `initTimeframeBar()` — панель tf + WebSocket стрим
+- `initTimeframeBar()` — панель tf + WebSocket стрим (защита от race)
 - `runFullDiagnostics()` — раз в сутки
 - `initAlertsLoop()` — проверка алертов каждые 30 сек
-- тема из localStorage
+- `initOracleOverlay()` — кнопка 🔮 на графике
 
 ---
 
@@ -115,23 +114,13 @@ text
 **Формула скоринга:**
 
 score = tech // технический анализ
-
-    whale_score // поведение китов
-
-    obs_score // стакан (bids vs asks)
-
-    funding_score // funding rate
-
-    onchain_score // DEX активность
-
-    learned_score // обучаемая память паттернов
-
-    man_score // манипуляции (искусственный сброс)
-
-    aggr_modifier // рыночный контекст (Fear&Greed)
-
-text
-
+      + whale_score // поведение китов
+      + obs_score // стакан (bids vs asks)
+      + funding_score // funding rate
+      + onchain_score // DEX активность
+      + learned_score // обучаемая память паттернов
+      + man_score // манипуляции (искусственный сброс)
+      + aggr_modifier // рыночный контекст (Fear&Greed)
 
 **Вердикт по score:**
 | Score | Verdict | Смысл |
@@ -147,8 +136,6 @@ text
 
 pos = min(profile_max_position_size, max_risk_per_trade * 5)
 if (confidence < 55) pos *= 0.4
-text
-
 
 **Риск-профили** (из квиза 3 вопроса):
 | Уровень | max_risk_per_trade | max_position_size |
@@ -157,10 +144,9 @@ text
 | balanced | 1.5% | 15% |
 | aggressive | 3.0% | 30% |
 
-### 4.2 Multi-TF Confluence (Новое)
+### 4.2 Multi-TF Confluence
 
 Файл: `src/sources/confluence.ts` → `getConfluence()`
-
 Анализирует монету на **трёх таймфреймах одновременно**: 1h, 1d, 1w. 
 Для каждого считает RSI, MACD (hist), Stoch RSI. Выдаёт `verdict` (buy/hold/avoid) для каждого ТФ.
 - Если все 3 — BUY → `overall = 'strong_buy'` (уверенность ~97%).
@@ -171,11 +157,8 @@ text
 ### 4.3 Whale detection
 
 Файл: `src/ui/whale.ts` → `calculateVolumeAnomalies()`, `mergeWhaleMetrics()`
-
 **Volume anomaly:** если объём последних 2 свечей > 180% от среднего за 30 дней → `isWhaleActive = true`
-
 **OBV trend:** rising / falling / neutral — по накоплению объёма
-
 **Futures metrics** (`src/sources/whale-futures.ts`):
 - **OI change 24h** — Bybit → Binance fallback. > +5% = rising, < -5% = falling
 - **LSR Top Traders** — OKX → Binance → Bybit.
@@ -186,10 +169,8 @@ text
 ### 4.4 AI Mentor (Groq)
 
 Файл: `src/ai.ts` → `getAiMentor()`
-
 Отправляет в Groq **все** метрики + совпадения с базой паттернов. Просит ответить строго по 7 блокам (Что происходит, На что похоже, Почему так, За и против, Сценарии, Что делать, Уверенность).
-**Объём:** 350-450 слов.
-**Модель:** `openai/gpt-oss-120b`.
+**Объём:** 350-450 слов. **Модель:** `openai/gpt-oss-120b`.
 
 ### 4.5 Сканер дна
 
@@ -203,28 +184,40 @@ text
 **Мониторинг:** WebSocket на `stream.binance.com`, отслеживает исполнение.
 **TWAP:** разбивает ордер на N слайсов за M минут.
 
-### 4.7 Risk Command Center (Новое)
+### 4.7 Risk Command Center + Help
 
 Файл: `src/ui/risk.ts`
-Экран «Риски» (7-я вкладка). Собирает 5 индикаторов:
+Экран «Риски». Собирает 5 индикаторов:
 1. Концентрация портфеля (доля топ-1 монеты).
 2. Уверенность Оракула (confidence текущего анализа).
 3. Активность китов (isWhaleActive).
 4. Funding rate (экстремумы).
 5. Fear & Greed (страх/жадность).
 Выдаёт общий светофор (low/medium/high) с пульсирующей анимацией.
+**Новое:** Кнопка `ℹ️` рядом с заголовком вызывает модалку `showRiskHelp()` с расшифровкой каждого из 5 индикаторов (переведено на RU/EN).
 
-### 4.8 Trade Journal (Новое)
+### 4.8 Trade Journal
 
 Файл: `src/ui/oracle.ts` → `openJournalEntry()`
-На вкладке «Оракул» в списке последних анализов записи теперь кликабельны. При клике открывается модалка с полной историей: вердикт, score, RSI на входе, активность китов, funding и реальный результат (Win/Loss в %).
+На вкладке «Оракул» в списке последних анализов записи кликабельны. Открывается модалка: вердикт, score, RSI на входе, активность китов, funding и реальный результат.
+
+### 4.9 Oracle Chart Overlay (Level 2)
+
+Файл: `src/ui/chart-overlay.ts`
+Кнопка **🔮 Логика** на графике. Показывает, *почему* Оракул принял решение. Отрисовывает маркеры на свечах:
+- 🐋 — Аномальный объём (в 2 раза выше среднего).
+- 🟢 — MACD бычий кроссовер.
+- 🔴 — MACD медвежий кроссовер.
+- 🔵 — Касание нижней полосы Боллинджера.
+- 🟣 — Касание верхней полосы Боллинджера.
+- 🟨 — Экстремальный Funding Rate (если > 0.05%).
+Рядом кнопка `ℹ️` — открывает справку (`showOverlayHelp`) с объяснением всех маркеров.
 
 ---
 
 ## 5. Безопасность
 
 Файлы: `src/auth.ts`, `src/crypto.ts`
-
 **Мастер-пароль:** хранится только хеш (SHA-256) в localStorage. Сам пароль в sessionStorage.
 **Шифрование ключей:** AES-256-GCM + PBKDF2 (150k итераций).
 - MEXC: `nebulaConfig`
@@ -237,9 +230,8 @@ text
 ## 6. Обход CORS — три платформы
 
 Все три в `src/main.ts` + `src/platform/http.ts`.
-
 **Web (dev):** Vite proxy в `vite.config.ts`. Добавлены прокси `/proxy/kucoin` и `/proxy/kucoin-futures`.
-**Android (Capacitor):** `CapacitorHttp` перехватывает `window.fetch`. Обёрнут в `Promise.race` с `AbortSignal.timeout`, чтобы не висело по 30-60 сек.
+**Android (Capacitor):** `CapacitorHttp` перехватывает `window.fetch`. Обёрнут в `Promise.race` с `AbortSignal.timeout`.
 **Windows (Tauri):** `@tauri-apps/plugin-http` для whitelist-доменов.
 В `TAURI_PROXY_HOSTS` добавлены: `api.kucoin.com`, `api-futures.kucoin.com`.
 
@@ -248,9 +240,8 @@ text
 ## 7. UI — 7 экранов
 
 Файл: `index.html` (разметка) + `src/ui/*.ts` (логика)
-
 **Bottom nav (7 вкладок):**
-1. **home** — график + verdict + план + AI + whale + Multi-TF.
+1. **home** — график + verdict + план + AI + whale + Multi-TF + Overlay.
 2. **pro** — продвинутая аналитика (карточки).
 3. **scanner** — сканер дна.
 4. **fav** — избранное.
@@ -259,28 +250,29 @@ text
 7. **portfolio** — баланс MEXC/KuCoin.
 
 **Плюс:**
-- **Alerts** — настройка уведомлений (Price / Whale / Funding) в Risk Center и Настройках.
-- **Radial menu** — 6 кнопок по кругу (Рынок, Избранное, Риски, Баланс, Ордера, Обучение). Иконки расставляются динамически через JS с сохранением позиций в localStorage.
-- **Sheet-модалки**, **Demo mode**, **Terms**, **App lock**, **Splash**.
+- **Alerts** — настройка уведомлений (Price / Whale / Funding).
+- **Radial menu** — 6 кнопок по кругу (Рынок, Избранное, Риски, Баланс, Ордера, Обучение).
+- **Sheet-модалки**, **Demo mode**, **Terms**, **App lock**.
+- **Splash Screen**: 7 секунд, звёзды + параллакс + SVG-кардиограмма (пульс).
+- **Landscape Mode**: на телефонах при повороте экрана срабатывает `@media (orientation: landscape)`. Топбар сжимается, нижнее меню прячет текст, контент разбивается на 2 колонки.
+- **Pull-to-refresh v3.2**: свайп вниз от верха.
 
 **Таймфреймы:** `1m / 15m / 1h / 1d / 7d / 1M / ALL`.
-**Pull-to-refresh v3.2:** свайп вниз от верха. Игнорирует нажатия на кнопки (`shouldIgnore`), чтобы не блокировать клики.
 
 ---
 
-## 8. WebSocket — real-time цена
+## 8. WebSocket — real-time цена и защита от Race Conditions
 
 Файл: `src/sources/stream.ts` (класс `PriceStream`)
 **Источники: Binance и KuCoin.**
 - Binance: `wss://stream.binance.com:9443/ws/{symbol}@kline_{interval}`
-- KuCoin: `wss://x-push-spot.kucoin.com` (требует отправки `action: SUBSCRIBE` при `onopen`).
+- KuCoin: `wss://x-push-spot.kucoin.com` (требуется `action: SUBSCRIBE`).
 **Логика:**
 - При смене tf, тикера или биржи — `destroy()` + новый `connect()`.
-- Reconnect: экспоненциальный бэкофф 1s→30s.
-- Fallback на REST (в `timeframes.ts`), если WS не подключился за 8 сек.
-**Обновление графика:**
-- REST → `updateCandles()` (полная перерисовка).
-- WS → `updateLastCandle()` (`series.update()`, зум не сбрасывается).
+- **Защита:** в `onmessage` стоит проверка `if (this.destroyed) return;` — чтобы старый сокет не записал свечу в новый график.
+- **Фикс графика:** `src/sources/candles.ts` имеет `toSeconds()` и `sortAndDedupe()`. KuCoin возвращает свечи от новых к старым, теперь они принудительно сортируются перед `setData`, иначе lightweight-charts падал.
+- **Гонка при анализе:** в `mobileAnalyze` добавлен `_analyzeGen` (счётчик поколений). Если пока грузились данные юзер переключил TF — старый ответ отбрасывается.
+- Fallback на REST, если WS не подключился за 8 сек.
 
 ---
 
@@ -291,9 +283,10 @@ text
 2. Сканирует на секреты.
 3. `npm run check`.
 4. Bump версии в 8 файлах + `versionCode`.
-5. Собирает через `build-all.ps1`.
-6. Генерирует `PROJECT_MAP.md`.
-7. Коммит, тег, push.
+5. **Очищает кэш Tauri:** `Remove-Item src-tauri\target\release\bundle` и `dist_release`. (Это критически важно, иначе `Setup.exe` устанавливает старые версии).
+6. Собирает через `build-all.ps1`.
+7. Генерирует `PROJECT_MAP.md`.
+8. Коммит, тег, push.
 
 **Флаги:** `-DryRun`, `-Minor`, `-Major`, `-SkipBuild`, `-SkipPush`, `-SkipTests`, `-Yes`.
 **Команды:**
@@ -323,6 +316,7 @@ text
 
 **Разработчик:** Русскоязычный, Windows 11 + VS Code + PowerShell.
 **Стиль ответов ИИ:** Русский язык, развёрнуто и по делу, структурированно. Готовые команды PowerShell. Прямо говорить о проблемах. Проверка после каждого шага.
+**Критично:** Если нужно заменить код, нужно указывать точный блок "Найти: ... Заменить на: ...". Не давать абстрактных инструкций.
 
 ---
 
@@ -347,6 +341,7 @@ text
 
 | Версия | Дата | Ключевое |
 |---|---|---|
+| v2.0.7+ | 2026-10-28 | Фикс гонки графиков (race condition), фикс KuCoin candles, Oracle Overlay (Level 2) + Help модалки (Риски, Логика), Landscape Mode, 7-сек заставка с пульсом, автоочистка bundle при релизе |
 | v2.0.5+ | 2026-10-27 | KuCoin (все модули), Risk Center, Alerts, Multi-TF, Trade Journal, i18n, pull-refresh v3.2, radar v2 |
 | v2.0.2 | 2026-10-25 | WebSocket real-time, pull-refresh v3, build-all fix версий |
 | v2.0.1 | 2026-10-23 | AbortSignal fix (Android), таймфреймы, pull-refresh v1 |

@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.9** | Branch: `main` | Commit: `4d05231`
-> Generated: 2026-10-28 06:34
+> Version: **2.0.10** | Branch: `main` | Commit: `1f2c272`
+> Generated: 2026-10-28 07:11
 
 ---
 
@@ -43,11 +43,27 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Consistency check
 
-- `package.json` version: **2.0.9**
-- Last git tag: `v2.0.8`
+- `package.json` version: **2.0.10**
+- Last git tag: `v2.0.9`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `1f2c272` - 2026-10-28 - chore(release): v2.0.9
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/layout.css`
+- `scripts/release.ps1`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ui/splash.ts`
 
 ### `4d05231` - 2026-10-28 - chore(release): v2.0.8
 
@@ -107,46 +123,13 @@ Files:
 Files:
 - `AI_CONTEXT.md`
 
-### `373f3de` - 2026-10-27 - chore(release): v2.0.5
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/screens.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/alerts.ts`
-- `src/i18n.ts`
-- `src/oracle.ts`
-- `src/platform/http.ts`
-- `src/sources/candles.ts`
-- `src/sources/confluence.ts`
-- `src/sources/funding.ts`
-- `src/sources/kucoin.ts`
-- `src/sources/orderbook.ts`
-- `src/sources/stream.ts`
-- `src/trading.ts`
-- `src/ui/init.ts`
-- `src/ui/oracle.ts`
-- `src/ui/pull-refresh.ts`
-- `src/ui/risk.ts`
-- `src/ui/screens.ts`
-- `src/ui/settings.ts`
-- `src/ui/timeframes.ts`
-- `src/utils.ts`
-- `vite.config.ts`
-
 ## Last release diff
 
-No changes since `v2.0.8`
+No changes since `v2.0.9`
 
 ## Recent tags
 
+- `v2.0.9`
 - `v2.0.8`
 - `v2.0.7`
 - `v2.0.6`
@@ -832,6 +815,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 1f2c272  2026-10-28  chore(release): v2.0.9
 - 4d05231  2026-10-28  chore(release): v2.0.8
 - c2a620d  2026-10-28  chore(release): v2.0.7
 - 3a37664  2026-10-28  chore(release): v2.0.6
@@ -846,7 +830,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 352b9ca  2026-10-21  feat: mobile radial HUD, demo sandbox fixes, NEBUL core button
 - 3ec7e5c  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 - aa430bf  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
-- d542dd0  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 
 ---
 
