@@ -79,6 +79,7 @@ export class PriceStream {
     };
 
     this.ws.onmessage = (ev) => {
+      if (this.destroyed) return;
       try {
         const msg = JSON.parse(ev.data);
         if (msg.e === 'kline' && msg.k) {
@@ -128,7 +129,6 @@ export class PriceStream {
     this.ws.onopen = () => {
       if (this.destroyed) { try { this.ws?.close(); } catch {} return; }
       this.reconnectAttempts = 0;
-      // KuCoin требует отправить subscribe
       const subMsg = {
         id: String(Date.now()),
         action: 'SUBSCRIBE',
@@ -144,9 +144,9 @@ export class PriceStream {
     };
 
     this.ws.onmessage = (ev) => {
+      if (this.destroyed) return;
       try {
         const msg = JSON.parse(ev.data);
-        // KuCoin kline: { T: "kline.SPOT", d: { o, c, h, l, v, O } }
         if (msg.T === 'kline.SPOT' && msg.d) {
           const d = msg.d;
           const candle: Candle = {
@@ -221,6 +221,10 @@ export class PriceStream {
       this.reconnectTimer = null;
     }
     if (this.ws) {
+      // Снимаем колбэки до close(), чтобы не получить «последний вздох»
+      try { this.ws.onmessage = null; } catch { /* silent */ }
+      try { this.ws.onerror = null; } catch { /* silent */ }
+      try { this.ws.onclose = null; } catch { /* silent */ }
       try { this.ws.close(1000, 'destroy'); } catch { /* silent */ }
       this.ws = null;
     }

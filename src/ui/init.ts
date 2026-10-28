@@ -170,6 +170,16 @@ export function initApp(): void {
     }
   }, 300);
 
+  // ─── 12b. Oracle overlay (кнопка 🔮 на графике) ───
+  setTimeout(async () => {
+    try {
+      const m = await import('./chart-overlay');
+      m.initOracleOverlay();
+    } catch (e) {
+      console.warn('[init] chart-overlay failed:', e);
+    }
+  }, 500);
+
   // ─── 13. Pull-to-refresh (свайп вниз для обновления экрана) ───
   setTimeout(async () => {
     try {

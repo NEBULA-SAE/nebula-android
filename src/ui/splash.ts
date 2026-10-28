@@ -5,16 +5,35 @@
 (function nebulaSplash() {
   'use strict';
 
-  const TOTAL_MS = 5200;
+  // ─── CSS-АНИМАЦИЯ ДЛЯ ПУЛЬСА ───
+  if (!document.getElementById('nebula-pulse-style')) {
+    const style = document.createElement('style');
+    style.id = 'nebula-pulse-style';
+    style.textContent = `
+      .nebula-pulse-line {
+        stroke-dasharray: 40 300;
+        stroke-dashoffset: 340;
+        animation: nebula-hospital-pulse 2s linear infinite;
+        filter: drop-shadow(0 0 6px rgba(94, 203, 255, 0.9));
+      }
+      @keyframes nebula-hospital-pulse {
+        0% { stroke-dashoffset: 340; }
+        100% { stroke-dashoffset: -300; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const TOTAL_MS = 8000;
   const FADE_MS  = 800;
   const STAR_COUNT_BASE = 60;
 
   const STAGES: { p: number; t: number; s: string }[] = [
-    { p: 15,  t: 300,  s: 'LOADING CORE...' },
-    { p: 40,  t: 1100, s: 'CONNECTING EXCHANGES...' },
-    { p: 65,  t: 2200, s: 'FETCHING MARKET DATA...' },
-    { p: 88,  t: 3400, s: 'CALIBRATING ORACLE...' },
-    { p: 100, t: 4300, s: 'READY' },
+    { p: 15,  t: 500,  s: 'LOADING CORE...' },
+    { p: 40,  t: 2000, s: 'CONNECTING EXCHANGES...' },
+    { p: 65,  t: 3500, s: 'FETCHING MARKET DATA...' },
+    { p: 88,  t: 5500, s: 'CALIBRATING ORACLE...' },
+    { p: 100, t: 7000, s: 'READY' },
   ];
 
   let canvas: HTMLCanvasElement | null = null;
@@ -156,13 +175,11 @@ if (isMobile) {
       }
     }
 
-    // Прогресс + статус
-    const bar = document.getElementById('splash-loader-bar');
+      // Статус (текст). Ширину больше не меняем — теперь там SVG-пульс.
     const stat = document.getElementById('splash-status');
 
     STAGES.forEach(st => {
       setTimeout(() => {
-        if (bar) bar.style.width = st.p + '%';
         if (stat) stat.textContent = st.s;
       }, st.t);
     });
@@ -197,9 +214,8 @@ if (isMobile) {
       const el = document.getElementById('splash-status');
       if (el) el.textContent = text;
     },
-    setProgress(pct: number): void {
-      const el = document.getElementById('splash-loader-bar');
-      if (el) el.style.width = Math.max(0, Math.min(100, pct)) + '%';
+      setProgress(_pct: number): void {
+      // Прогресс-бар заменен на анимированный SVG-пульс
     },
   };
 

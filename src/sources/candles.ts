@@ -39,6 +39,27 @@ export function getTfConfig(tf: Timeframe = '1d'): TfConfig {
 const TIMEOUT = 8000;
 const CACHE_TTL_MS = 15_000;
 
+// Универсальный парсер времени: понимает и секунды, и миллисекунды
+function toSeconds(ts: string | number): number {
+  const n = typeof ts === 'number' ? ts : parseInt(ts, 10);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return n > 1_000_000_000_000 ? Math.floor(n / 1000) : n;
+}
+
+// Сортировка + удаление дублей по времени (lightweight-charts требует asc order)
+function sortAndDedupe(candles: Candle[]): Candle[] {
+  const sorted = candles.slice().sort((a, b) => a.time - b.time);
+  const out: Candle[] = [];
+  for (const c of sorted) {
+    if (out.length && out[out.length - 1].time === c.time) {
+      out[out.length - 1] = c;
+    } else {
+      out.push(c);
+    }
+  }
+  return out;
+}
+
 // ─── ИСТОЧНИКИ ───
 
 async function fromGateio(t: string, interval: string, limit: number, signal: AbortSignal): Promise<Candle[]> {
@@ -49,7 +70,7 @@ async function fromGateio(t: string, interval: string, limit: number, signal: Ab
   if (!r.ok) throw new Error(`gateio ${r.status}`);
   const d: any[] = await r.json();
   return d.map(x => ({
-    time: parseInt(x[0]), volume: parseFloat(x[1]), close: parseFloat(x[2]),
+    time: toSeconds(x[0]), volume: parseFloat(x[1]), close: parseFloat(x[2]),
     high: parseFloat(x[3]), low: parseFloat(x[4]), open: parseFloat(x[5]),
   }));
 }
@@ -62,7 +83,7 @@ async function fromBinance(t: string, interval: string, limit: number, signal: A
   if (!r.ok) throw new Error(`binance ${r.status}`);
   const d: any[] = await r.json();
   return d.map(x => ({
-    time: Math.floor(x[0] / 1000),
+    time: toSeconds(x[0]),
     open: parseFloat(x[1]), high: parseFloat(x[2]),
     low: parseFloat(x[3]), close: parseFloat(x[4]),
     volume: parseFloat(x[5]),
@@ -79,7 +100,7 @@ async function fromOkx(t: string, interval: string, limit: number, signal: Abort
   if (!r.ok) throw new Error(`okx ${r.status}`);
   const j = await r.json();
   return (j.data || []).map((d: any) => ({
-    time: Math.floor(parseInt(d[0]) / 1000),
+    time: toSeconds(d[0]),
     open: parseFloat(d[1]), high: parseFloat(d[2]),
     low: parseFloat(d[3]), close: parseFloat(d[4]),
     volume: parseFloat(d[5]),
@@ -96,7 +117,7 @@ async function fromBybit(t: string, interval: string, limit: number, signal: Abo
   const j = await r.json();
   if (j.retCode !== 0) throw new Error(`bybit ${j.retMsg}`);
   return (j.result?.list || []).map((d: any) => ({
-    time: Math.floor(parseInt(d[0]) / 1000),
+    time: toSeconds(d[0]),
     open: parseFloat(d[1]), high: parseFloat(d[2]),
     low: parseFloat(d[3]), close: parseFloat(d[4]),
     volume: parseFloat(d[5]),
@@ -112,7 +133,7 @@ async function fromMexc(t: string, interval: string, limit: number, signal: Abor
   if (!r.ok) throw new Error(`mexc ${r.status}`);
   const d: any[] = await r.json();
   return d.map(x => ({
-    time: Math.floor(x[0] / 1000),
+    time: toSeconds(x[0]),
     open: parseFloat(x[1]), high: parseFloat(x[2]),
     low: parseFloat(x[3]), close: parseFloat(x[4]),
     volume: parseFloat(x[5]),
@@ -129,16 +150,18 @@ async function fromKucoin(t: string, interval: string, limit: number, signal: Ab
   const j = await r.json();
   if (j.code !== '200000') throw new Error(`kucoin ${j.msg}`);
 
-  // KuCoin: [time (ms), open, close, high, low, volume, turnover]
-  const list = (j.data || []).slice(-limit);
-  return list.map((d: any) => ({
-    time: Math.floor(parseInt(d[0]) / 1000),
+  // KuCoin: [time, open, close, high, low, volume, turnover]
+  // Порядок в ответе — от новых к старым. Разворачиваем и обрезаем.
+  const mapped: Candle[] = (j.data || []).map((d: any): Candle => ({
+    time: toSeconds(d[0]),
     open: parseFloat(d[1]),
     close: parseFloat(d[2]),
     high: parseFloat(d[3]),
     low: parseFloat(d[4]),
     volume: parseFloat(d[5]),
   }));
+  mapped.sort((a, b) => a.time - b.time);
+  return mapped.slice(-limit);
 }
 
 // ─── ОДИН ИСТОЧНИК С ТАЙМАУТОМ + ВНЕШНЕЙ ОТМЕНОЙ ───
@@ -232,6 +255,10 @@ export async function fetchCandlesWithSource(
   }
 
   const value = await trySources(ticker, tf);
+
+  // Бронебойная нормализация: гарантированно asc-порядок, без дублей.
+  value.data = sortAndDedupe(value.data);
+
   _candleCache.set(key, { value, ts: Date.now() });
   return value;
 }

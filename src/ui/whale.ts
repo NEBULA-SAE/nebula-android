@@ -474,9 +474,12 @@ async function fetchXray(ticker: string): Promise<XrayData> {
       getAggregatedOrderbook(ticker),
     ]);
 
-    if (fundingRes && fundingRes.status === 'success') {
+      if (fundingRes && fundingRes.status === 'success') {
       const avg = fundingRes.avgFunding;
       const srcCount = fundingRes.sourceCount;
+      
+      // Обновляем маркер фандинга на графике, если он включен
+      (window as any).updateFundingRate?.(avg, ticker);
       if (avg < -0.01) {
         fundingText = `<span style="color:var(--mint)"><b>${avg.toFixed(4)}%</b><br><span style="font-size:10px; color:var(--mut);">${crowdShort} · ${srcCount} ${exLabel}</span></span>`;
       } else if (avg > 0.01) {

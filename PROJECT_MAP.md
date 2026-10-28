@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.5** | Branch: `main` | Commit: `37763e9`
-> Generated: 2026-10-27 06:07
+> Version: **2.0.6** | Branch: `main` | Commit: `0afb819`
+> Generated: 2026-10-28 05:41
 
 ---
 
@@ -37,17 +37,56 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Stats
 
-- TypeScript files in `src/`: 45
-- Total LOC in `src/`: 13600
-- Bundle (`dist/`): 56 files, 506.4 KB
+- TypeScript files in `src/`: 46
+- Total LOC in `src/`: 14328
+- Bundle (`dist/`): 57 files, 528.7 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.5**
-- Last git tag: `v2.0.4`
+- `package.json` version: **2.0.6**
+- Last git tag: `v2.0.5`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `0afb819` - 2026-10-28 - backup before chart race fix
+
+Files:
+- `AI_CONTEXT.md`
+
+### `373f3de` - 2026-10-27 - chore(release): v2.0.5
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/screens.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/alerts.ts`
+- `src/i18n.ts`
+- `src/oracle.ts`
+- `src/platform/http.ts`
+- `src/sources/candles.ts`
+- `src/sources/confluence.ts`
+- `src/sources/funding.ts`
+- `src/sources/kucoin.ts`
+- `src/sources/orderbook.ts`
+- `src/sources/stream.ts`
+- `src/trading.ts`
+- `src/ui/init.ts`
+- `src/ui/oracle.ts`
+- `src/ui/pull-refresh.ts`
+- `src/ui/risk.ts`
+- `src/ui/screens.ts`
+- `src/ui/settings.ts`
+- `src/ui/timeframes.ts`
+- `src/utils.ts`
+- `vite.config.ts`
 
 ### `37763e9` - 2026-10-25 - chore(release): v2.0.4
 
@@ -97,57 +136,15 @@ Files:
 - `src/ui/pull-refresh.ts`
 - `src/ui/timeframes.ts`
 
-### `d94ff8f` - 2026-10-25 - chore(release): v2.0.1
-
-Files:
-- `.gitattributes`
-- `PROJECT_MAP.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `scripts/context.ps1`
-- `scripts/project-map.ps1`
-- `scripts/release.ps1`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-
-### `8234933` - 2026-10-23 - fix(android): AbortSignal в fetch-патче + таймфреймы + pull-to-refresh
-
-Files:
-- `README.md`
-- `android/app/capacitor.build.gradle`
-- `android/capacitor.settings.gradle`
-- `capacitor.config.ts`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src/ai.ts`
-- `src/auth.ts`
-- `src/chart.ts`
-- `src/crypto.ts`
-- `src/main.ts`
-- `src/sources/candles.ts`
-- `src/sources/dash.ts`
-- `src/trading.ts`
-- `src/ui/diagnostics.ts`
-- `src/ui/init.ts`
-- `src/ui/oracle.ts`
-- `src/ui/pull-refresh.ts`
-- `src/ui/settings.ts`
-- `src/ui/splash.ts`
-- `src/ui/terms.ts`
-- `src/ui/timeframes.ts`
-- `src/ui/tooltip.ts`
-- `src/utils.ts`
-
 ## Last release diff
 
-No changes since `v2.0.4`
+Files changed since `v2.0.5`: 1
+
+- `AI_CONTEXT.md`
 
 ## Recent tags
 
+- `v2.0.5`
 - `v2.0.4`
 - `v2.0.3`
 - `v2.0.2`
@@ -161,43 +158,44 @@ src/
 |   +--   103 http.ts
 |   +--    29 index.ts
 +-- sources/
-|   +--   241 candles.ts
+|   +--   268 candles.ts
 |   +--   147 confluence.ts
 |   +--   158 dash.ts
 |   +--    95 funding.ts
 |   +--   336 kucoin.ts
 |   +--   331 mexc.ts
 |   +--   192 orderbook.ts
-|   +--   228 stream.ts
+|   +--   232 stream.ts
 |   +--   246 whale-futures.ts
 +-- styles/
 |   +--   136 main.css
 +-- ui/
+|   +--   428 chart-overlay.ts
 |   +--   139 dash.ts
 |   +--   498 diagnostics.ts
-|   +--   216 init.ts
+|   +--   226 init.ts
 |   +--   132 learning.ts
 |   +--    76 market.ts
-|   +--   906 oracle.ts
+|   +--   933 oracle.ts
 |   +--   436 pull-refresh.ts
-|   +--   215 risk.ts
+|   +--   311 risk.ts
 |   +--   256 scanner.ts
 |   +--   486 screens.ts
 |   +--   609 settings.ts
-|   +--   212 splash.ts
+|   +--   228 splash.ts
 |   +--   150 terms.ts
 |   +--   383 themes.ts
-|   +--   253 timeframes.ts
+|   +--   262 timeframes.ts
 |   +--   113 tooltip.ts
-|   +--   581 whale.ts
+|   +--   584 whale.ts
 +--   394 ai.ts
 +--   277 alerts.ts
 +--   280 auth.ts
-+--   274 chart.ts
++--   300 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
 +--   330 demo.ts
-+--   567 i18n.ts
++--   649 i18n.ts
 +--   411 indicators.ts
 +--   266 main.ts
 +--   475 market.ts
@@ -461,6 +459,14 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - mobileAiCommand()
 - mobileTwapStart()
 
+### `src/ui/chart-overlay.ts`
+- isOverlayEnabled()
+- initOracleOverlay()
+- toggleOracleOverlay()
+- updateOverlayFromAnalysis()
+- updateFundingRate()
+- OverlayData (iface)
+
 ### `src/ui/dash.ts`
 - refreshDashSection()
 - renderDashNetwork (const)
@@ -504,6 +510,8 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 ### `src/ui/risk.ts`
 - computeRiskSnapshot()
 - renderRiskCenter()
+- showRiskHelp()
+- injectRiskHelpBtn()
 
 ### `src/ui/scanner.ts`
 - runScanner()
@@ -648,6 +656,10 @@ applyTheme, createThemeFromColors, DEFAULT_COLORS, deleteCustomTheme, getActiveT
 
 mobileAiCommand, mobileCalcGrid, mobileDeleteKeys, mobileExecuteTrade, mobileLoadKeys, mobileSaveKeys, mobileSyncOrders, mobileSyncPortfolio, mobileTwapStart, openOrdersSheet, scheduleAutoSaveKeys, selectExTab, startMonitoring, stopMonitoring, switchAiMode, switchExecMode
 
+### `src/ui/chart-overlay.ts` (6)
+
+initOracleOverlay, isOverlayEnabled, showOverlayHelp, toggleOracleOverlay, updateFundingRate, updateOverlayFromAnalysis
+
 ### `src/ui/dash.ts` (1)
 
 refreshDashSection
@@ -672,9 +684,9 @@ _currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromMo
 
 initPullToRefresh, triggerPullRefresh
 
-### `src/ui/risk.ts` (2)
+### `src/ui/risk.ts` (4)
 
-computeRiskSnapshot, renderRiskCenter
+computeRiskSnapshot, injectRiskHelpBtn, renderRiskCenter, showRiskHelp
 
 ### `src/ui/scanner.ts` (8)
 
@@ -814,6 +826,8 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 0afb819  2026-10-28  backup before chart race fix
+- 373f3de  2026-10-27  chore(release): v2.0.5
 - 37763e9  2026-10-25  chore(release): v2.0.4
 - 00f81af  2026-10-25  chore(release): v2.0.3
 - fdf138a  2026-10-25  chore(release): v2.0.2
@@ -827,8 +841,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - fef67d4  2026-10-15  feat(auth): пароль на вход вместо мастер-пароля, упрощён vault
 - 7f70ba5  2026-10-15  feat(whale): Binance Futures как fallback-источник для OI/LSR/Taker
 - 0cf98ce  2026-10-15  feat(infra): VPS-прокси через Caddy, Coinpaprika основной источник, Binance Futures через обход блокировки
-- d47b36f  2026-10-14  fix(market): CoinGecko основной, Coinpaprika фоллбэк (лимит 60 req/h)
-- f606dd2  2026-10-14  feat(settings): единый sheet настроек в топбаре, About без дублей
 
 ---
 

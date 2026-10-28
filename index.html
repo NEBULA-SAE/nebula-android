@@ -50,8 +50,16 @@
 
     <div class="splash-sub">ORACLE · TRADING TERMINAL</div>
 
-    <div class="splash-loader">
-      <div class="splash-loader-bar" id="splash-loader-bar"></div>
+      <div class="splash-loader" id="splash-loader-bar" style="background: transparent; border: none; box-shadow: none; width: 180px; height: 40px; margin: 10px auto; position: relative; overflow: visible;">
+      <svg viewBox="0 0 200 40" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible;">
+        <path d="M 0 20 
+                 L 5 20 L 8 22 L 11 18 L 14 20 L 17 21 L 20 19 L 23 20 L 26 20 
+                 L 30 20 L 33 10 L 36 30 L 39 20 
+                 L 42 20 L 45 -5 L 48 45 L 51 10 L 54 20 
+                 L 57 20 L 60 5 L 63 35 L 66 15 L 69 20 
+                 L 80 20 L 200 20"
+              fill="none" stroke="#5ecbff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nebula-pulse-line" />
+      </svg>
     </div>
 
     <div class="splash-status" id="splash-status">INITIALIZING...</div>
@@ -69,10 +77,9 @@
         <path d="M10 14h4"/>
       </svg>
     </div>
-    <div class="tauri-titlebar-title" style="display:flex; align-items:center; gap:8px; position:relative;">
+      <div class="tauri-titlebar-title" style="display:flex; align-items:center; gap:8px; position:relative;">
       <span class="status-lamp"></span>
       NEBULA · ORACLE TERMINAL
-      <div class="title-pulse-line"></div>
     </div>
   </div>
   <div class="tauri-titlebar-controls">
@@ -132,8 +139,14 @@
 
 <header class="top-bar">
   <div class="top-row-1">
-    <div class="brand-mini-wrap">
-      <div class="brand-mini"><span class="brand-dot"></span>NEBULA</div>
+      <div class="brand-mini-wrap">
+      <div class="brand-mini" style="position: relative; display: inline-block;">
+        <span class="brand-dot"></span>NEBULA
+        <!-- Новый неоновый пульс под логотипом -->
+        <svg viewBox="0 0 100 10" preserveAspectRatio="none" style="position: absolute; bottom: -6px; left: 0; width: 100%; height: 8px; overflow: visible;">
+          <path d="M 0 5 L 20 5 L 25 1 L 30 9 L 35 5 L 100 5" fill="none" stroke="var(--cyan)" stroke-width="1.5" class="brand-pulse-path" />
+        </svg>
+      </div>
       <button class="demo-badge-btn" onclick="enterDemoMode()" title="Виртуальная торговля без риска">
         🧪 DEMO
       </button>
@@ -606,7 +619,7 @@
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.5</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.6</div>
     </div>
 
     <div class="terms-body">
@@ -655,7 +668,7 @@
 
       <h4>Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.5</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.6</b><br>
         Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
@@ -730,6 +743,20 @@
   </div>
 </div>
 
+<script type="module" src="/src/main.ts"></script>
+<style>
+  /* Стиль для пульса под логотипом NEBULA */
+  .brand-pulse-path {
+    stroke-dasharray: 20 100;
+    stroke-dashoffset: 120;
+    animation: brand-pulse-anim 1.5s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(94, 203, 255, 0.8));
+  }
+  @keyframes brand-pulse-anim {
+    0% { stroke-dashoffset: 120; }
+    100% { stroke-dashoffset: -100; }
+  }
+</style>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

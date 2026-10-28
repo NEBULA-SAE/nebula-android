@@ -59,6 +59,11 @@ async function refreshChartViaRest(): Promise<void> {
   const tf = getCurrentTimeframe();
   try {
     const { data } = await fetchCandlesWithSource(ticker, tf, undefined, true);
+
+    // GUARD: пока летел запрос, пользователь мог переключить TF/тикер
+    if ((state as any).currentTicker !== ticker) return;
+    if (getCurrentTimeframe() !== tf) return;
+
     if (!data || data.length < 25) return;
     updateCandles(data as any);
   }
@@ -96,6 +101,10 @@ function connectStream(): void {
     timeframe: tf,
     exchange,
     onCandle: (candle) => {
+      // GUARD: сокет мог отдать сообщение уже после переключения TF/тикера
+      if ((state as any).currentTicker !== ticker) return;
+      if (getCurrentTimeframe() !== tf) return;
+
       updateLastCandle(candle);
 
       const now = Date.now();

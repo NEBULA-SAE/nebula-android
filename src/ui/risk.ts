@@ -186,6 +186,9 @@ export function renderRiskCenter(): void {
   const host = document.getElementById('risk-content');
   if (!host) return;
 
+  // Добавляем кнопку справки
+  injectRiskHelpBtn();
+
   const snap = computeRiskSnapshot();
 
   host.innerHTML = `
@@ -205,11 +208,104 @@ export function renderRiskCenter(): void {
   `;
 }
 
+// ─── СПРАВКА (HELP) ───
+
+export function showRiskHelp(): void {
+  const openSheet = (window as any).openSheet;
+  
+  const html = `
+    <div style="font-size: 13.5px; color: var(--tx); line-height: 1.6;">
+      <div style="margin-bottom: 16px; color: var(--dim);">
+        ${tm('risk_help_desc')}
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.05);">
+          <div style="font-size: 20px; width: 30px; text-align: center;">🥧</div>
+          <div>
+            <div style="font-weight: 700; color: var(--cyan); margin-bottom: 2px;">${tm('risk_help_conc')}</div>
+            <div style="font-size: 11.5px; color: var(--mut);">${tm('risk_help_conc_desc')}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.05);">
+          <div style="font-size: 20px; width: 30px; text-align: center;">🔮</div>
+          <div>
+            <div style="font-weight: 700; color: #45e0a8; margin-bottom: 2px;">${tm('risk_help_conf')}</div>
+            <div style="font-size: 11.5px; color: var(--mut);">${tm('risk_help_conf_desc')}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.05);">
+          <div style="font-size: 20px; width: 30px; text-align: center;">🐋</div>
+          <div>
+            <div style="font-weight: 700; color: #5ecbff; margin-bottom: 2px;">${tm('risk_help_whale')}</div>
+            <div style="font-size: 11.5px; color: var(--mut);">${tm('risk_help_whale_desc')}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.05);">
+          <div style="font-size: 20px; width: 30px; text-align: center;">⚖️</div>
+          <div>
+            <div style="font-weight: 700; color: #ffb858; margin-bottom: 2px;">${tm('risk_help_fund')}</div>
+            <div style="font-size: 11.5px; color: var(--mut);">${tm('risk_help_fund_desc')}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.05);">
+          <div style="font-size: 20px; width: 30px; text-align: center;">😱</div>
+          <div>
+            <div style="font-weight: 700; color: #a78bfa; margin-bottom: 2px;">${tm('risk_help_fear')}</div>
+            <div style="font-size: 11.5px; color: var(--mut);">${tm('risk_help_fear_desc')}</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary btn-mint" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top: 20px;">
+        ${tm('risk_help_close')}
+      </button>
+    </div>
+  `;
+
+  if (openSheet) {
+    openSheet(tm('risk_help_title'), html);
+  }
+}
+
+export function injectRiskHelpBtn(): void {
+  const titleEl = document.getElementById('risk-page-title-text');
+  if (!titleEl || document.getElementById('risk-help-btn')) return;
+
+  const parent = titleEl.parentElement;
+  if (parent) {
+    parent.style.display = 'flex';
+    parent.style.alignItems = 'center';
+    parent.style.gap = '10px';
+  }
+
+  const btn = document.createElement('button');
+  btn.id = 'risk-help-btn';
+  btn.innerHTML = 'ℹ️';
+  btn.title = tm('risk_help_title');
+  btn.style.cssText = `
+    height: 24px; width: 24px; border-radius: 50%;
+    background: rgba(0,0,0,.6); border: 1px solid rgba(140,170,220,.25);
+    color: #6b7a94; font-size: 12px;
+    cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  `;
+  btn.addEventListener('click', showRiskHelp);
+  titleEl.after(btn);
+}
+
 // ─── Экспорт ───
 
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     computeRiskSnapshot,
     renderRiskCenter,
+    showRiskHelp,
+    injectRiskHelpBtn,
   });
 }

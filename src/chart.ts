@@ -22,6 +22,9 @@ export interface WallsData {
   sourcesFailed?: string[];
 }
 
+// Отложенные свечи: если setCandlesAndFit/updateCandles пришли до создания series
+let _pendingCandles: Candle[] | null = null;
+
 function getContainerSize(): { w: number; h: number } {
   const c = document.getElementById('chart-container');
   if (!c) return { w: 0, h: 0 };
@@ -107,6 +110,13 @@ function createChartNow(LW: any, c: HTMLElement, w: number, h: number): void {
     wickDownColor: '#ff6584',
     borderVisible: false,
   });
+
+  // Если анализ уже успел прийти до создания series — применяем
+  if (_pendingCandles && _pendingCandles.length) {
+    const pending = _pendingCandles;
+    _pendingCandles = null;
+    setCandlesAndFit(pending);
+  }
 
   setTimeout(refreshAutoScale, 300);
 }
@@ -196,7 +206,18 @@ export function drawNowLine(price: number): void {
 }
 
 export function setCandlesAndFit(candles: Candle[]): void {
-  if (!state.candleSeries) return;
+  if (!state.candleSeries) {
+    // График ещё не создан — запомним, применим после createChartNow
+    _pendingCandles = candles;
+    return;
+  }
+  _pendingCandles = null;
+
+  // Сбрасываем маркеры оверлея перед установкой новых данных,
+  // иначе они «залипнут» от предыдущего таймфрейма
+  try { (state.candleSeries as any).setMarkers?.([]); }
+  catch { /* silent */ }
+
   try {
     state.candleSeries.setData(candles as any);
   }
@@ -217,8 +238,13 @@ export function setCandlesAndFit(candles: Candle[]): void {
 }
 
 export function updateCandles(candles: Candle[]): void {
-  if (!state.candleSeries) return;
   if (!candles || candles.length === 0) return;
+
+  if (!state.candleSeries) {
+    _pendingCandles = candles;
+    return;
+  }
+  _pendingCandles = null;
 
   try {
     state.candleSeries.setData(candles as any);

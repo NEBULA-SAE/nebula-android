@@ -33,6 +33,9 @@ import {
 
 // ═══ ОСНОВНОЙ АНАЛИЗ ═══
 
+// Счётчик поколений mobileAnalyze — защита от гонок при быстром переключении TF/тикера
+let _analyzeGen = 0;
+
 export async function mobileAnalyze(): Promise<void> {
   // Смотрим, откуда брать тикер: из демо-режима или из главного
   const inputId = state.isDemoMode ? 'demo-ticker' : 'ticker';
@@ -40,6 +43,8 @@ export async function mobileAnalyze(): Promise<void> {
   
   const raw = (tickerInput?.value || '').toUpperCase().trim();
   if (!raw) return;
+
+  const myGen = ++_analyzeGen;
 
   // Синхронизируем оба инпута
   state.currentTicker = raw;
@@ -68,6 +73,9 @@ export async function mobileAnalyze(): Promise<void> {
 
     // Сохраняем для Risk Center
     (state as any).lastFuturesMetrics = futuresMetrics;
+
+    // GUARD: если пока грузили свечи, стартовал новый анализ — выходим
+    if (myGen !== _analyzeGen) return;
 
     // fetchExtras — параллельно, не блокирует рендер
     const extrasPromise = fetchExtras(raw);
@@ -212,10 +220,13 @@ export async function mobileAnalyze(): Promise<void> {
     state.lastMarketData = marketData;
 
     const profile = loadRiskProfile();
-    const [oracleResult, adv] = await Promise.all([
+      const [oracleResult, adv] = await Promise.all([
       engineOracleAnalyze(raw, marketData, {}, profile),
       getAdvancedAnalytics(raw),
     ]);
+
+    // GUARD: пока считали oracle/adv, пользователь мог переключиться
+    if (myGen !== _analyzeGen) return;
 
     if (oracleResult.status === 'success') {
       const vd2 = document.getElementById('verdict');
@@ -248,6 +259,20 @@ export async function mobileAnalyze(): Promise<void> {
       setHTML('pro-content', `<div class="empty-msg">${tm('error')}: ${adv.message || 'no data'}</div>`);
     }
 
+      // ─── Oracle overlay: применяем маркеры, если пользователь включил 🔮 ───
+    try {
+      const fundingRate =
+        Number((state.lastWhaleData as any)?.fundingRate) ||
+        Number((state.lastMarketData as any)?.funding_rate) ||
+        0;
+      (window as any).updateOverlayFromAnalysis?.({
+        candles,
+        fundingRate,
+        price,
+        ticker: raw, // <-- добавили передачу тикера
+      });
+    } catch { /* silent */ }
+
     if ((state.currentTicker || '').toUpperCase() === 'DASH') {
       setTimeout(async () => {
         try {
@@ -262,6 +287,7 @@ export async function mobileAnalyze(): Promise<void> {
 
     // ═══ Multi-TF Confluence (не блокируем основной рендер) ═══
     getConfluence(raw).then(conf => {
+      if (myGen !== _analyzeGen) return;
       if (state.currentTicker === raw) {
         renderConfluence(conf);
       }
@@ -273,6 +299,7 @@ export async function mobileAnalyze(): Promise<void> {
     }
 
   } catch (e: any) {
+    if (myGen !== _analyzeGen) return;
     toast(tm('error') + ': ' + e.message, 'error');
   }
 }
