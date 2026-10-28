@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.8** | Branch: `main` | Commit: `c2a620d`
-> Generated: 2026-10-28 06:18
+> Version: **2.0.9** | Branch: `main` | Commit: `4d05231`
+> Generated: 2026-10-28 06:34
 
 ---
 
@@ -39,15 +39,30 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 - TypeScript files in `src/`: 46
 - Total LOC in `src/`: 14308
-- Bundle (`dist/`): 57 files, 528.5 KB
+- Bundle (`dist/`): 57 files, 530.5 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.8**
-- Last git tag: `v2.0.7`
+- `package.json` version: **2.0.9**
+- Last git tag: `v2.0.8`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `4d05231` - 2026-10-28 - chore(release): v2.0.8
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/main.ts`
+- `src/ui/splash.ts`
 
 ### `c2a620d` - 2026-10-28 - chore(release): v2.0.7
 
@@ -126,26 +141,13 @@ Files:
 - `src/utils.ts`
 - `vite.config.ts`
 
-### `37763e9` - 2026-10-25 - chore(release): v2.0.4
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/ui/pull-refresh.ts`
-
 ## Last release diff
 
-No changes since `v2.0.7`
+No changes since `v2.0.8`
 
 ## Recent tags
 
+- `v2.0.8`
 - `v2.0.7`
 - `v2.0.6`
 - `v2.0.5`
@@ -830,6 +832,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 4d05231  2026-10-28  chore(release): v2.0.8
 - c2a620d  2026-10-28  chore(release): v2.0.7
 - 3a37664  2026-10-28  chore(release): v2.0.6
 - 0afb819  2026-10-28  backup before chart race fix
@@ -844,7 +847,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 3ec7e5c  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 - aa430bf  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 - d542dd0  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
-- fef67d4  2026-10-15  feat(auth): пароль на вход вместо мастер-пароля, упрощён vault
 
 ---
 

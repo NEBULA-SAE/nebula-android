@@ -274,3 +274,63 @@
   /* ─── Модалки ─── */
   .diag-modal, .terms-modal { max-width: 720px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LANDSCAPE MODE (Поворот телефона)
+   ═══════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* Топбар становится тоньше и прячет лишнее */
+  .top-bar {
+    padding: calc(var(--safe-top) + 4px) 12px 4px;
+    height: auto;
+    gap: 4px;
+  }
+  .top-row-1 { min-height: 24px; }
+  .top-row-2 { margin-top: 4px; }
+  .brand-mini { font-size: 12px; }
+  .ticker-wrap, .ticker-wrap input { height: 32px; font-size: 12px; }
+  .btn-go { top: 4px; bottom: 4px; font-size: 10px; padding: 0 10px; }
+  .btn-star { top: 4px; bottom: 4px; width: 28px; }
+  
+  /* Прячем лишние кнопки в топбаре */
+  .demo-badge-btn { display: none !important; }
+  .top-right .chip { display: none !important; }
+  .top-right .chip.cyan { display: flex !important; } /* Оставляем только настройки */
+  .lang-mini { display: none !important; }
+
+  /* Нижнее меню становится аккуратным */
+  .bottom-nav {
+    padding: 4px 4px calc(4px + var(--safe-bot));
+    height: calc(var(--safe-bot) + 48px);
+  }
+  .nav-btn svg { width: 18px; height: 18px; }
+  .nav-btn .lbl { display: none; } /* Убираем текст, оставляем иконки */
+  
+  /* Центральный радар уменьшаем */
+  .radar-center-wrap { margin-top: -16px; width: 54px; height: 54px; }
+  .radar-trigger { width: 52px; height: 52px; }
+  .rt-core { font-size: 10px; letter-spacing: .5px; }
+
+  /* Экранные отступы */
+  .screen {
+    padding-top: calc(var(--safe-top) + 75px);
+    padding-bottom: calc(var(--safe-bot) + 60px);
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* График делаем повыше, так как места стало больше */
+  #chart-container { height: 220px !important; min-height: 220px !important; }
+  
+  /* Карточки делаем в 2 колонки */
+  #screen-home, #screen-pro { 
+    display: grid !important; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+  }
+  #screen-home > .btc-card, #screen-home > .chart-card, #screen-home > #verdict,
+  #screen-home > #whale-card, #screen-home > #monitor-panel, #screen-home > #confluence-card {
+    grid-column: 1 / -1 !important;
+  }
+  #screen-pro > #pro-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+}

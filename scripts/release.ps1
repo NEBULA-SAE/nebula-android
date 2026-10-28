@@ -637,6 +637,16 @@ if ($SkipBuild) {
 else {
     Write-Step "6/9 - Build Windows + Android"
     Write-Info "10-20 minutes. Do not close window."
+    
+    # ═══════════════════════════════════════════════════════════
+    # 🛠️ ФИКС УСТАНОВЩИКА: Удаляем старый кэш Tauri и старые артефакты
+    # ═══════════════════════════════════════════════════════════
+    Write-Info "Cleaning old Tauri bundles and dist_release..."
+    Remove-Item -Recurse -Force "src-tauri\target\release\bundle" -ErrorAction SilentlyContinue
+    Remove-Item -Force "src-tauri\target\release\*.exe" -ErrorAction SilentlyContinue
+    Remove-Item -Recurse -Force "dist_release" -ErrorAction SilentlyContinue
+    Write-Ok "Old bundles cleared"
+
     $scriptPath = ".\scripts\build-all.ps1"
     if (-not (Test-Path $scriptPath)) { Restore-Backup; Fail "$scriptPath not found" }
     try {
