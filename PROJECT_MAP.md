@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.7** | Branch: `main` | Commit: `3a37664`
-> Generated: 2026-10-28 05:55
+> Version: **2.0.8** | Branch: `main` | Commit: `c2a620d`
+> Generated: 2026-10-28 06:18
 
 ---
 
@@ -38,16 +38,30 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 46
-- Total LOC in `src/`: 14328
-- Bundle (`dist/`): 57 files, 529.1 KB
+- Total LOC in `src/`: 14308
+- Bundle (`dist/`): 57 files, 528.5 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.7**
-- Last git tag: `v2.0.6`
+- `package.json` version: **2.0.8**
+- Last git tag: `v2.0.7`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `c2a620d` - 2026-10-28 - chore(release): v2.0.7
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ui/splash.ts`
 
 ### `3a37664` - 2026-10-28 - chore(release): v2.0.6
 
@@ -126,28 +140,13 @@ Files:
 - `src-tauri/tauri.conf.json`
 - `src/ui/pull-refresh.ts`
 
-### `00f81af` - 2026-10-25 - chore(release): v2.0.3
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/ui/pull-refresh.ts`
-- `"\320\267\320\260\320\277\321\203\321\201\320\272.txt"`
-
 ## Last release diff
 
-No changes since `v2.0.6`
+No changes since `v2.0.7`
 
 ## Recent tags
 
+- `v2.0.7`
 - `v2.0.6`
 - `v2.0.5`
 - `v2.0.4`
@@ -187,7 +186,7 @@ src/
 |   +--   256 scanner.ts
 |   +--   486 screens.ts
 |   +--   609 settings.ts
-|   +--   228 splash.ts
+|   +--   209 splash.ts
 |   +--   150 terms.ts
 |   +--   383 themes.ts
 |   +--   262 timeframes.ts
@@ -202,7 +201,7 @@ src/
 +--   330 demo.ts
 +--   649 i18n.ts
 +--   411 indicators.ts
-+--   266 main.ts
++--   265 main.ts
 +--   475 market.ts
 +--   708 oracle.ts
 +--   185 patterns.ts
@@ -831,6 +830,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- c2a620d  2026-10-28  chore(release): v2.0.7
 - 3a37664  2026-10-28  chore(release): v2.0.6
 - 0afb819  2026-10-28  backup before chart race fix
 - 373f3de  2026-10-27  chore(release): v2.0.5
@@ -845,7 +845,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - aa430bf  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 - d542dd0  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 - fef67d4  2026-10-15  feat(auth): пароль на вход вместо мастер-пароля, упрощён vault
-- 7f70ba5  2026-10-15  feat(whale): Binance Futures как fallback-источник для OI/LSR/Taker
 
 ---
 

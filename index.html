@@ -50,14 +50,14 @@
 
     <div class="splash-sub">ORACLE · TRADING TERMINAL</div>
 
-      <div class="splash-loader" id="splash-loader-bar" style="background: transparent; border: none; box-shadow: none; width: 180px; height: 40px; margin: 10px auto; position: relative; overflow: visible;">
-      <svg viewBox="0 0 200 40" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible;">
-        <path d="M 0 20 
-                 L 5 20 L 8 22 L 11 18 L 14 20 L 17 21 L 20 19 L 23 20 L 26 20 
-                 L 30 20 L 33 10 L 36 30 L 39 20 
-                 L 42 20 L 45 -5 L 48 45 L 51 10 L 54 20 
-                 L 57 20 L 60 5 L 63 35 L 66 15 L 69 20 
-                 L 80 20 L 200 20"
+          <div class="splash-loader" id="splash-loader-bar" style="background: transparent; border: none; box-shadow: none; width: 200px; height: 50px; margin: 10px auto; position: relative; overflow: visible;">
+      <svg viewBox="0 0 200 60" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+        <path d="M 0 30 
+                 L 5 30 L 8 32 L 11 28 L 14 30 L 17 31 L 20 29 L 23 30 L 26 30 
+                 L 30 30 L 33 20 L 36 40 L 39 30 
+                 L 42 30 L 45 5 L 48 55 L 51 20 L 54 30 
+                 L 57 30 L 60 15 L 63 45 L 66 25 L 69 30 
+                 L 80 30 L 200 30"
               fill="none" stroke="#5ecbff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nebula-pulse-line" />
       </svg>
     </div>
@@ -140,11 +140,12 @@
 <header class="top-bar">
   <div class="top-row-1">
       <div class="brand-mini-wrap">
-      <div class="brand-mini" style="position: relative; display: inline-block;">
+      <div class="brand-mini" style="position: relative; display: inline-block; padding-bottom: 6px;">
         <span class="brand-dot"></span>NEBULA
-        <!-- Новый неоновый пульс под логотипом -->
-        <svg viewBox="0 0 100 10" preserveAspectRatio="none" style="position: absolute; bottom: -6px; left: 0; width: 100%; height: 8px; overflow: visible;">
-          <path d="M 0 5 L 20 5 L 25 1 L 30 9 L 35 5 L 100 5" fill="none" stroke="var(--cyan)" stroke-width="1.5" class="brand-pulse-path" />
+        <!-- Надежная SVG-линия -->
+        <svg viewBox="0 0 100 4" preserveAspectRatio="none" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;">
+          <line x1="0" y1="1.5" x2="100" y2="1.5" stroke="rgba(94,203,255,0.2)" stroke-width="2" />
+          <line x1="0" y1="1.5" x2="100" y2="1.5" stroke="var(--cyan)" stroke-width="2" class="brand-pulse-svg" />
         </svg>
       </div>
       <button class="demo-badge-btn" onclick="enterDemoMode()" title="Виртуальная торговля без риска">
@@ -619,7 +620,7 @@
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.7</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.8</div>
     </div>
 
     <div class="terms-body">
@@ -668,7 +669,7 @@
 
       <h4>Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.7</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.8</b><br>
         Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
@@ -745,16 +746,15 @@
 
 <script type="module" src="/src/main.ts"></script>
 <style>
-  /* Пульс под логотипом NEBULA */
-  .brand-pulse-path {
-    stroke-dasharray: 20 100;
-    stroke-dashoffset: 120;
-    animation: brand-pulse-anim 1.5s linear infinite;
-    filter: drop-shadow(0 0 4px rgba(94, 203, 255, 0.9));
-    stroke-linecap: round;
+  /* НОВЫЙ пульс под логотипом NEBULA (SVG) */
+  .brand-pulse-svg {
+    stroke-dasharray: 30 100;
+    stroke-dashoffset: 130;
+    animation: brandSvgPulse 1.5s linear infinite;
+    filter: drop-shadow(0 0 4px var(--cyan));
   }
-  @keyframes brand-pulse-anim {
-    0% { stroke-dashoffset: 120; }
+  @keyframes brandSvgPulse {
+    0% { stroke-dashoffset: 130; }
     100% { stroke-dashoffset: -100; }
   }
 
@@ -763,7 +763,7 @@
     stroke-dasharray: 60 200;
     stroke-dashoffset: 260;
     animation: nebula-hospital-pulse 2s linear infinite;
-    filter: drop-shadow(0 0 8px rgba(94, 203, 255, 1));
+    filter: drop-shadow(0 0 6px rgba(94, 203, 255, 0.9));
     stroke-linecap: round;
   }
   @keyframes nebula-hospital-pulse {

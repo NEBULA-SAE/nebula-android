@@ -2334,7 +2334,7 @@ dependencies = [
 
 [[package]]
 name = "nebula"
-version = "2.0.7"
+version = "2.0.8"
 dependencies = [
  "serde",
  "serde_json",

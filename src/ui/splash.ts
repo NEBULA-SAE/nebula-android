@@ -5,25 +5,6 @@
 (function nebulaSplash() {
   'use strict';
 
-  // ─── CSS-АНИМАЦИЯ ДЛЯ ПУЛЬСА ───
-  if (!document.getElementById('nebula-pulse-style')) {
-    const style = document.createElement('style');
-    style.id = 'nebula-pulse-style';
-    style.textContent = `
-      .nebula-pulse-line {
-        stroke-dasharray: 40 300;
-        stroke-dashoffset: 340;
-        animation: nebula-hospital-pulse 2s linear infinite;
-        filter: drop-shadow(0 0 6px rgba(94, 203, 255, 0.9));
-      }
-      @keyframes nebula-hospital-pulse {
-        0% { stroke-dashoffset: 340; }
-        100% { stroke-dashoffset: -300; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
   const TOTAL_MS = 10000;
   const FADE_MS  = 800;
   const STAR_COUNT_BASE = 60;

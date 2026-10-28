@@ -241,12 +241,11 @@ async function bootstrap() {
   await import('./ui/themes');
   await import('./ui/settings');
 
-  // 2. Ждем 1 секунду, чтобы пользователь насладился сплэшем со звездами
-  await new Promise(r => setTimeout(r, 1000));
+  // 2. Ждем немного, чтобы инициализировать модули
+  await new Promise(r => setTimeout(r, 500));
 
-  // 3. Скрываем сплэш, чтобы показать окно пароля
-  const splash = document.getElementById('nebula-splash');
-  if (splash) splash.style.display = 'none';
+  // 3. Сплэш скрывается САМ через splash.ts (через 10 секунд).
+  // Окно пароля загрузится ПОД ним и появится, когда сплэш растворится.
 
   // 4. Ждем ввода пароля
   await initAuth();
