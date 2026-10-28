@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.6** | Branch: `main` | Commit: `0afb819`
-> Generated: 2026-10-28 05:41
+> Version: **2.0.7** | Branch: `main` | Commit: `3a37664`
+> Generated: 2026-10-28 05:55
 
 ---
 
@@ -39,15 +39,39 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 - TypeScript files in `src/`: 46
 - Total LOC in `src/`: 14328
-- Bundle (`dist/`): 57 files, 528.7 KB
+- Bundle (`dist/`): 57 files, 529.1 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.6**
-- Last git tag: `v2.0.5`
+- `package.json` version: **2.0.7**
+- Last git tag: `v2.0.6`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `3a37664` - 2026-10-28 - chore(release): v2.0.6
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/chart.ts`
+- `src/i18n.ts`
+- `src/sources/candles.ts`
+- `src/sources/stream.ts`
+- `src/ui/chart-overlay.ts`
+- `src/ui/init.ts`
+- `src/ui/oracle.ts`
+- `src/ui/risk.ts`
+- `src/ui/splash.ts`
+- `src/ui/timeframes.ts`
+- `src/ui/whale.ts`
 
 ### `0afb819` - 2026-10-28 - backup before chart race fix
 
@@ -118,32 +142,13 @@ Files:
 - `src/ui/pull-refresh.ts`
 - `"\320\267\320\260\320\277\321\203\321\201\320\272.txt"`
 
-### `fdf138a` - 2026-10-25 - chore(release): v2.0.2
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `scripts/build-all.ps1`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/chart.ts`
-- `src/sources/stream.ts`
-- `src/ui/pull-refresh.ts`
-- `src/ui/timeframes.ts`
-
 ## Last release diff
 
-Files changed since `v2.0.5`: 1
-
-- `AI_CONTEXT.md`
+No changes since `v2.0.6`
 
 ## Recent tags
 
+- `v2.0.6`
 - `v2.0.5`
 - `v2.0.4`
 - `v2.0.3`
@@ -826,6 +831,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 3a37664  2026-10-28  chore(release): v2.0.6
 - 0afb819  2026-10-28  backup before chart race fix
 - 373f3de  2026-10-27  chore(release): v2.0.5
 - 37763e9  2026-10-25  chore(release): v2.0.4
@@ -840,7 +846,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - d542dd0  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 - fef67d4  2026-10-15  feat(auth): пароль на вход вместо мастер-пароля, упрощён vault
 - 7f70ba5  2026-10-15  feat(whale): Binance Futures как fallback-источник для OI/LSR/Taker
-- 0cf98ce  2026-10-15  feat(infra): VPS-прокси через Caddy, Coinpaprika основной источник, Binance Futures через обход блокировки
 
 ---
 

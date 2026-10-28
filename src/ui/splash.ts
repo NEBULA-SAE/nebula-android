@@ -24,16 +24,16 @@
     document.head.appendChild(style);
   }
 
-  const TOTAL_MS = 8000;
+  const TOTAL_MS = 10000;
   const FADE_MS  = 800;
   const STAR_COUNT_BASE = 60;
 
   const STAGES: { p: number; t: number; s: string }[] = [
-    { p: 15,  t: 500,  s: 'LOADING CORE...' },
-    { p: 40,  t: 2000, s: 'CONNECTING EXCHANGES...' },
-    { p: 65,  t: 3500, s: 'FETCHING MARKET DATA...' },
-    { p: 88,  t: 5500, s: 'CALIBRATING ORACLE...' },
-    { p: 100, t: 7000, s: 'READY' },
+    { p: 15,  t: 1000,  s: 'LOADING CORE...' },
+    { p: 40,  t: 3000, s: 'CONNECTING EXCHANGES...' },
+    { p: 65,  t: 5000, s: 'FETCHING MARKET DATA...' },
+    { p: 88,  t: 7500, s: 'CALIBRATING ORACLE...' },
+    { p: 100, t: 9000, s: 'READY' },
   ];
 
   let canvas: HTMLCanvasElement | null = null;
