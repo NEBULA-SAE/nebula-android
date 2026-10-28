@@ -1,15 +1,10 @@
-📄 AI_CONTEXT.md — ручной handoff-файл для ИИ
-
-Создай в корне проекта рядом с PROJECT_MAP.md. Обновляй вручную при значимых изменениях (новая фича, новый модуль, смена архитектуры). PROJECT_MAP.md обновляется автоматически при релизе — они дополняют друг друга.
-markdown
-
 # NEBULA Oracle Terminal — AI Context
 
 > **Ручной handoff-файл** для передачи контекста ИИ-ассистенту в новом чате.
 > Обновляется вручную при значимых изменениях архитектуры, бизнес-логики, роадмапа.
 > Структурная карта проекта — отдельный файл `PROJECT_MAP.md` (генерируется автоматически).
 >
-> **Версия этого файла:** соответствует релизу **v2.0.2** (2026-10-25)
+> **Версия этого файла:** соответствует релизу **v2.0.5+** (2026-10-27)
 > **Актуальная версия кода:** см. `package.json` → `version`
 > **При расхождении:** верь `PROJECT_MAP.md` и `package.json`, они новее
 
@@ -25,7 +20,7 @@ markdown
    > «Вот контекст проекта NEBULA. Изучи оба файла. Задача: [что нужно сделать]»
 4. ИИ сразу в курсе — не нужно объяснять базовые вещи
 
-**Проверка свежести:** если `PROJECT_MAP.md` показывает `Version: 2.0.5`, а `AI_CONTEXT.md` — `v2.0.2`, значит после 2.0.2 были релизы. `PROJECT_MAP.md` актуальнее по структуре, но бизнес-логика в `AI_CONTEXT.md` меняется редко — обычно остаётся верной.
+**Проверка свежести:** если `PROJECT_MAP.md` показывает версию ниже, чем `package.json`, просто выполни `npm run context`, чтобы обновить карту.
 
 ---
 
@@ -33,7 +28,7 @@ markdown
 
 **NEBULA Oracle Terminal** — персональный торговый терминал для криптовалютного рынка. Один TypeScript-код работает на трёх платформах: **Web** (браузер), **Android** (Capacitor 8), **Windows** (Tauri 2). Сделан одним разработчиком-трейдером в сотрудничестве с ИИ.
 
-**Задача приложения:** дать розничному трейдеру то, что обычно доступно только профессионалам — глубокий анализ монеты с 5 бирж, метрики крупных игроков (киты, funding, OI), AI-наставник, который объясняет «что происходит» простым языком.
+**Задача приложения:** дать розничному трейдеру то, что обычно доступно только профессионалам — глубокий анализ монеты с 6 бирж, метрики крупных игроков (киты, funding, OI), AI-наставник, который объясняет «что происходит» простым языком.
 
 **Ключевая фишка:** алгоритм **Oracle** — скоринг от -100 до +100, который агрегирует технические индикаторы, поведение китов, стакан, funding rate, on-chain активность и историческое обучение. На основе скоринга выдаёт вердикт (strong_buy / buy / hold / avoid) и рекомендует размер позиции.
 
@@ -57,7 +52,7 @@ markdown
 **Идентификатор приложения:** `com.nebula.oracle`
 **Android:** min SDK 24, target SDK 36, versionCode — инкрементится при каждом релизе
 **Windows:** требует WebView2 (встроен в Win11, отдельно для Win10)
-**Bundle size:** ~450 KB dist, ~7 MB APK, ~7 MB EXE
+**Bundle size:** ~470 KB dist, ~7.1 MB APK, ~7 MB EXE
 
 ---
 
@@ -72,7 +67,7 @@ mobileAnalyze() [src/ui/oracle.ts]
 ┌────────────────┼────────────────┐
 ▼ ▼ ▼
 fetchCandlesWithSource getWhaleFuturesMetrics fetchExtras
-[5 бирж race] [Bybit+OKX+Binance] [orderbook+funding]
+[6 бирж race] [Bybit+OKX+Binance] [orderbook+funding]
 │ │ │
 ▼ ▼ ▼
 300 свечей OI/LSR/Taker bid/ask pressure
@@ -95,10 +90,10 @@ score: -100 … +100
 verdict + confidence + plan
 │
 ▼
-┌────┴────┬─────────┬──────────┬────────────┐
-▼ ▼ ▼ ▼ ▼
-renderPro setCandles whale- renderOracle agent-card
-(pro tab) +drawNow radar Dashboard (AI Mentor)
+┌────┴────┬─────────┬──────────┬────────────┬────────────┐
+▼ ▼ ▼ ▼ ▼ ▼
+renderPro setCandles whale- renderOracle agent-card Multi-TF
+(pro tab) +drawNow radar Dashboard (AI Mentor) Confluence
 text
 
 
@@ -106,6 +101,7 @@ text
 - `loadBTC()` — карточка BTC каждые 90 сек
 - `initTimeframeBar()` — панель tf + WebSocket стрим
 - `runFullDiagnostics()` — раз в сутки
+- `initAlertsLoop()` — проверка алертов каждые 30 сек
 - тема из localStorage
 
 ---
@@ -161,7 +157,18 @@ text
 | balanced | 1.5% | 15% |
 | aggressive | 3.0% | 30% |
 
-### 4.2 Whale detection
+### 4.2 Multi-TF Confluence (Новое)
+
+Файл: `src/sources/confluence.ts` → `getConfluence()`
+
+Анализирует монету на **трёх таймфреймах одновременно**: 1h, 1d, 1w. 
+Для каждого считает RSI, MACD (hist), Stoch RSI. Выдаёт `verdict` (buy/hold/avoid) для каждого ТФ.
+- Если все 3 — BUY → `overall = 'strong_buy'` (уверенность ~97%).
+- Если 2 из 3 BUY → `overall = 'buy'`.
+- Если все 3 AVOID → `overall = 'avoid'`.
+Если данных мало (<2 ТФ) — карточка скрывается.
+
+### 4.3 Whale detection
 
 Файл: `src/ui/whale.ts` → `calculateVolumeAnomalies()`, `mergeWhaleMetrics()`
 
@@ -171,410 +178,186 @@ text
 
 **Futures metrics** (`src/sources/whale-futures.ts`):
 - **OI change 24h** — Bybit → Binance fallback. > +5% = rising, < -5% = falling
-- **LSR Top Traders** — OKX → Binance → Bybit. Топ-трейдеры vs толпа
-- **LSR Global** — Bybit → Binance. Толпа (толпа обычно неправа)
-- **Taker Buy/Sell** — OKX → Binance. Агрессивные покупки vs продажи
+- **LSR Top Traders** — OKX → Binance → Bybit.
+- **LSR Global** — Bybit → Binance.
+- **Taker Buy/Sell** — OKX → Binance.
+*(KuCoin Futures не поддерживает публичное API для LSR и истории OI, поэтому участвует только в Funding Rate).*
 
-**Интерпретация:**
-- OI растёт + LSR толпы растёт → перегрев лонгов, вероятен шорт-сквиз
-- OI растёт + LSR топ-трейдеров растёт → умные деньги набирают
-- Funding > 0.03% → эйфория, скоро коррекция
-- Funding < -0.01% → паника, потенциал short squeeze
-
-### 4.3 AI Mentor (Groq)
+### 4.4 AI Mentor (Groq)
 
 Файл: `src/ai.ts` → `getAiMentor()`
 
-Отправляет в Groq **все** метрики (технические, whale, funding, стакан, контекст рынка) + совпадения с базой паттернов. Просит ответить строго по 7 блокам:
-
-1. 📌 **Что происходит** — развёрнутая картина (3-5 предложений)
-2. 🎯 **На что похоже** — 2-3 паттерна из базы (Wyckoff, шорт-сквиз, капитуляция...)
-3. 🧠 **Почему так** — причинно-следственные связи (5-7 предложений)
-4. ⚖️ **За и против** — два списка по 3-5 пунктов
-5. 📈 **Сценарии** — бычий / базовый / медвежий с процентами (сумма 100%)
-6. ⚡ **Что делать** — направление, вход, стоп, TP, R:R, размер позиции
-7. 📊 **Уверенность** — X/10 с обоснованием
-
-**Объём:** 350-450 слов. Не растягивать, не сжимать.
-
-**Модель:** `openai/gpt-oss-120b` (быстрая, дешёвая на Groq). Пользователь вводит свой Groq API-ключ в настройках → шифруется AES.
-
-### 4.4 Trade Intent Parser
-
-Файл: `src/ai.ts` → `parseTradeIntent()`
-
-Команда на естественном языке → JSON-интент через Groq (модель та же, но `temperature: 0.1` + `response_format: json_object`).
-
-Примеры:
-
-"Купи DASH на 10% депо" →
-{"action":"market_buy","symbol":"DASH/USDT","capital_pct":10}
-
-"Поставь сетку на BTC 60000-65000 на 5 шагов"
-→ {"action":"grid","symbol":"BTC/USDT","side":"buy",
-"capital_pct":20,"price_low":60000,"price_high":65000,"steps":5}
-text
-
-
-Валидация через `validateTradeIntent()`. Если интент невалидный — exception, ордер не размещается.
+Отправляет в Groq **все** метрики + совпадения с базой паттернов. Просит ответить строго по 7 блокам (Что происходит, На что похоже, Почему так, За и против, Сценарии, Что делать, Уверенность).
+**Объём:** 350-450 слов.
+**Модель:** `openai/gpt-oss-120b`.
 
 ### 4.5 Сканер дна
 
 Файл: `src/ui/scanner.ts` → `runScanner()`
-
-Проходит топ-200 монет (список из Gate.io). Для каждой:
-1. Загружает 120 свечей с приоритетом Binance → Gate.io
-2. Считает RSI, rebound, drop через Web Worker (батчами)
-3. Отбрасывает если `RSI > 55` или `rebound > 45%`
-4. Проверяет аномалию объёма (если > 180% от 30d avg → whale active)
-5. Оставляет только «на дне»: `RSI < 45 && rebound < 30 && drop > 40`
-
-Worker (`src/worker.ts`) — inline Blob, не отдельный файл. Причина: Tauri и Capacitor плохо работают с внешними worker-файлами в production-сборке.
+Проходит топ-200 монет (Gate.io). Загружает 120 свечей (Binance → Gate.io). Считает RSI, rebound, drop через Worker. Оставляет только `RSI < 45 && rebound < 30 && drop > 40`.
 
 ### 4.6 Планы и мониторинг
 
 Файл: `src/trading.ts`
+**Grid plan:** делит инвестиции на N шагов.
+**Мониторинг:** WebSocket на `stream.binance.com`, отслеживает исполнение.
+**TWAP:** разбивает ордер на N слайсов за M минут.
 
-**Grid plan** (`calculateStrategy`): берёт объём инвестиций в USDT, делит на N шагов, каждый лимитник ставится на N% выше breakeven. Цель — выйти в плюс при движении вверх.
+### 4.7 Risk Command Center (Новое)
 
-**Мониторинг** (`startMonitoring`): WebSocket на `stream.binance.com`, отслеживает исполнение шагов. Если цена достигла TP шага → перечёркивает в UI. Сохраняется в `localStorage.nebulaMonitor`, восстанавливается при перезапуске (но не старше 14 дней).
+Файл: `src/ui/risk.ts`
+Экран «Риски» (7-я вкладка). Собирает 5 индикаторов:
+1. Концентрация портфеля (доля топ-1 монеты).
+2. Уверенность Оракула (confidence текущего анализа).
+3. Активность китов (isWhaleActive).
+4. Funding rate (экстремумы).
+5. Fear & Greed (страх/жадность).
+Выдаёт общий светофор (low/medium/high) с пульсирующей анимацией.
 
-**TWAP** (`mobileTwapStart`): разбивает крупный ордер на N слайсов за M минут. Рандомизирует объём слайса ±10%, чтобы не светить паттерн. Last slice забирает остаток (без округлений).
+### 4.8 Trade Journal (Новое)
+
+Файл: `src/ui/oracle.ts` → `openJournalEntry()`
+На вкладке «Оракул» в списке последних анализов записи теперь кликабельны. При клике открывается модалка с полной историей: вердикт, score, RSI на входе, активность китов, funding и реальный результат (Win/Loss в %).
 
 ---
 
-## 5. Безопасность — критично, не сломать
+## 5. Безопасность
 
 Файлы: `src/auth.ts`, `src/crypto.ts`
 
-**Мастер-пароль:**
-- При первом запуске пользователь создаёт пароль (мин. 4 символа)
-- Хранится **только хеш** в `localStorage.nebulaAppPasswordHash` (SHA-256 с солью)
-- Сам пароль — в `sessionStorage.nebula_session_pwd` (умирает при закрытии вкладки)
-- **НЕ хранится** на сервере, в облаке, нигде
-
-**Шифрование ключей:**
-- Алгоритм: **AES-256-GCM + PBKDF2** (150 000 итераций)
-- Ключи MEXC: `localStorage.nebulaConfig` — зашифрованный blob
-- Groq API-ключ: `localStorage.nebulaGroqKey` — тоже зашифрованный
-- Формат: `NBLA2:` + соль(16) + iv(12) + ciphertext
-- Кодировка: base64
-
-**Функции:**
-- `encryptJson(data, password)` → string
-- `decryptJson(token, password)` → any
-- `hmacSha256Hex(secret, msg)` — для MEXC API-подписей
-
-**Биометрия (только Android):**
-- `@capgo/capacitor-native-biometric`
-- Пароль шифруется в нативном хранилище (Android Keystore)
-- Отпечаток / FaceID → разблокировка → пароль восстанавливается
-
-**Сброс пароля = потеря ключей.** В UI это подтверждается через `confirm()` с предупреждением.
-
-**Keystore APK:** `android/app/nebula-release.keystore` — **НИКОГДА не в git**, в `.gitignore`. Без него нельзя обновить APK. Пароль в `Knowledge Base` проекта (не в этом файле). Есть бэкап.
+**Мастер-пароль:** хранится только хеш (SHA-256) в localStorage. Сам пароль в sessionStorage.
+**Шифрование ключей:** AES-256-GCM + PBKDF2 (150k итераций).
+- MEXC: `nebulaConfig`
+- KuCoin: `nebulaConfig` (exchange: 'kucoin')
+- Groq API-ключ: `nebulaGroqKey`
+**Биометрия (Android):** `@capgo/capacitor-native-biometric`.
 
 ---
 
-## 6. Обход CORS — три платформы, три способа
+## 6. Обход CORS — три платформы
 
 Все три в `src/main.ts` + `src/platform/http.ts`.
 
-**Web (dev):**
-- Vite proxy в `vite.config.ts`
-- `/proxy/gateio` → `api.gateio.ws`
-- `/proxy/mexc` → `api.mexc.com`
-- Используется ТОЛЬКО в dev (`import.meta.env.DEV`)
-
-**Android (Capacitor):**
-- `CapacitorHttp` перехватывает `window.fetch` в `main.ts`
-- НО: `CapacitorHttp.request()` **не поддерживает AbortSignal**
-- Поэтому обёрнут в `Promise.race([runNative(), abortPromise])` — это **ключевой фикс производительности** (без него запрос висит 30-60 сек вместо 6)
-- Если нативный запрос упал с `AbortError` — **не** делать fallback на `origFetch`, иначе двойное ожидание
-
-**Windows (Tauri):**
-- `@tauri-apps/plugin-http` только для whitelist-доменов
-- Whitelist в `src/platform/http.ts` → `TAURI_PROXY_HOSTS`
-- Остальные домены (gateio, binance, bybit, okx) идут нативно — они CORS-friendly
-- В whitelist: mexc, okx-rubik, groq, getblock, dash-rpc, blockchair, dashcentral, dexpaprika
+**Web (dev):** Vite proxy в `vite.config.ts`. Добавлены прокси `/proxy/kucoin` и `/proxy/kucoin-futures`.
+**Android (Capacitor):** `CapacitorHttp` перехватывает `window.fetch`. Обёрнут в `Promise.race` с `AbortSignal.timeout`, чтобы не висело по 30-60 сек.
+**Windows (Tauri):** `@tauri-apps/plugin-http` для whitelist-доменов.
+В `TAURI_PROXY_HOSTS` добавлены: `api.kucoin.com`, `api-futures.kucoin.com`.
 
 ---
 
-## 7. UI — 6 экранов + sheet-модалки
+## 7. UI — 7 экранов
 
-Файл: `index.html` (основная разметка) + `src/ui/*.ts` (логика)
+Файл: `index.html` (разметка) + `src/ui/*.ts` (логика)
 
-**Bottom nav (6 вкладок):**
-1. **home** — главный анализ (график + verdict + план + AI-наставник + whale-радар)
-2. **pro** — продвинутая аналитика (MACD/BB/ADX/Stoch/S&R/VP в карточках)
-3. **scanner** — сканер дна по топ-200
-4. **fav** — избранное (звёздочка на тикере)
-5. **oracle** — дашборд обучения (профиль, статы, история)
-6. **portfolio** — синхронизация баланса MEXC
+**Bottom nav (7 вкладок):**
+1. **home** — график + verdict + план + AI + whale + Multi-TF.
+2. **pro** — продвинутая аналитика (карточки).
+3. **scanner** — сканер дна.
+4. **fav** — избранное.
+5. **oracle** — дашборд обучения + Trade Journal.
+6. **risk** — Risk Command Center.
+7. **portfolio** — баланс MEXC/KuCoin.
 
 **Плюс:**
-- **Demo mode** — виртуальная торговля $10,000, отдельный экран
-- **Radar menu** — круговое меню на центральной кнопке (мобилка)
-- **Sheet-модалки** — settings, orders, quiz, themes, about, donate
-- **Terms overlay** — при первом запуске
-- **App lock overlay** — пароль при каждом старте
-- **Splash** — анимация загрузки (canvas + звёзды)
+- **Alerts** — настройка уведомлений (Price / Whale / Funding) в Risk Center и Настройках.
+- **Radial menu** — 6 кнопок по кругу (Рынок, Избранное, Риски, Баланс, Ордера, Обучение). Иконки расставляются динамически через JS с сохранением позиций в localStorage.
+- **Sheet-модалки**, **Demo mode**, **Terms**, **App lock**, **Splash**.
 
-**Таймфреймы графика:** `1m / 15m / 1h / 1d / 7d / 1M / ALL` — горизонтальная панель над графиком (`#tf-bar`).
-
-**Pull-to-refresh:** свайп вниз от верха активного экрана → SVG-кольцо → обновление текущего экрана. Не работает внутри `#chart-container` (там свой зум) и `.tf-bar` (там горизонтальный скролл).
+**Таймфреймы:** `1m / 15m / 1h / 1d / 7d / 1M / ALL`.
+**Pull-to-refresh v3.2:** свайп вниз от верха. Игнорирует нажатия на кнопки (`shouldIgnore`), чтобы не блокировать клики.
 
 ---
 
 ## 8. WebSocket — real-time цена
 
 Файл: `src/sources/stream.ts` (класс `PriceStream`)
-
-**Только Binance:** `wss://stream.binance.com:9443/ws/{symbol}@kline_{interval}`
-**Почему:** самый стабильный, отдаёт данные push-ом, не считается в rate-limit
-
+**Источники: Binance и KuCoin.**
+- Binance: `wss://stream.binance.com:9443/ws/{symbol}@kline_{interval}`
+- KuCoin: `wss://x-push-spot.kucoin.com` (требует отправки `action: SUBSCRIBE` при `onopen`).
 **Логика:**
-- При смене tf или тикера — `destroy()` + новый `connect()`
-- Reconnect: экспоненциальный бэкофф 1s → 2s → 4s → ... → 30s max, 10 попыток
-- Heartbeat: ping каждые 30 сек (чтобы NAT не рвал TCP)
-- Нормальное закрытие (код 1000) — не реконнектить
-- Fallback на REST (`refreshIntervalMs` в `timeframes.ts`) — если WS не подключился за 8 сек
-
+- При смене tf, тикера или биржи — `destroy()` + новый `connect()`.
+- Reconnect: экспоненциальный бэкофф 1s→30s.
+- Fallback на REST (в `timeframes.ts`), если WS не подключился за 8 сек.
 **Обновление графика:**
-- Обычный REST → `updateCandles()` — полностью перерисовывает серию, сбрасывает зум при новом tf, не сбрасывает при автообновлении
-- WebSocket → `updateLastCandle()` — `series.update()` одного бара, <1мс, зум не трогает
-
-**Известное ограничение:** на спокойных монетах (DASH) цена может стоять 10-30 сек без движения. Это нормально, WebSocket присылает только при реальном изменении.
+- REST → `updateCandles()` (полная перерисовка).
+- WS → `updateLastCandle()` (`series.update()`, зум не сбрасывается).
 
 ---
 
 ## 9. Релиз и сборка
 
-**Один скрипт для всего:** `scripts/release.ps1`
+**Скрипт:** `scripts/release.ps1`
+1. Проверяет окружение.
+2. Сканирует на секреты.
+3. `npm run check`.
+4. Bump версии в 8 файлах + `versionCode`.
+5. Собирает через `build-all.ps1`.
+6. Генерирует `PROJECT_MAP.md`.
+7. Коммит, тег, push.
 
-Что делает:
-1. Проверяет окружение (node, npm, git, keystore)
-2. Проверяет на секреты (Groq/OpenAI/GitHub PAT/пароли) — блокирует при находке
-3. `npm run check` — TypeScript
-4. Bump версии во всех 8 файлах + `versionCode`
-5. Собирает через `build-all.ps1` (Windows + Android)
-6. Проверяет артефакты в `dist_release/`
-7. Генерирует `PROJECT_MAP.md`
-8. Коммит + тег + push
+**Флаги:** `-DryRun`, `-Minor`, `-Major`, `-SkipBuild`, `-SkipPush`, `-SkipTests`, `-Yes`.
+**Команды:**
+`npm run dev`, `npm run pc:dev`, `npm run pc:build`, `npm run android:build:release`, `npm run check`, `npm run context`.
 
-**Флаги:**
-- `-DryRun` — только проверки, без изменений
-- `-Minor` / `-Major` — тип bump
-- `-SkipBuild` — bump+commit+push без сборки
-- `-SkipPush` — всё локально
-- `-SkipTests` — пропустить TypeScript
-- `-Yes` — без подтверждений (для CI)
+---
 
-**Отдельные команды:**
-```powershell
-npm run dev                    # Web (localhost:5173)
-npm run pc:dev                 # Tauri dev
-npm run pc:build               # Windows EXE+MSI
-npm run android:build:release  # Android APK
-npm run check                  # TypeScript
-npm run context                # перегенерировать PROJECT_MAP.md
-.\scripts\build-all.ps1        # Windows + Android (без bump)
+## 10. Known issues / TODO
 
-Файлы в dist_release/: NEBULA-{ver}-Setup.exe (NSIS), NEBULA-{ver}-Portable.exe, NEBULA-{ver}-x64.msi, NEBULA-{ver}.apk
-10. Known issues / TODO (что не сделано)
+**Обучение Оракула (`src/ui/learning.ts`):**
+- 3 TODO-заглушки: `oracleGetStats`, `oracleUpdateOutcomes`, `oracleLearnPatterns` не подключены к UI.
+- Нужно заменить заглушки на реальные вызовы.
 
-Обучение Оракула (src/ui/learning.ts):
+**Tauri эксклюзивы (в config есть, не активированы):**
+- Tray icon, Глобальные хоткеи, Mini-режим окна, Auto-updater.
 
-    3 TODO-заглушки: oracleGetStats, oracleUpdateOutcomes, oracleLearnPatterns не подключены к UI
+**Проблема с `nebula.exe`:** процесс висит после закрытия (WS не закрывается).
 
-    Причина: UI-часть переносилась из Python-версии, не доделана
+**Duplicate exports:**
+- `Candle` в 5 файлах, `PlanStep` в 2, `WallsData` в 2. Кандидат на `src/types.ts`.
 
-    Что делать: заменить заглушки на реальные вызовы (функции уже готовы в src/oracle.ts)
+**Android `allowBackup`:** стоит `"true"`, лучше поставить `"false"`.
 
-WebSocket только Binance:
+---
 
-    Bybit (wss://stream.bybit.com/v5/public/spot) не подключён
+## 11. Стиль разработки и общения
 
-    OKX (wss://ws.okx.com:8443/ws/v5/public) не подключён
+**Разработчик:** Русскоязычный, Windows 11 + VS Code + PowerShell.
+**Стиль ответов ИИ:** Русский язык, развёрнуто и по делу, структурированно. Готовые команды PowerShell. Прямо говорить о проблемах. Проверка после каждого шага.
 
-    Для РФ Binance может блокироваться — fallback на REST работает, но не real-time
+---
 
-Tauri эксклюзивы (в config есть, не активированы):
+## 12. Красные флаги — что НЕ делать без бэкапа
 
-    Tray icon (иконка в системном трее) — плагин в Cargo.toml, но lib.rs не инициализирует
+**Критичные файлы:** `main.ts`, `auth.ts`, `crypto.ts`, `trading.ts`, `sources/mexc.ts`, `sources/kucoin.ts`.
+**Где важна каждая строка:** `release.ps1`, `candles.ts`, `chart.ts`, `stream.ts`.
+**Где легко сломать кодировку:** `index.html`, `i18n.ts`, `terms.ts`.
+**Keystore:** `android/app/nebula-release.keystore` — не трогать, лежит в `.gitignore`.
 
-    Глобальные хоткеи (@tauri-apps/plugin-global-shortcut) — не подключены
+---
 
-    Mini-режим окна (в tauri.conf.json есть, JS не переключает)
+## 13. Полезные команды для ИИ
 
-    Auto-updater — @tauri-apps/plugin-updater не установлен
+**Покажи что изменилось:** `git log --oneline -5`, `git status --short`.
+**Проверь что не сломалось:** `npm run check`.
+**Что в проекте сейчас:** `Get-Content package.json -Raw | Select-String '"version"'`.
 
-Проблема с process nebula.exe:
+---
 
-    После закрытия окна процесс висит (~8 MB) — WebSocket не закрывается
+## 14. История версий
 
-    Решение: Stop-Process -Name nebula -Force вручную, или CloseRequested handler в Rust
+| Версия | Дата | Ключевое |
+|---|---|---|
+| v2.0.5+ | 2026-10-27 | KuCoin (все модули), Risk Center, Alerts, Multi-TF, Trade Journal, i18n, pull-refresh v3.2, radar v2 |
+| v2.0.2 | 2026-10-25 | WebSocket real-time, pull-refresh v3, build-all fix версий |
+| v2.0.1 | 2026-10-23 | AbortSignal fix (Android), таймфреймы, pull-refresh v1 |
 
-Duplicate exports:
+---
 
-    Candle объявлен в 5 файлах (chart.ts, indicators.ts, sources/candles.ts, ui/whale.ts, utils.ts)
+## 15. Быстрые напоминания
 
-    PlanStep в 2 файлах
-
-    WallsData в 2 файлах
-
-    Не баг, TypeScript справляется. Но при изменении Candle (например, добавить trades) придётся править все 5. Кандидат на src/types.ts в будущем.
-
-Android allowBackup:
-
-    Сейчас android:allowBackup="true" в AndroidManifest.xml
-
-    Риск: localStorage можно извлечь через USB-бэкап
-
-    Решение: поставить "false" (MobSF score вырастет)
-
-11. Стиль разработки и общения
-
-Разработчик:
-
-    Русскоязычный, Windows 11 + VS Code + PowerShell 5.1
-
-    Не профессиональный программист, но разбирается в трейдинге
-
-    Работает с ИИ как «второй разработчик»
-
-    Ценит конкретику, готовые команды, объяснения «почему»
-
-Стиль ответов ИИ:
-
-    Русский язык
-
-    Развёрнуто, но по делу — не «вот пример кода», а «вот полный файл, вот что изменилось, вот как проверить»
-
-    Структурированно — заголовки, таблицы, списки
-
-    Готовые команды PowerShell — не «можно запустить через…», а «вот команда, копируй»
-
-    Прямо говорить о проблемах — если подход неверный, сказать «это не сработает потому что…»
-
-    Проверка после каждого шага — «ожидаемый вывод», «если видишь X — значит Y»
-
-    Не переспрашивать базу — если контекст в AI_CONTEXT.md + PROJECT_MAP.md, не надо «а что такое Oracle?»
-
-Избегать:
-
-    Общих советов («попробуй посмотреть в логах»)
-
-    Воды («криптовалюты — это волатильный рынок»)
-
-    Отписок («это сложно объяснить»)
-
-    Lorem ipsum кода — давать полные файлы, а не обрывки
-
-12. Красные флаги — что НЕ делать без бэкапа
-
-Критичные файлы (ломается всё):
-
-    src/main.ts — bootstrap, fetch patch, auth init
-
-    src/auth.ts + src/crypto.ts — шифрование, потеря ключей = сброс пароля
-
-    src/trading.ts — ордера, реальные деньги
-
-    src/sources/mexc.ts — подписи API, HMAC
-
-Файлы, где каждая строка важна:
-
-    scripts/release.ps1 — если сломать, релиз не соберётся
-
-    scripts/build-all.ps1 — то же
-
-    src/sources/candles.ts — 5 бирж, race logic, таймфреймы
-
-    src/chart.ts — серии, priceLines, память
-
-    src/sources/stream.ts — WebSocket, reconnect, heartbeat
-
-Файлы, где легко сломать кодировку:
-
-    index.html — там кириллица в UI-текстах
-
-    src/i18n.ts — словари RU/EN
-
-    src/ui/terms.ts — текст соглашения
-
-Всегда при правке этих файлов:
-
-    Читать через -Encoding UTF8 в PowerShell
-
-    Писать через Write-FileUtf8 (без BOM)
-
-    git status до и после — проверять что не появилось лишних M
-
-    При сомнении — git checkout HEAD -- <файл> для отката
-
-Keystore — АБСОЛЮТНО не трогать:
-
-    android/app/nebula-release.keystore
-
-    Лежит в .gitignore (android/app/.gitignore → *.keystore)
-
-    Без него нельзя обновить APK
-
-    Пароль в Knowledge Base проекта (не в этом файле)
-
-13. Полезные команды для ИИ
-
-Когда пользователь говорит «покажи что изменилось»:
-powershell
-
-git log --oneline -5
-git status --short
-
-Когда «проверь что не сломалось»:
-powershell
-
-npm run check
-
-Когда «что в проекте сейчас»:
-powershell
-
-Get-Content package.json -Raw | Select-String '"version"'
-Select-String -Path "PROJECT_MAP.md" -Pattern "Version:"
-
-Когда «установи что за версия»:
-powershell
-
-git describe --tags --abbrev=0
-
-14. История версий (последние)
-Версия	Дата	Ключевое
-v2.0.2	2026-10-25	WebSocket real-time, pull-refresh v3, build-all fix версий
-v2.0.1	2026-10-23	AbortSignal fix (Android), таймфреймы, pull-refresh v1
-8234933	2026-10-23	(commit) fix(android): AbortSignal в fetch-патче
-eb6d48b	2026-10-22	About page, reset demo, tauri fix
-352b9ca	2026-10-21	Mobile radial HUD, demo sandbox
-3ec7e5c	2026-10-19	Полный рефакторинг, VPS-прокси, пароль, Telegram
-
-Теги в git — только с v2.0.1. До этого версии были только в коммитах (v2.0.3 в коммите 1cf6a91 — это историческая версия Python-версии, не наш релиз).
-
-Полная история: PROJECT_MAP.md → Release history.
-15. Быстрые напоминания
-
-    v2.0.2 — текущая версия, тег v2.0.2, коммит fdf138a
-
-    PROJECT_MAP.md — генерируется при каждом релизе, показывает реальное состояние
-
-    AI_CONTEXT.md — этот файл, обновляется вручную при значимых изменениях
-
-    Keystore — Nebula2026!, alias nebula, файл android/app/nebula-release.keystore
-
-    Пароль Groq API — пользователь вводит сам в настройках
-
-    Пароль на вход — пользователь вводит сам при первом запуске
-
-    JDK 21 — C:\Program Files\Android\Android Studio\jbr
-
-    GitHub — https://github.com/NEBULA-SAE/nebula-android
-
-    Текущая задача — обсуждена в чате, если непонятно, спроси у пользователя
+- **Текущая версия:** см. `package.json`.
+- **PROJECT_MAP.md** — генерируется при релизе.
+- **Keystore** — `Nebula2026!`, alias `nebula`.
+- **JDK 21** — `C:\Program Files\Android\Android Studio\jbr`.
+- **GitHub** — https://github.com/NEBULA-SAE/nebula-android
+- **Текущая задача** — обсуждена в чате, если непонятно, спроси у пользователя.
