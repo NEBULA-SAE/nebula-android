@@ -1,6 +1,6 @@
 [package]
 name = "nebula"
-version = "2.0.10"
+version = "2.0.11"
 description = "NEBULA Oracle Terminal"
 authors = ["NEBULA"]
 edition = "2021"

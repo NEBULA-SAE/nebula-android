@@ -1,6 +1,6 @@
 {
   "name": "nebula-oracle-v2",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "NEBULA Oracle Terminal · Capacitor + Tauri + TypeScript",
   "type": "module",
   "scripts": {

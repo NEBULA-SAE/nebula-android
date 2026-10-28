@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.10** | Branch: `main` | Commit: `1f2c272`
-> Generated: 2026-10-28 07:11
+> Version: **2.0.11** | Branch: `main` | Commit: `2410041`
+> Generated: 2026-10-28 07:41
 
 ---
 
@@ -43,11 +43,96 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Consistency check
 
-- `package.json` version: **2.0.10**
-- Last git tag: `v2.0.9`
+- `package.json` version: **2.0.11**
+- Last git tag: `v2.0.10`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `2410041` - 2026-10-28 - chore(release): v2.0.10
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
+- `android/app/src/main/res/mipmap-hdpi/ic_launcher.png`
+- `android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png`
+- `android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png`
+- `android/app/src/main/res/mipmap-ldpi/ic_launcher_round.png`
+- `android/app/src/main/res/mipmap-mdpi/ic_launcher.png`
+- `android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png`
+- `android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png`
+- `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png`
+- `android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png`
+- `android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png`
+- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png`
+- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png`
+- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png`
+- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`
+- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png`
+- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png`
+- `android/app/src/main/res/values/ic_launcher_background.xml`
+- `icon.png`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/favicon.ico`
+- `public/ic_launcher-playstore.png`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/icons/128x128.png`
+- `src-tauri/icons/128x128@2x.png`
+- `src-tauri/icons/32x32.png`
+- `src-tauri/icons/64x64.png`
+- `src-tauri/icons/Square107x107Logo.png`
+- `src-tauri/icons/Square142x142Logo.png`
+- `src-tauri/icons/Square150x150Logo.png`
+- `src-tauri/icons/Square284x284Logo.png`
+- `src-tauri/icons/Square30x30Logo.png`
+- `src-tauri/icons/Square310x310Logo.png`
+- `src-tauri/icons/Square44x44Logo.png`
+- `src-tauri/icons/Square71x71Logo.png`
+- `src-tauri/icons/Square89x89Logo.png`
+- `src-tauri/icons/StoreLogo.png`
+- `src-tauri/icons/android/mipmap-hdpi/ic_launcher.png`
+- `src-tauri/icons/android/mipmap-hdpi/ic_launcher_foreground.png`
+- `src-tauri/icons/android/mipmap-hdpi/ic_launcher_round.png`
+- `src-tauri/icons/android/mipmap-mdpi/ic_launcher.png`
+- `src-tauri/icons/android/mipmap-mdpi/ic_launcher_foreground.png`
+- `src-tauri/icons/android/mipmap-mdpi/ic_launcher_round.png`
+- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher.png`
+- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher_foreground.png`
+- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher_round.png`
+- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher.png`
+- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png`
+- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_round.png`
+- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher.png`
+- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png`
+- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_round.png`
+- `src-tauri/icons/icon.icns`
+- `src-tauri/icons/icon.ico`
+- `src-tauri/icons/icon.png`
+- `src-tauri/icons/ios/AppIcon-20x20@1x.png`
+- `src-tauri/icons/ios/AppIcon-20x20@2x-1.png`
+- `src-tauri/icons/ios/AppIcon-20x20@2x.png`
+- `src-tauri/icons/ios/AppIcon-20x20@3x.png`
+- `src-tauri/icons/ios/AppIcon-29x29@1x.png`
+- `src-tauri/icons/ios/AppIcon-29x29@2x-1.png`
+- `src-tauri/icons/ios/AppIcon-29x29@2x.png`
+- `src-tauri/icons/ios/AppIcon-29x29@3x.png`
+- `src-tauri/icons/ios/AppIcon-40x40@1x.png`
+- `src-tauri/icons/ios/AppIcon-40x40@2x-1.png`
+- `src-tauri/icons/ios/AppIcon-40x40@2x.png`
+- `src-tauri/icons/ios/AppIcon-40x40@3x.png`
+- `src-tauri/icons/ios/AppIcon-512@2x.png`
+- `src-tauri/icons/ios/AppIcon-60x60@2x.png`
+- `src-tauri/icons/ios/AppIcon-60x60@3x.png`
+- `src-tauri/icons/ios/AppIcon-76x76@1x.png`
+- `src-tauri/icons/ios/AppIcon-76x76@2x.png`
+- `src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png`
+- `src-tauri/tauri.conf.json`
 
 ### `1f2c272` - 2026-10-28 - chore(release): v2.0.9
 
@@ -118,17 +203,13 @@ Files:
 - `src/ui/timeframes.ts`
 - `src/ui/whale.ts`
 
-### `0afb819` - 2026-10-28 - backup before chart race fix
-
-Files:
-- `AI_CONTEXT.md`
-
 ## Last release diff
 
-No changes since `v2.0.9`
+No changes since `v2.0.10`
 
 ## Recent tags
 
+- `v2.0.10`
 - `v2.0.9`
 - `v2.0.8`
 - `v2.0.7`
@@ -815,6 +896,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 2410041  2026-10-28  chore(release): v2.0.10
 - 1f2c272  2026-10-28  chore(release): v2.0.9
 - 4d05231  2026-10-28  chore(release): v2.0.8
 - c2a620d  2026-10-28  chore(release): v2.0.7
@@ -829,7 +911,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - eb6d48b  2026-10-22  feat: about page, reset demo, tauri fix, UI updates
 - 352b9ca  2026-10-21  feat: mobile radial HUD, demo sandbox fixes, NEBUL core button
 - 3ec7e5c  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
-- aa430bf  2026-10-19  feat: полный рефакторинг ядра, VPS-прокси, пароль на вход, Telegram-поддержка и чаты
 
 ---
 
