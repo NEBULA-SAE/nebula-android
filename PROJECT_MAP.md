@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.13** | Branch: `main` | Commit: `3ef9fd6`
-> Generated: 2026-10-29 01:41
+> Version: **2.0.14** | Branch: `main` | Commit: `5a93e1f`
+> Generated: 2026-10-29 04:49
 
 ---
 
@@ -43,11 +43,26 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Consistency check
 
-- `package.json` version: **2.0.13**
-- Last git tag: `v2.0.12`
+- `package.json` version: **2.0.14**
+- Last git tag: `v2.0.13`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `5a93e1f` - 2026-10-29 - chore(release): v2.0.13
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/favicon.ico`
+- `public/ic_launcher-playstore.png`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
 
 ### `3ef9fd6` - 2026-10-29 - chore(release): v2.0.12
 
@@ -308,27 +323,13 @@ Files:
 - `src-tauri/tauri.conf.json`
 - `src/ui/splash.ts`
 
-### `4d05231` - 2026-10-28 - chore(release): v2.0.8
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/main.ts`
-- `src/ui/splash.ts`
-
 ## Last release diff
 
-No changes since `v2.0.12`
+No changes since `v2.0.13`
 
 ## Recent tags
 
+- `v2.0.13`
 - `v2.0.12`
 - `v2.0.11`
 - `v2.0.10`
@@ -338,7 +339,6 @@ No changes since `v2.0.12`
 - `v2.0.6`
 - `v2.0.5`
 - `v2.0.4`
-- `v2.0.3`
 
 ## File tree (src/)
 
@@ -1016,6 +1016,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 5a93e1f  2026-10-29  chore(release): v2.0.13
 - 3ef9fd6  2026-10-29  chore(release): v2.0.12
 - caf4a6a  2026-10-28  chore(release): v2.0.11
 - 2410041  2026-10-28  chore(release): v2.0.10
@@ -1030,7 +1031,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - fdf138a  2026-10-25  chore(release): v2.0.2
 - d94ff8f  2026-10-25  chore(release): v2.0.1
 - 8234933  2026-10-23  fix(android): AbortSignal в fetch-патче + таймфреймы + pull-to-refresh
-- eb6d48b  2026-10-22  feat: about page, reset demo, tauri fix, UI updates
 
 ---
 
