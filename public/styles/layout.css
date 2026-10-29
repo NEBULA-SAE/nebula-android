@@ -276,61 +276,115 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LANDSCAPE MODE (Поворот телефона)
+   MOBILE LANDSCAPE FIX (Поворот телефона)
+   Принудительно включает мобильную верстку, даже если ширина > 1024px
    ═══════════════════════════════════════════════════════════════ */
 @media (orientation: landscape) and (max-height: 600px) {
-  /* Топбар становится тоньше и прячет лишнее */
-  .top-bar {
-    padding: calc(var(--safe-top) + 4px) 12px 4px;
-    height: auto;
-    gap: 4px;
+  /* 1. Возвращаем нижнее меню на место (вниз) и делаем его горизонтальным */
+  .bottom-nav {
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: calc(var(--safe-bot) + 48px) !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    padding: 4px 4px calc(4px + var(--safe-bot)) !important;
+    border-top: 1px solid var(--border) !important;
+    border-right: none !important;
+    background: linear-gradient(0deg, rgba(3,5,9,1) 45%, rgba(3,5,9,.98) 90%, rgba(3,5,9,.92) 100%) !important;
   }
-  .top-row-1 { min-height: 24px; }
-  .top-row-2 { margin-top: 4px; }
-  .brand-mini { font-size: 12px; }
-  .ticker-wrap, .ticker-wrap input { height: 32px; font-size: 12px; }
-  .btn-go { top: 4px; bottom: 4px; font-size: 10px; padding: 0 10px; }
-  .btn-star { top: 4px; bottom: 4px; width: 28px; }
   
+  /* Убираем надпись NEBULA из бокового меню (она не нужна внизу) */
+  .bottom-nav::before {
+    display: none !important;
+  }
+  
+  /* Настраиваем кнопки навигации обратно в колонку */
+  .nav-btn {
+    flex: 1 !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    padding: 6px 2px 4px !important;
+    text-align: center !important;
+    width: auto !important;
+  }
+  .nav-btn svg { width: 18px !important; height: 18px !important; }
+  .nav-btn .lbl {
+    display: block !important;
+    font-size: 7.5px !important;
+    text-transform: uppercase !important;
+  }
+  
+  /* Возвращаем полоску активной вкладки наверх */
+  .nav-btn.active::before {
+    top: 0 !important;
+    bottom: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 22px !important;
+    height: 2px !important;
+    border-radius: 2px !important;
+  }
+  .nav-btn.active {
+    background: transparent !important;
+  }
+
+  /* 2. Сбрасываем отступы ПК-версии для топбара и экранов */
+  .top-bar {
+    left: 0 !important;
+    right: 0 !important;
+    height: auto !important;
+    padding: calc(var(--safe-top) + 4px) 12px 4px !important;
+  }
+  .screens {
+    left: 0 !important;
+  }
+  .screen {
+    padding-top: calc(var(--safe-top) + 75px) !important;
+    padding-bottom: calc(var(--safe-bot) + 60px) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* 3. Центральный радар (NEBUL) возвращаем на место */
+  .radar-center-wrap {
+    display: flex !important;
+    margin-top: -16px !important;
+    width: 54px !important;
+    height: 54px !important;
+  }
+  .radar-trigger {
+    width: 52px !important;
+    height: 52px !important;
+  }
+  .rt-core {
+    font-size: 10px !important;
+  }
+
   /* Прячем лишние кнопки в топбаре */
   .demo-badge-btn { display: none !important; }
   .top-right .chip { display: none !important; }
   .top-right .chip.cyan { display: flex !important; } /* Оставляем только настройки */
   .lang-mini { display: none !important; }
 
-  /* Нижнее меню становится аккуратным */
-  .bottom-nav {
-    padding: 4px 4px calc(4px + var(--safe-bot));
-    height: calc(var(--safe-bot) + 48px);
-  }
-  .nav-btn svg { width: 18px; height: 18px; }
-  .nav-btn .lbl { display: none; } /* Убираем текст, оставляем иконки */
-  
-  /* Центральный радар уменьшаем */
-  .radar-center-wrap { margin-top: -16px; width: 54px; height: 54px; }
-  .radar-trigger { width: 52px; height: 52px; }
-  .rt-core { font-size: 10px; letter-spacing: .5px; }
-
-  /* Экранные отступы */
-  .screen {
-    padding-top: calc(var(--safe-top) + 75px);
-    padding-bottom: calc(var(--safe-bot) + 60px);
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  /* График делаем повыше, так как места стало больше */
+  /* 4. Делаем график повыше, а карточки в 2 колонки */
   #chart-container { height: 220px !important; min-height: 220px !important; }
-  
-  /* Карточки делаем в 2 колонки */
   #screen-home, #screen-pro { 
     display: grid !important; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 10px; 
+    grid-template-columns: 1fr 1fr !important; 
+    gap: 10px !important; 
   }
   #screen-home > .btc-card, #screen-home > .chart-card, #screen-home > #verdict,
   #screen-home > #whale-card, #screen-home > #monitor-panel, #screen-home > #confluence-card {
     grid-column: 1 / -1 !important;
   }
-  #screen-pro > #pro-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  #screen-pro > #pro-content { 
+    grid-column: 1 / -1 !important; 
+    display: grid !important; 
+    grid-template-columns: 1fr 1fr !important; 
+    gap: 10px !important; 
+  }
 }
