@@ -6,7 +6,7 @@
 import { state } from '../utils';
 import { fetchCandlesWithSource, TF_CONFIG } from '../sources/candles';
 import type { Timeframe } from '../sources/candles';
-import { updateCandles, updateLastCandle, drawNowLine } from '../chart';
+import { updateCandles, updateLastCandle, drawNowLine, showChartLoading } from '../chart';
 import { PriceStream } from '../sources/stream';
 
 const LS_KEY = 'nebulaTimeframe';
@@ -47,8 +47,20 @@ export function setTimeframe(tf: Timeframe): void {
     btn.classList.toggle('active', btn.dataset.tf === tf);
   });
 
-  (window as any).mobileAnalyze?.();
-  reconnectStream();
+  showChartLoading(); // Показываем шторку загрузки
+  
+  // Вызываем ЛЕГКУЮ функцию загрузки графика, а не тяжелый mobileAnalyze!
+  const ticker = (state as any).currentTicker;
+  if (ticker) {
+    (window as any).loadChartOnly?.(ticker, tf);
+  }
+  
+  // Запускаем переподключение WS с задержкой в 150мс, чтобы не спамить биржу
+  if ((window as any)._tfDebounce) clearTimeout((window as any)._tfDebounce);
+  (window as any)._tfDebounce = setTimeout(() => {
+    stopRestFallback();
+    connectStream();
+  }, 150);
 }
 
 async function refreshChartViaRest(): Promise<void> {
@@ -59,12 +71,10 @@ async function refreshChartViaRest(): Promise<void> {
   const tf = getCurrentTimeframe();
   try {
     const { data } = await fetchCandlesWithSource(ticker, tf, undefined, true);
-
-    // GUARD: пока летел запрос, пользователь мог переключить TF/тикер
     if ((state as any).currentTicker !== ticker) return;
     if (getCurrentTimeframe() !== tf) return;
-
     if (!data || data.length < 25) return;
+    
     updateCandles(data as any);
   }
   catch { /* silent */ }
@@ -100,10 +110,10 @@ function connectStream(): void {
     ticker,
     timeframe: tf,
     exchange,
-    onCandle: (candle) => {
-      // GUARD: сокет мог отдать сообщение уже после переключения TF/тикера
+       onCandle: (candle) => {
       if ((state as any).currentTicker !== ticker) return;
       if (getCurrentTimeframe() !== tf) return;
+      if ((state as any).chartLoading) return; // <-- НЕ РИСУЕМ, ПОКА ГРУЗИТСЯ
 
       updateLastCandle(candle);
 

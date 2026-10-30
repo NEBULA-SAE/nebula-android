@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.17** | Branch: `main` | Commit: `e189a69`
-> Generated: 2026-10-30 08:09
+> Version: **2.0.18** | Branch: `main` | Commit: `c93e08a`
+> Generated: 2026-10-30 08:31
 
 ---
 
@@ -38,16 +38,30 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 46
-- Total LOC in `src/`: 14430
-- Bundle (`dist/`): 57 files, 535.8 KB
+- Total LOC in `src/`: 14525
+- Bundle (`dist/`): 57 files, 538.1 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.17**
-- Last git tag: `v2.0.16`
+- `package.json` version: **2.0.18**
+- Last git tag: `v2.0.17`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `c93e08a` - 2026-10-30 - chore(release): v2.0.17
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/titlebar-logo.png`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
 
 ### `e189a69` - 2026-10-30 - chore(release): v2.0.16
 
@@ -110,91 +124,13 @@ Files:
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 
-### `3ef9fd6` - 2026-10-29 - chore(release): v2.0.12
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `android/app/src/main/res/mipmap-hdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-mdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png`
-- `icon.png`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/icons/128x128.png`
-- `src-tauri/icons/128x128@2x.png`
-- `src-tauri/icons/32x32.png`
-- `src-tauri/icons/64x64.png`
-- `src-tauri/icons/Square107x107Logo.png`
-- `src-tauri/icons/Square142x142Logo.png`
-- `src-tauri/icons/Square150x150Logo.png`
-- `src-tauri/icons/Square284x284Logo.png`
-- `src-tauri/icons/Square30x30Logo.png`
-- `src-tauri/icons/Square310x310Logo.png`
-- `src-tauri/icons/Square44x44Logo.png`
-- `src-tauri/icons/Square71x71Logo.png`
-- `src-tauri/icons/Square89x89Logo.png`
-- `src-tauri/icons/StoreLogo.png`
-- `src-tauri/icons/android/mipmap-hdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-hdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-hdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-mdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-mdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-mdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_round.png`
-- `src-tauri/icons/icon.icns`
-- `src-tauri/icons/icon.ico`
-- `src-tauri/icons/icon.png`
-- `src-tauri/icons/ios/AppIcon-20x20@1x.png`
-- `src-tauri/icons/ios/AppIcon-20x20@2x-1.png`
-- `src-tauri/icons/ios/AppIcon-20x20@2x.png`
-- `src-tauri/icons/ios/AppIcon-20x20@3x.png`
-- `src-tauri/icons/ios/AppIcon-29x29@1x.png`
-- `src-tauri/icons/ios/AppIcon-29x29@2x-1.png`
-- `src-tauri/icons/ios/AppIcon-29x29@2x.png`
-- `src-tauri/icons/ios/AppIcon-29x29@3x.png`
-- `src-tauri/icons/ios/AppIcon-40x40@1x.png`
-- `src-tauri/icons/ios/AppIcon-40x40@2x-1.png`
-- `src-tauri/icons/ios/AppIcon-40x40@2x.png`
-- `src-tauri/icons/ios/AppIcon-40x40@3x.png`
-- `src-tauri/icons/ios/AppIcon-512@2x.png`
-- `src-tauri/icons/ios/AppIcon-60x60@2x.png`
-- `src-tauri/icons/ios/AppIcon-60x60@3x.png`
-- `src-tauri/icons/ios/AppIcon-76x76@1x.png`
-- `src-tauri/icons/ios/AppIcon-76x76@2x.png`
-- `src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.16`
+No changes since `v2.0.17`
 
 ## Recent tags
 
+- `v2.0.17`
 - `v2.0.16`
 - `v2.0.15`
 - `v2.0.14`
@@ -204,7 +140,6 @@ No changes since `v2.0.16`
 - `v2.0.10`
 - `v2.0.9`
 - `v2.0.8`
-- `v2.0.7`
 
 ## File tree (src/)
 
@@ -232,7 +167,7 @@ src/
 |   +--   226 init.ts
 |   +--   132 learning.ts
 |   +--    76 market.ts
-|   +--   995 oracle.ts
+|   +--  1038 oracle.ts
 |   +--   436 pull-refresh.ts
 |   +--   311 risk.ts
 |   +--   256 scanner.ts
@@ -241,13 +176,13 @@ src/
 |   +--   209 splash.ts
 |   +--   150 terms.ts
 |   +--   383 themes.ts
-|   +--   262 timeframes.ts
+|   +--   272 timeframes.ts
 |   +--   113 tooltip.ts
 |   +--   584 whale.ts
 +--   394 ai.ts
 +--   277 alerts.ts
 +--   280 auth.ts
-+--   300 chart.ts
++--   342 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
 +--   330 demo.ts
@@ -306,6 +241,8 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - initAuth()
 
 ### `src/chart.ts`
+- showChartLoading()
+- hideChartLoading()
 - initChart()
 - clearLines()
 - clearOrderbookLines()
@@ -545,6 +482,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - openMarketPulse()
 
 ### `src/ui/oracle.ts`
+- loadChartOnly()
 - mobileAnalyze()
 - renderPro()
 - renderConfluence()
@@ -694,9 +632,9 @@ Functions/objects assigned to `window` for inline HTML handlers.
 
 addAlert, checkAlerts, openAlertsSheet, removeAlert, startAlertsLoop, stopAlertsLoop, submitAlertFromSheet
 
-### `src/chart.ts` (10)
+### `src/chart.ts` (12)
 
-clearLines, clearOrderbookLines, drawNowLine, drawOrderbookWalls, fetchCandles, initChart, mapCandleArray, setCandlesAndFit, updateCandles, updateLastCandle
+clearLines, clearOrderbookLines, drawNowLine, drawOrderbookWalls, fetchCandles, hideChartLoading, initChart, mapCandleArray, setCandlesAndFit, showChartLoading, updateCandles, updateLastCandle
 
 ### `src/i18n.ts` (5)
 
@@ -734,9 +672,9 @@ openLearning, refreshLearning
 
 openMarketPulse
 
-### `src/ui/oracle.ts` (18)
+### `src/ui/oracle.ts` (19)
 
-_currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, mobileAnalyze, openAISettings, openJournalEntry, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderConfluence, renderOracleAnalogies, renderOracleDashboard, renderPro, saveGroqKeyFromModal, showConfluenceHelp
+_currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, loadChartOnly, mobileAnalyze, openAISettings, openJournalEntry, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderConfluence, renderOracleAnalogies, renderOracleDashboard, renderPro, saveGroqKeyFromModal, showConfluenceHelp
 
 ### `src/ui/pull-refresh.ts` (2)
 
@@ -770,9 +708,9 @@ acceptTerms, copyDonate, hideAbout, openDonateModal, showAbout
 
 applyThemeById, applyThemePreset, openThemeCreator, openThemeEditor, removeTheme, saveAndApplyTheme, saveAndSubmitTheme
 
-### `src/ui/timeframes.ts` (5)
+### `src/ui/timeframes.ts` (6)
 
-getCurrentTimeframe, initTimeframeBar, setTimeframe, startAutoRefresh, stopAutoRefresh
+_tfDebounce, getCurrentTimeframe, initTimeframeBar, setTimeframe, startAutoRefresh, stopAutoRefresh
 
 ### `src/ui/tooltip.ts` (1)
 
@@ -884,6 +822,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- c93e08a  2026-10-30  chore(release): v2.0.17
 - e189a69  2026-10-30  chore(release): v2.0.16
 - 8a239ea  2026-10-29  chore(release): v2.0.15
 - c695e5d  2026-10-29  chore(release): v2.0.14
@@ -898,7 +837,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 0afb819  2026-10-28  backup before chart race fix
 - 373f3de  2026-10-27  chore(release): v2.0.5
 - 37763e9  2026-10-25  chore(release): v2.0.4
-- 00f81af  2026-10-25  chore(release): v2.0.3
 
 ---
 

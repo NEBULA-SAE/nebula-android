@@ -6,7 +6,7 @@
 import { tm, isEN } from '../i18n';
 import { state, fmt, fmtP, setText, setHTML, esc, toast, relTime } from '../utils';
 import { wCall } from '../worker';
-import { initChart, clearLines, drawNowLine, setCandlesAndFit } from '../chart';
+import { initChart, clearLines, drawNowLine, setCandlesAndFit, showChartLoading, hideChartLoading } from '../chart';
 import { fetchCandlesWithSource } from '../sources/candles';
 import { getWhaleFuturesMetrics } from '../sources/whale-futures';
 import { getAdvancedAnalytics } from '../market';
@@ -37,6 +37,42 @@ import {
 // Счётчик поколений mobileAnalyze — защита от гонок при быстром переключении TF/тикера
 let _analyzeGen = 0;
 
+// ═══ БЫСТРАЯ ЗАГРУЗКА ТОЛЬКО ГРАФИКА (для смены TF) ═══
+export async function loadChartOnly(ticker: string, tf: string): Promise<void> {
+  (state as any).chartLoading = true;
+  try {
+    const { data } = await fetchCandlesWithSource(ticker, tf as any, undefined, true);
+    
+    // Защита от гонки
+    if (state.currentTicker !== ticker) return;
+    if ((state as any).currentTimeframe !== tf) return;
+
+    const closes = data.map(c => c.close);
+    const highs = data.map(c => c.high);
+    const lows = data.map(c => c.low);
+
+    const min = Math.min(...lows);
+    const max = Math.max(...highs);
+    const price = closes[closes.length - 1];
+
+    if (!state.chart) initChart();
+    clearLines();
+    setCandlesAndFit(data as any);
+    drawNowLine(price);
+
+    setHTML('chart-stats',
+      `<span>${tm('min')}: <b>${fmt(min)}</b></span>` +
+      `<span class="cur">${tm('cur')}: <b>${fmt(price)}</b></span>` +
+      `<span>${tm('max')}: <b>${fmt(max)}</b></span>`);
+
+  } catch (e) {
+    console.warn('[chart] loadChartOnly failed', e);
+  } finally {
+    (state as any).chartLoading = false;
+    hideChartLoading();
+  }
+}
+
 export async function mobileAnalyze(): Promise<void> {
   // Смотрим, откуда брать тикер: из демо-режима или из главного
   const inputId = state.isDemoMode ? 'demo-ticker' : 'ticker';
@@ -64,7 +100,10 @@ export async function mobileAnalyze(): Promise<void> {
   const confCard = document.getElementById('confluence-card');
   if (confCard) confCard.style.display = 'none';
 
-  try {
+    try {
+    (state as any).chartLoading = true; // <-- Блокируем WS
+    showChartLoading();                 // <-- Показываем шторку
+
     // ── Параллельный старт: candles + futures + extras ──
     const tf = ((state as any).currentTimeframe || '1d') as import('../sources/candles').Timeframe;
     const [candlesResult, futuresMetrics] = await Promise.all([
@@ -124,11 +163,14 @@ export async function mobileAnalyze(): Promise<void> {
       proTarget.innerHTML = `<div class="empty-msg" style="padding:20px 0;">${tm('loading')}…</div>`;
     }
 
-    // ─── График (использует setCandlesAndFit из chart.ts) ───
+      // ─── График (использует setCandlesAndFit из chart.ts) ───
     if (!state.chart) initChart();
     clearLines();
     setCandlesAndFit(candles as any);
     drawNowLine(price);
+    
+    (state as any).chartLoading = false; // <-- Разблокируем WS, график загружен
+    hideChartLoading();                  // <-- Убираем шторку
 
     setHTML('chart-stats',
       `<span>${tm('min')}: <b>${fmt(min120)}</b></span>` +
@@ -977,6 +1019,7 @@ if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     mobileAnalyze,
     askAIMentor,
+    loadChartOnly,
     renderPro,
     renderConfluence,
     showConfluenceHelp,

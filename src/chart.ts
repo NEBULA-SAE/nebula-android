@@ -24,6 +24,51 @@ export interface WallsData {
 
 // Отложенные свечи: если setCandlesAndFit/updateCandles пришли до создания series
 let _pendingCandles: Candle[] | null = null;
+let _loadingEl: HTMLElement | null = null;
+
+export function showChartLoading(): void {
+  const c = document.getElementById('chart-container');
+  if (!c) return;
+  if (!_loadingEl) {
+    if (!document.getElementById('chart-loading-style')) {
+      const style = document.createElement('style');
+      style.id = 'chart-loading-style';
+      style.textContent = `
+        .chart-loading-overlay {
+          position: absolute; inset: 0; z-index: 10;
+          background: rgba(5, 8, 15, 0.75); backdrop-filter: blur(4px);
+          display: flex; align-items: center; justify-content: center;
+          flex-direction: column; gap: 12px;
+          font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--cyan);
+          border-radius: var(--r-md); opacity: 0; transition: opacity 0.2s;
+        }
+        .chart-loading-overlay.visible { opacity: 1; }
+        .chart-spinner {
+          width: 28px; height: 28px; border: 2px solid rgba(94,203,255,0.2);
+          border-top-color: var(--cyan); border-radius: 50%;
+          animation: chartSpin 0.8s linear infinite;
+        }
+        @keyframes chartSpin { 100% { transform: rotate(360deg); } }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    if (getComputedStyle(c).position === 'static') c.style.position = 'relative';
+
+    _loadingEl = document.createElement('div');
+    _loadingEl.className = 'chart-loading-overlay';
+    _loadingEl.innerHTML = `<div class="chart-spinner"></div><span>LOADING DATA...</span>`;
+    c.appendChild(_loadingEl);
+  }
+  requestAnimationFrame(() => _loadingEl?.classList.add('visible'));
+}
+
+export function hideChartLoading(): void {
+  if (_loadingEl) {
+    _loadingEl.classList.remove('visible');
+    setTimeout(() => { if (_loadingEl) _loadingEl.style.display = 'none'; }, 200);
+  }
+}
 
 function getContainerSize(): { w: number; h: number } {
   const c = document.getElementById('chart-container');
@@ -207,34 +252,24 @@ export function drawNowLine(price: number): void {
 
 export function setCandlesAndFit(candles: Candle[]): void {
   if (!state.candleSeries) {
-    // График ещё не создан — запомним, применим после createChartNow
     _pendingCandles = candles;
     return;
   }
   _pendingCandles = null;
+  hideChartLoading(); // Скрываем загрузку
 
-  // Сбрасываем маркеры оверлея перед установкой новых данных,
-  // иначе они «залипнут» от предыдущего таймфрейма
-  try { (state.candleSeries as any).setMarkers?.([]); }
-  catch { /* silent */ }
+  try { (state.candleSeries as any).setMarkers?.([]); } catch { /* silent */ }
 
-  try {
-    state.candleSeries.setData(candles as any);
-  }
-  catch (e) {
-    console.warn('[chart] setData failed:', e);
-    return;
-  }
-
-  try { state.chart?.timeScale().fitContent(); }
-  catch { /* silent */ }
-  refreshAutoScale();
-
-  setTimeout(() => {
-    try { state.chart?.timeScale().fitContent(); }
-    catch { /* silent */ }
+  requestAnimationFrame(() => {
+    try {
+      state.candleSeries.setData(candles as any);
+    } catch (e) {
+      console.warn('[chart] setData failed:', e);
+      return;
+    }
+    try { state.chart?.timeScale().fitContent(); } catch { /* silent */ }
     refreshAutoScale();
-  }, 400);
+  });
 }
 
 export function updateCandles(candles: Candle[]): void {
@@ -275,6 +310,11 @@ export function updateCandles(candles: Candle[]): void {
 export function updateLastCandle(candle: Candle): void {
   if (!state.candleSeries) return;
   if (!candle || !candle.time || candle.close <= 0) return;
+  
+  // Защита: если график сейчас загружается или пуст, игнорируем свечу от WS
+  if ((state as any).chartLoading) return;
+  if ((state.candleSeries as any).data().length === 0) return;
+
   try {
     state.candleSeries.update(candle as any);
   }
@@ -296,5 +336,7 @@ if (typeof window !== 'undefined') {
     setCandlesAndFit,
     updateCandles,
     updateLastCandle,
+    showChartLoading,
+    hideChartLoading,
   });
 }
