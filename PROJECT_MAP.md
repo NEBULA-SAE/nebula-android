@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.15** | Branch: `main` | Commit: `c695e5d`
-> Generated: 2026-10-29 05:10
+> Version: **2.0.16** | Branch: `main` | Commit: `8a239ea`
+> Generated: 2026-10-30 07:48
 
 ---
 
@@ -38,16 +38,30 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 46
-- Total LOC in `src/`: 14308
-- Bundle (`dist/`): 57 files, 532.1 KB
+- Total LOC in `src/`: 14430
+- Bundle (`dist/`): 57 files, 536.1 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.15**
-- Last git tag: `v2.0.14`
+- `package.json` version: **2.0.16**
+- Last git tag: `v2.0.15`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `8a239ea` - 2026-10-29 - chore(release): v2.0.15
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/layout.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
 
 ### `c695e5d` - 2026-10-29 - chore(release): v2.0.14
 
@@ -236,97 +250,13 @@ Files:
 - `src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png`
 - `src-tauri/tauri.conf.json`
 
-### `2410041` - 2026-10-28 - chore(release): v2.0.10
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
-- `android/app/src/main/res/mipmap-hdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-ldpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-mdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png`
-- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`
-- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png`
-- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png`
-- `android/app/src/main/res/values/ic_launcher_background.xml`
-- `icon.png`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/favicon.ico`
-- `public/ic_launcher-playstore.png`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/icons/128x128.png`
-- `src-tauri/icons/128x128@2x.png`
-- `src-tauri/icons/32x32.png`
-- `src-tauri/icons/64x64.png`
-- `src-tauri/icons/Square107x107Logo.png`
-- `src-tauri/icons/Square142x142Logo.png`
-- `src-tauri/icons/Square150x150Logo.png`
-- `src-tauri/icons/Square284x284Logo.png`
-- `src-tauri/icons/Square30x30Logo.png`
-- `src-tauri/icons/Square310x310Logo.png`
-- `src-tauri/icons/Square44x44Logo.png`
-- `src-tauri/icons/Square71x71Logo.png`
-- `src-tauri/icons/Square89x89Logo.png`
-- `src-tauri/icons/StoreLogo.png`
-- `src-tauri/icons/android/mipmap-hdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-hdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-hdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-mdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-mdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-mdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-xhdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_round.png`
-- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher.png`
-- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png`
-- `src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_round.png`
-- `src-tauri/icons/icon.icns`
-- `src-tauri/icons/icon.ico`
-- `src-tauri/icons/icon.png`
-- `src-tauri/icons/ios/AppIcon-20x20@1x.png`
-- `src-tauri/icons/ios/AppIcon-20x20@2x-1.png`
-- `src-tauri/icons/ios/AppIcon-20x20@2x.png`
-- `src-tauri/icons/ios/AppIcon-20x20@3x.png`
-- `src-tauri/icons/ios/AppIcon-29x29@1x.png`
-- `src-tauri/icons/ios/AppIcon-29x29@2x-1.png`
-- `src-tauri/icons/ios/AppIcon-29x29@2x.png`
-- `src-tauri/icons/ios/AppIcon-29x29@3x.png`
-- `src-tauri/icons/ios/AppIcon-40x40@1x.png`
-- `src-tauri/icons/ios/AppIcon-40x40@2x-1.png`
-- `src-tauri/icons/ios/AppIcon-40x40@2x.png`
-- `src-tauri/icons/ios/AppIcon-40x40@3x.png`
-- `src-tauri/icons/ios/AppIcon-512@2x.png`
-- `src-tauri/icons/ios/AppIcon-60x60@2x.png`
-- `src-tauri/icons/ios/AppIcon-60x60@3x.png`
-- `src-tauri/icons/ios/AppIcon-76x76@1x.png`
-- `src-tauri/icons/ios/AppIcon-76x76@2x.png`
-- `src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.14`
+No changes since `v2.0.15`
 
 ## Recent tags
 
+- `v2.0.15`
 - `v2.0.14`
 - `v2.0.13`
 - `v2.0.12`
@@ -336,7 +266,6 @@ No changes since `v2.0.14`
 - `v2.0.8`
 - `v2.0.7`
 - `v2.0.6`
-- `v2.0.5`
 
 ## File tree (src/)
 
@@ -354,7 +283,7 @@ src/
 |   +--   331 mexc.ts
 |   +--   192 orderbook.ts
 |   +--   232 stream.ts
-|   +--   246 whale-futures.ts
+|   +--   248 whale-futures.ts
 +-- styles/
 |   +--   136 main.css
 +-- ui/
@@ -364,7 +293,7 @@ src/
 |   +--   226 init.ts
 |   +--   132 learning.ts
 |   +--    76 market.ts
-|   +--   933 oracle.ts
+|   +--   995 oracle.ts
 |   +--   436 pull-refresh.ts
 |   +--   311 risk.ts
 |   +--   256 scanner.ts
@@ -387,7 +316,7 @@ src/
 +--   411 indicators.ts
 +--   265 main.ts
 +--   475 market.ts
-+--   708 oracle.ts
++--   766 oracle.ts
 +--   185 patterns.ts
 +--   282 themes.ts
 +--   687 trading.ts
@@ -519,6 +448,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - oracleSaveAnalysis()
 - oracleUpdateOutcomes()
 - oracleLearnPatterns()
+- oracleGetAnalogies()
 - oracleGetStats()
 - oracleGetRecent()
 - oracleGetLearnedWeight()
@@ -691,6 +621,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - executeDemoTrade()
 - openJournalEntry()
 - showConfluenceHelp()
+- renderOracleAnalogies()
 
 ### `src/ui/pull-refresh.ts`
 - initPullToRefresh()
@@ -832,9 +763,9 @@ clearLines, clearOrderbookLines, drawNowLine, drawOrderbookWalls, fetchCandles, 
 
 getAllKeys, getLang, isEN, setLang, tm
 
-### `src/oracle.ts` (4)
+### `src/oracle.ts` (5)
 
-oracleGetRecent, oracleGetStats, oracleLearnPatterns, oracleUpdateOutcomes
+oracleGetAnalogies, oracleGetRecent, oracleGetStats, oracleLearnPatterns, oracleUpdateOutcomes
 
 ### `src/themes.ts` (12)
 
@@ -864,9 +795,9 @@ openLearning, refreshLearning
 
 openMarketPulse
 
-### `src/ui/oracle.ts` (17)
+### `src/ui/oracle.ts` (18)
 
-_currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, mobileAnalyze, openAISettings, openJournalEntry, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderConfluence, renderOracleDashboard, renderPro, saveGroqKeyFromModal, showConfluenceHelp
+_currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, mobileAnalyze, openAISettings, openJournalEntry, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderConfluence, renderOracleAnalogies, renderOracleDashboard, renderPro, saveGroqKeyFromModal, showConfluenceHelp
 
 ### `src/ui/pull-refresh.ts` (2)
 
@@ -988,9 +919,9 @@ demoHistory: []
 
 Critical list: ticker, chart-container, chart-stats, tf-bar, verdict, verdict-title, verdict-text, plan-card, agent-card, whale-card, dash-section, dash-network-content, screen-home, screen-pro, screen-scanner, sheet, sheet-overlay, sheet-title, sheet-body, toast-wrap, app-lock-overlay, al-input, al-submit
 
-All IDs in index.html (179 total):
+All IDs in index.html (181 total):
 
-about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, btc-advice, btc-change, btc-drop, btc-price, btc-rebound, btc-rsi, btc-trend, chart-container, chart-stats, confluence-badge, confluence-card, confluence-content, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-oracle-content, demo-orders-list, demo-panel, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, fav-count, fav-list, i-bell, i-bolt, i-brain, i-chart, i-check, i-clock, i-flask, i-globe, i-info, i-lock, i-oracle, i-play, i-pulse, i-radar, i-refresh, i-scan, i-search, i-settings, i-shield, i-star, i-star-fill, i-target, i-trending, i-wallet, i-whale, i-x, lang-en, lang-ru, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-confluence, lbl-drop, lbl-fav, lbl-monitor, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-trend, lbl-walls, lbl-whale, lbl-xray, main-nav, monitor-content, monitor-panel, mon-price, mon-sym, nav-fav, nav-home, nav-oracle, nav-portfolio, nav-pro, nav-risk, nav-scanner, nebula-splash, ofg1, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, radar-center-orb, radar-items, radar-laser-line, radar-overlay, radar-trigger, radar-trigger-wrap, risk-content, risk-page-title-text, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-risk, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, star-btn, star-icon, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
+about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, btc-advice, btc-change, btc-drop, btc-price, btc-rebound, btc-rsi, btc-trend, chart-container, chart-stats, confluence-badge, confluence-card, confluence-content, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-oracle-content, demo-orders-list, demo-panel, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, fav-count, fav-list, i-bell, i-bolt, i-brain, i-chart, i-check, i-clock, i-flask, i-globe, i-info, i-lock, i-oracle, i-play, i-pulse, i-radar, i-refresh, i-scan, i-search, i-settings, i-shield, i-star, i-star-fill, i-target, i-trending, i-wallet, i-whale, i-x, lang-en, lang-ru, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-confluence, lbl-drop, lbl-fav, lbl-monitor, lbl-oracle-analogs, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-trend, lbl-walls, lbl-whale, lbl-xray, main-nav, monitor-content, monitor-panel, mon-price, mon-sym, nav-fav, nav-home, nav-oracle, nav-portfolio, nav-pro, nav-risk, nav-scanner, nebula-splash, oracle-analogs-card, oracle-analogs-content, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, radar-center-orb, radar-items, radar-laser-line, radar-overlay, radar-trigger, radar-trigger-wrap, risk-content, risk-page-title-text, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-risk, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, star-btn, star-icon, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
 
 ## Key dependencies
 
@@ -1014,6 +945,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 8a239ea  2026-10-29  chore(release): v2.0.15
 - c695e5d  2026-10-29  chore(release): v2.0.14
 - 5a93e1f  2026-10-29  chore(release): v2.0.13
 - 3ef9fd6  2026-10-29  chore(release): v2.0.12
@@ -1028,7 +960,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 37763e9  2026-10-25  chore(release): v2.0.4
 - 00f81af  2026-10-25  chore(release): v2.0.3
 - fdf138a  2026-10-25  chore(release): v2.0.2
-- d94ff8f  2026-10-25  chore(release): v2.0.1
 
 ---
 

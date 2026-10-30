@@ -22,6 +22,7 @@ import {
   oracleGetRecent,
   oracleUpdateOutcomes,
   oracleLearnPatterns,
+  oracleGetAnalogies,
 } from '../oracle';
 import { getAiMentor } from '../ai';
 import {
@@ -292,6 +293,10 @@ export async function mobileAnalyze(): Promise<void> {
         renderConfluence(conf);
       }
     }).catch(() => { /* silent */ });
+
+        // Обновляем Зеркало истории (если открыта вкладка Оракул)
+    renderOracleAnalogies(marketData);
+    
 
     // ⚠️ ОБНОВЛЕНИЕ ДЕМО-РЕЖИМА: если мы в песочнице, перерисовываем её
     if (state.isDemoMode) {
@@ -910,6 +915,62 @@ export function showConfluenceHelp(): void {
   (window as any).openSheet?.(tm('conf_help_title'), html);
 }
 
+export function renderOracleAnalogies(marketData: any): void {
+  const content = document.getElementById('oracle-analogs-content');
+  if (!content) return;
+  if (!marketData) {
+    content.innerHTML = `<div class="empty-msg" style="padding:20px 10px;">Нужно проанализировать монету на главном экране</div>`;
+    return;
+  }
+
+  const res = oracleGetAnalogies(marketData);
+
+  if (res.status === 'empty') {
+    content.innerHTML = `<div class="empty-msg" style="padding:20px 10px;">${res.message}</div>`;
+    return;
+  }
+
+  const isBullish = res.winRate >= 60;
+  const color = isBullish ? 'var(--mint)' : res.winRate <= 40 ? 'var(--coral)' : 'var(--amber)';
+  
+  const listHtml = res.recentMatches.map((m: any) => `
+    <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,.05); font-family:'JetBrains Mono',monospace; font-size:11px;">
+      <div style="color:var(--mut);">${m.date} · <b style="color:var(--hi)">${m.ticker}</b></div>
+      <div style="color:${m.is_win ? 'var(--mint)' : 'var(--coral)'}">
+        ${m.outcome_pct > 0 ? '+' : ''}${m.outcome_pct}% ${m.is_win ? '✅' : '❌'}
+      </div>
+    </div>
+  `).join('');
+
+  content.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px;">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Найдено совпадений</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--hi);">${res.matches}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Вероятность роста</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:${color};">${res.winRate}%</div>
+      </div>
+    </div>
+    
+    <div style="background:rgba(0,0,0,.3); border-radius:8px; padding:10px; border:1px solid var(--border); margin-bottom:12px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--tx); margin-bottom:8px;">
+        💡 Оракул проанализировал историю и нашел ${res.matches} похожих ситуаций.
+        ${isBullish 
+          ? 'В большинстве случаев цена росла.' 
+          : res.winRate <= 40 ? 'В большинстве случаев цена падала. Будьте осторожны.' : 'Результаты смешанные. Лучше подождать.'}
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mut);">
+        Средняя доходность: <b style="color:${res.avgReturn >= 0 ? 'var(--mint)' : 'var(--coral)'}">${res.avgReturn > 0 ? '+' : ''}${res.avgReturn}%</b>
+      </div>
+    </div>
+
+    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Последние аналоги</div>
+    ${listHtml}
+  `;
+}
+
 // ═══ Экспорт в window ═══
 
 if (typeof window !== 'undefined') {
@@ -929,5 +990,6 @@ if (typeof window !== 'undefined') {
     saveGroqKeyFromModal,
     deleteGroqKeyFromModal,
     executeDemoTrade,
+    renderOracleAnalogies, 
   });
 }

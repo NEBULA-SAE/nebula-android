@@ -158,7 +158,7 @@
   flex-shrink: 0;
   box-shadow: 0 0 24px rgba(94,203,255,.3);
 }
-.oracle-avatar-large svg { width: 34px; height: 34px; }
+.oracle-avatar-large img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
 .oracle-hero-info { flex: 1; min-width: 0; }
 .oracle-name { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--hi); letter-spacing: .5px; }
 .oracle-status { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mint); margin-top: 3px; letter-spacing: .5px; display: flex; align-items: center; gap: 6px; }

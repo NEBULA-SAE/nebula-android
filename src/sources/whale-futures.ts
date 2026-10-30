@@ -69,7 +69,8 @@ async function okxTaker(t: string): Promise<number> {
   if (!lst.length) throw new Error('okx taker empty');
   const [, sell, buy] = lst[0];
   const s = parseFloat(sell), b = parseFloat(buy);
-  return s <= 0 ? 1 : b / s;
+  // Ограничиваем от 0.1 до 10, чтобы избежать выбросов вроде 300.11
+  return s <= 0 ? 1 : Math.max(0.1, Math.min(10, b / s));
 }
 
 async function okxTopLsr(t: string): Promise<number> {
@@ -128,7 +129,8 @@ async function binanceTaker(t: string): Promise<number> {
   if (!r.ok) throw new Error(`binance taker ${r.status}`);
   const arr = await r.json();
   if (!Array.isArray(arr) || !arr.length) throw new Error('binance taker empty');
-  return parseFloat(arr[0].buySellRatio);
+  const val = parseFloat(arr[0].buySellRatio);
+  return Math.max(0.1, Math.min(10, val)); // Тоже ограничиваем
 }
 
 // ═══════════════════════════════════════════════════════════════

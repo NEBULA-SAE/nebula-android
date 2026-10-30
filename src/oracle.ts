@@ -328,6 +328,63 @@ export async function oracleLearnPatterns(): Promise<any> {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// HISTORICAL ANALOGIES (Зеркало истории)
+// ═══════════════════════════════════════════════════════════════
+
+export function oracleGetAnalogies(current: any): any {
+  const mem = loadMemory();
+  // Берем только завершенные анализы, где мы знаем результат
+  const completed = mem.analyses.filter(a => a.outcome !== null && a.outcome !== 'flat');
+
+  if (completed.length < 5) {
+    return { status: 'empty', message: 'Мало данных (нужно 5+)' };
+  }
+
+  let matches = 0;
+  let wins = 0;
+  let totalReturn = 0;
+  const recentMatches: any[] = [];
+
+  const rsi = Number(current.rsi ?? 50);
+  const drop = Number(current.drop_pct ?? 0);
+
+  for (const rec of completed) {
+    const rsiDiff = Math.abs(rec.rsi - rsi);
+    const dropDiff = Math.abs(rec.drop_pct - drop);
+
+    // Ищем ситуации, где RSI был ±10, а падение ±15%
+    if (rsiDiff <= 10 && dropDiff <= 15) {
+      matches++;
+      if (rec.outcome === 'win' || rec.outcome === 'win_big') wins++;
+      totalReturn += rec.outcome_pct || 0;
+
+      // Сохраняем первые 5 найденных аналогов для красивого списка
+      if (recentMatches.length < 5) {
+        recentMatches.push({
+          ticker: rec.ticker,
+          date: new Date(rec.timestamp * 1000).toLocaleDateString(),
+          rsi: Math.round(rec.rsi),
+          outcome_pct: rec.outcome_pct,
+          is_win: rec.outcome === 'win' || rec.outcome === 'win_big',
+        });
+      }
+    }
+  }
+
+  if (matches === 0) {
+    return { status: 'empty', message: 'Схожих ситуаций не найдено' };
+  }
+
+  return {
+    status: 'success',
+    matches,
+    winRate: Math.round((wins / matches) * 100),
+    avgReturn: Math.round((totalReturn / matches) * 100) / 100,
+    recentMatches,
+  };
+}
+
 // ─── Stats ───
 
 export function oracleGetStats(): any {
@@ -704,5 +761,6 @@ if (typeof window !== 'undefined') {
     oracleGetRecent,
     oracleUpdateOutcomes,
     oracleLearnPatterns,
+    oracleGetAnalogies,
   });
 }

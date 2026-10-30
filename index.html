@@ -395,14 +395,9 @@
   </section>
 
   <section class="screen" id="screen-oracle">
-    <div class="oracle-hero">
+      <div class="oracle-hero">
       <div class="oracle-avatar-large">
-        <svg viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="8" fill="url(#ofg1)"/>
-          <ellipse cx="24" cy="24" rx="20" ry="7" stroke="#5ecbff" stroke-width="1.5" fill="none" transform="rotate(-25 24 24)"/>
-          <ellipse cx="24" cy="24" rx="20" ry="7" stroke="#a78bfa" stroke-width="1.5" fill="none" transform="rotate(25 24 24)"/>
-          <defs><linearGradient id="ofg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5ecbff"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs>
-        </svg>
+        <img src="ic_launcher-playstore.png" alt="Oracle Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%; padding: 4px;">
       </div>
       <div class="oracle-hero-info">
         <div class="oracle-name" id="lbl-oracle-name">Oracle</div>
@@ -422,6 +417,15 @@
         <div class="card-head-icon"><svg><use href="#i-brain"/></svg><span id="lbl-oracle-stats">Learning stats</span></div>
       </div>
       <div class="card-body" id="oracle-stats-content"><div class="loader">...</div></div>
+    </div>
+
+        <div class="card" id="oracle-analogs-card">
+      <div class="card-head">
+        <div class="card-head-icon"><svg><use href="#i-search"/></svg><span id="lbl-oracle-analogs">Зеркало истории</span></div>
+      </div>
+      <div class="card-body" id="oracle-analogs-content">
+        <div class="empty-msg" style="padding:20px 10px;">Нужно проанализировать монету на главном экране, чтобы найти аналоги</div>
+      </div>
     </div>
 
     <div class="card">
@@ -615,7 +619,7 @@
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.15</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.16</div>
     </div>
 
     <div class="terms-body">
@@ -664,7 +668,7 @@
 
       <h4>Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.15</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.16</b><br>
         Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
