@@ -1407,3 +1407,20 @@ body.in-demo-mode #screen-home {
   border-radius: 6px;
   border-left: 2px solid rgba(94,203,255,.4);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   АДАПТИВНЫЙ ТЕКСТ (ПК vs Смартфон)
+   ═══════════════════════════════════════════════════════════════ */
+
+.mobile-only { display: none !important; }
+
+@media (max-width: 1023px) {
+  .pc-only { display: none !important; }
+  .mobile-only { display: block !important; }
+  
+  /* Делаем текст на мобилках чуть крупнее и контрастнее для читаемости */
+  .whale-signal-what { font-size: 12px; color: var(--tx); }
+  .whale-signal-react { font-size: 12px; }
+  .xray-explain { font-size: 12px; color: var(--tx); }
+  .xray-react { font-size: 12px; }
+}

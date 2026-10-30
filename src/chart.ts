@@ -25,6 +25,7 @@ export interface WallsData {
 // Отложенные свечи: если setCandlesAndFit/updateCandles пришли до создания series
 let _pendingCandles: Candle[] | null = null;
 let _loadingEl: HTMLElement | null = null;
+let _nowLine: any = null; // <-- Ссылка на линию NOW
 
 export function showChartLoading(): void {
   const c = document.getElementById('chart-container');
@@ -172,6 +173,7 @@ export function clearLines(): void {
     catch { /* silent */ }
   });
   state.priceLines = [];
+  _nowLine = null; // <-- Сбрасываем ссылку
   clearOrderbookLines();
 }
 
@@ -237,15 +239,21 @@ export function drawOrderbookWalls(wallsData: WallsData | null): void {
 export function drawNowLine(price: number): void {
   if (!state.candleSeries) return;
   try {
-    const line = state.candleSeries.createPriceLine({
-      price,
-      color: 'rgba(94,203,255,0.7)',
-      lineWidth: 2,
-      lineStyle: LineStyle.Dotted,
-      axisLabelVisible: true,
-      title: 'NOW',
-    });
-    state.priceLines.push(line);
+    if (_nowLine) {
+      // Если линия уже есть — просто двигаем её
+      _nowLine.applyOptions({ price });
+    } else {
+      // Если нет — создаём один раз
+      _nowLine = state.candleSeries.createPriceLine({
+        price,
+        color: 'rgba(94,203,255,0.7)',
+        lineWidth: 2,
+        lineStyle: LineStyle.Dotted,
+        axisLabelVisible: true,
+        title: 'NOW',
+      });
+      state.priceLines.push(_nowLine);
+    }
   }
   catch { /* silent */ }
 }
@@ -295,6 +303,7 @@ export function updateCandles(candles: Candle[]): void {
     catch { /* silent */ }
   });
   state.priceLines = [];
+  _nowLine = null; // <-- Сбрасываем ссылку перед пересозданием
 
   const price = candles[candles.length - 1].close;
   if (price > 0) drawNowLine(price);

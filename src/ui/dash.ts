@@ -46,14 +46,14 @@ function renderDashContent(d: any): string {
             ${m.enabled} ${T('из', 'of')} ${m.total} ${T('работают', 'active')}
             <span class="dash-net-sub">(${pct.toFixed(1)}% ${T('активны', 'active')} · ${esc(m.source)})</span>
           </div>
-          <div class="dash-net-hint">${T(
-            'Крупные держатели DASH, которые держат узлы и получают награду. Чем больше мастернод — тем больше денег «заперто» в сети.',
-            'Large DASH holders who run nodes and earn rewards. More masternodes = more money "locked" in the network.'
-          )}</div>
-          ${react(T(
-            'Растёт — фон бычий, крупные накапливают. Резко падает — кто-то выходит, повод насторожиться.',
-            'Growing — bullish background, big players are accumulating. Sharp drop — someone is exiting, a reason to be cautious.'
-          ))}
+          <div class="dash-net-hint">
+            <span class="pc-only">${T('Крупные держатели DASH, которые держат узлы и получают награду. Чем больше мастернод — тем больше денег «заперто» в сети.', 'Large DASH holders who run nodes and earn rewards. More masternodes = more money "locked" in the network.')}</span>
+            <span class="mobile-only">${T('Узлы крупных держателей. Больше узлов = больше денег заперто.', 'Nodes of big holders. More nodes = more money locked.')}</span>
+          </div>
+          ${react(
+            `<span class="pc-only">${T('Растёт — фон бычий, крупные накапливают. Резко падает — кто-то выходит, повод насторожиться.', 'Growing — bullish background, big players are accumulating. Sharp drop — someone is exiting, a reason to be cautious.')}</span>
+             <span class="mobile-only">${T('📈 Рост = накапливают. 📉 Падение = выходят.', '📈 Growth = accumulating. 📉 Drop = exiting.')}</span>`
+          )}
         </div>
       </div>`;
   }
@@ -69,14 +69,14 @@ function renderDashContent(d: any): string {
             ${m.hashrate_ph} PH/s
             <span class="dash-net-sub">${T('сложность', 'difficulty')} ${m.difficulty} · ${esc(m.source)}</span>
           </div>
-          <div class="dash-net-hint">${T(
-            'Сколько вычислительной мощности защищает сеть. Выше — сеть надёжнее и майнеры верят в DASH.',
-            'How much computing power secures the network. Higher — the network is more reliable and miners believe in DASH.'
-          )}</div>
-          ${react(T(
-            'Резкое падение хэшрейта = майнеры уходят, возможна слабость. Рост — сеть укрепляется.',
-            'Sharp hashrate drop = miners leaving, weakness possible. Growth — the network is getting stronger.'
-          ))}
+          <div class="dash-net-hint">
+            <span class="pc-only">${T('Сколько вычислительной мощности защищает сеть. Выше — сеть надёжнее и майнеры верят в DASH.', 'How much computing power secures the network. Higher — the network is more reliable and miners believe in DASH.')}</span>
+            <span class="mobile-only">${T('Мощность майнеров. Защита сети.', 'Miners power. Network security.')}</span>
+          </div>
+          ${react(
+            `<span class="pc-only">${T('Резкое падение хэшрейта = майнеры уходят, возможна слабость. Рост — сеть укрепляется.', 'Sharp hashrate drop = miners leaving, weakness possible. Growth — the network is getting stronger.')}</span>
+             <span class="mobile-only">${T('📉 Падение = слабость. 📈 Рост = сила.', '📉 Drop = weakness. 📈 Growth = strength.')}</span>`
+          )}
         </div>
       </div>`;
   }
@@ -96,14 +96,14 @@ function renderDashContent(d: any): string {
             <span class="${cls}">${sign}${rate.toFixed(4)}%</span>
             <span class="dash-net-sub">${T('Открытый интерес', 'Open interest')}: $${oiM}M · bybit</span>
           </div>
-          <div class="dash-net-hint">${T(
-            'Плюс — лонги платят шортам (рынок перегрет в лонг). Минус — шорты платят лонгам (возможен шорт-сквиз). Открытый интерес — сколько денег в фьючерсах DASH.',
-            'Positive — longs pay shorts (market overheated in longs). Negative — shorts pay longs (short squeeze possible). Open interest — how much money is in DASH futures.'
-          )}</div>
-          ${react(T(
-            '> +0.05% — лонги перегреты, осторожно с покупкой. < −0.05% — возможен резкий рост (сквиз). Рост OI = новые деньги, движение усилится.',
-            '> +0.05% — longs overheated, be careful with buying. < −0.05% — sharp rise (squeeze) possible. OI growth = new money, move will intensify.'
-          ))}
+          <div class="dash-net-hint">
+            <span class="pc-only">${T('Плюс — лонги платят шортам (рынок перегрет в лонг). Минус — шорты платят лонгам (возможен шорт-сквиз). Открытый интерес — сколько денег в фьючерсах DASH.', 'Positive — longs pay shorts (market overheated in longs). Negative — shorts pay longs (short squeeze possible). Open interest — how much money is in DASH futures.')}</span>
+            <span class="mobile-only">${T('Ставка за перенос. Показывает перекос позиций.', 'Holding fee. Shows position skew.')}</span>
+          </div>
+          ${react(
+            `<span class="pc-only">${T('> +0.05% — лонги перегреты, осторожно с покупкой. < −0.05% — возможен резкий рост (сквиз). Рост OI = новые деньги, движение усилится.', '> +0.05% — longs overheated, be careful with buying. < −0.05% — sharp rise (squeeze) possible. OI growth = new money, move will intensify.')}</span>
+             <span class="mobile-only">${T('⚠️ >+0.05% = перегрев лонгов. ⚡ <−0.05% = шорт-сквиз.', '⚠️ >+0.05% = long overheat. ⚡ <−0.05% = short squeeze.')}</span>`
+          )}
         </div>
       </div>`;
   }

@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.19** | Branch: `main` | Commit: `d11ad41`
-> Generated: 2026-10-30 17:31
+> Version: **2.0.20** | Branch: `main` | Commit: `405a221`
+> Generated: 2026-10-30 17:55
 
 ---
 
@@ -38,16 +38,41 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 46
-- Total LOC in `src/`: 15007
-- Bundle (`dist/`): 57 files, 554.4 KB
+- Total LOC in `src/`: 15015
+- Bundle (`dist/`): 57 files, 561.9 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.19**
-- Last git tag: `v2.0.18`
+- `package.json` version: **2.0.20**
+- Last git tag: `v2.0.19`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `405a221` - 2026-10-30 - chore(release): v2.0.19
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/components.css`
+- `public/styles/screens.css`
+- `public/styles/splash.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ai.ts`
+- `src/i18n.ts`
+- `src/oracle.ts`
+- `src/sources/stream.ts`
+- `src/ui/dash.ts`
+- `src/ui/oracle.ts`
+- `src/ui/splash.ts`
+- `src/ui/whale.ts`
 
 ### `d11ad41` - 2026-10-30 - chore(release): v2.0.18
 
@@ -111,26 +136,13 @@ Files:
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 
-### `c695e5d` - 2026-10-29 - chore(release): v2.0.14
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/icons/icon.ico`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.18`
+No changes since `v2.0.19`
 
 ## Recent tags
 
+- `v2.0.19`
 - `v2.0.18`
 - `v2.0.17`
 - `v2.0.16`
@@ -140,7 +152,6 @@ No changes since `v2.0.18`
 - `v2.0.12`
 - `v2.0.11`
 - `v2.0.10`
-- `v2.0.9`
 
 ## File tree (src/)
 
@@ -179,11 +190,11 @@ src/
 |   +--   383 themes.ts
 |   +--   272 timeframes.ts
 |   +--   113 tooltip.ts
-|   +--   691 whale.ts
+|   +--   690 whale.ts
 +--   437 ai.ts
 +--   277 alerts.ts
 +--   280 auth.ts
-+--   342 chart.ts
++--   351 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
 +--   330 demo.ts
@@ -824,6 +835,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 405a221  2026-10-30  chore(release): v2.0.19
 - d11ad41  2026-10-30  chore(release): v2.0.18
 - c93e08a  2026-10-30  chore(release): v2.0.17
 - e189a69  2026-10-30  chore(release): v2.0.16
@@ -838,7 +850,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - c2a620d  2026-10-28  chore(release): v2.0.7
 - 3a37664  2026-10-28  chore(release): v2.0.6
 - 0afb819  2026-10-28  backup before chart race fix
-- 373f3de  2026-10-27  chore(release): v2.0.5
 
 ---
 

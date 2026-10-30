@@ -282,15 +282,21 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: `${z.toFixed(2)}σ`,
       color: z >= 2.5 ? 'var(--cyan)' : z >= 1.5 ? 'var(--amber)' : 'var(--mut)',
       strength,
-      what: T(
-        'Z-score показывает, насколько объём последних свечей выше обычного. 2.5σ — это крупный вход, в 2.5 раза выше стандартного разброса за 30 дней.',
-        'Z-score shows how much the recent volume exceeds the norm. 2.5σ means a large entry — 2.5x the standard deviation over 30 days.'
-      ),
+      what: `
+        <span class="pc-only">${T(
+          'Z-score показывает, насколько объём последних свечей выше обычного. 2.5σ — это крупный вход, в 2.5 раза выше стандартного разброса за 30 дней.',
+          'Z-score shows how much the recent volume exceeds the norm. 2.5σ means a large entry — 2.5x the standard deviation over 30 days.'
+        )}</span>
+        <span class="mobile-only">${T(
+          'Объём в 2.5σ раз выше нормы. Крупный игрок вошёл в рынок.',
+          'Volume is 2.5σ above normal. A big player entered the market.'
+        )}</span>
+      `,
       react: z >= 2.5
-        ? T('Смотри на свечу: растёт на объёме — покупают, падает — продают, стоит на месте — кто-то копит (поглощение).',
-            'Look at the candle: rising on volume — buyers, falling — sellers, flat — someone is accumulating (absorption).')
-        : T('Объём в норме, крупных входов не видно.',
-            'Volume is normal, no big entries visible.'),
+        ? `<span class="pc-only">${T('Смотри на свечу: растёт на объёме — покупают, падает — продают, стоит на месте — кто-то копит (поглощение).', 'Look at the candle: rising on volume — buyers, falling — sellers, flat — someone is accumulating (absorption).')}</span>
+           <span class="mobile-only">${T('📈 Растёт = покупают. 📉 Падает = продают. 😐 Стоит = копят.', '📈 Up = buying. 📉 Down = selling. 😐 Flat = accumulating.')}</span>`
+        : `<span class="pc-only">${T('Объём в норме, крупных входов не видно.', 'Volume is normal, no big entries visible.')}</span>
+           <span class="mobile-only">${T('Объём в норме. Ждём.', 'Volume is normal. Waiting.')}</span>`,
       active: z >= 2.5,
     });
   }
@@ -303,17 +309,18 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: v.obvTrend,
       color: v.isRising ? 'var(--mint)' : v.isFalling ? 'var(--coral)' : 'var(--mut)',
       strength: v.isRising || v.isFalling ? 'medium' : 'weak',
-      what: T(
-        'On-Balance Volume — суммарный объём с учётом направления свечей. Показывает, кто давит — покупатели или продавцы, даже если цена стоит.',
-        'On-Balance Volume — cumulative volume weighted by candle direction. Shows who is pushing — buyers or sellers — even if the price is flat.'
-      ),
+      what: `
+        <span class="pc-only">${T('On-Balance Volume — суммарный объём с учётом направления свечей. Показывает, кто давит — покупатели или продавцы, даже если цена стоит.', 'On-Balance Volume — cumulative volume weighted by candle direction. Shows who is pushing — buyers or sellers — even if the price is flat.')}</span>
+        <span class="mobile-only">${T('Накопление объёма. Показывает скрытое давление покупателей.', 'Volume accumulation. Shows hidden buyer pressure.')}</span>
+      `,
       react: v.isRising
-        ? T('Идёт накопление. Если цена при этом в боковике — крупный тихо набирает позицию.',
-            'Accumulation is underway. If price is sideways meanwhile — someone big is quietly building a position.')
+        ? `<span class="pc-only">${T('Идёт накопление. Если цена при этом в боковике — крупный тихо набирает позицию.', 'Accumulation is underway. If price is sideways meanwhile — someone big is quietly building a position.')}</span>
+           <span class="mobile-only">${T('🟢 Идёт набор позиции. Цена может выстрелить.', '🟢 Accumulation. Price may shoot up.')}</span>`
         : v.isFalling
-          ? T('Распределение. Даже если цена растёт — за этим могут стоять продажи крупных.',
-              'Distribution. Even if price rises — big players may be selling into it.')
-          : T('Нейтрально, явного перевеса нет.', 'Neutral, no clear bias.'),
+          ? `<span class="pc-only">${T('Распределение. Даже если цена растёт — за этим могут стоять продажи крупных.', 'Distribution. Even if price rises — big players may be selling into it.')}</span>
+           <span class="mobile-only">${T('🔴 Крупные сбрасывают. Осторожно.', '🔴 Big players selling. Be careful.')}</span>`
+          : `<span class="pc-only">${T('Нейтрально, явного перевеса нет.', 'Neutral, no clear bias.')}</span>
+           <span class="mobile-only">${T('⚖️ Нейтрально.', '⚖️ Neutral.')}</span>`,
       active: v.isRising || v.isFalling,
     });
   }
@@ -335,20 +342,16 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: `${chg >= 0 ? '+' : ''}${chg.toFixed(1)}% · ${v.oiTrend || 'flat'}`,
       color: fvColor,
       strength,
-      what: T(
-        'Open Interest — сумма всех открытых фьючерсных позиций. Показывает, заходят ли в рынок новые деньги или закрываются старые.',
-        'Open Interest — the sum of all open futures positions. Shows whether new money enters the market or old positions are closed.'
-      ),
+      what: `
+        <span class="pc-only">${T('Open Interest — сумма всех открытых фьючерсных позиций. Показывает, заходят ли в рынок новые деньги или закрываются старые.', 'Open Interest — the sum of all open futures positions. Shows whether new money enters the market or old positions are closed.')}</span>
+        <span class="mobile-only">${T('Сумма всех открытых фьючерсных позиций.', 'Total open futures positions.')}</span>
+      `,
       react:
-        v.futuresVerdict === 'new_longs' ? T('OI растёт, цена растёт — новые лонги. Тренд сильный, но следи за funding: если он высокий, возможна коррекция.',
-            'OI rises, price rises — new longs. Trend is strong, but watch funding: if it is high, a correction may come.')
-        : v.futuresVerdict === 'new_shorts' ? T('OI растёт, цена падает — новые шорты. Давление вниз, но при негативном funding возможен сквиз вверх.',
-            'OI rises, price falls — new shorts. Downward pressure, but a squeeze up is possible with negative funding.')
-        : v.futuresVerdict === 'short_cover' ? T('OI падает, цена растёт — шорты закрываются. Импульс вверх на закрытиях, но это не новые деньги.',
-            'OI falls, price rises — shorts are covering. Upward impulse on closes, but not new money.')
-        : v.futuresVerdict === 'long_liq' ? T('OI падает, цена падает — лонги ликвидируются. Возможна капитуляция, но не входи против тренда без подтверждения.',
-            'OI falls, price falls — longs are being liquidated. Capitulation possible, but do not trade against the trend without confirmation.')
-        : T('OI без явного сигнала.', 'OI without a clear signal.'),
+        v.futuresVerdict === 'new_longs' ? `<span class="pc-only">${T('OI растёт, цена растёт — новые лонги. Тренд сильный, но следи за funding: если он высокий, возможна коррекция.', 'OI rises, price rises — new longs. Trend is strong, but watch funding: if it is high, a correction may come.')}</span><span class="mobile-only">${T('🚀 Новые лонги. Тренд вверх, но следи за перегревом.', '🚀 New longs. Uptrend, but watch for overheat.')}</span>`
+        : v.futuresVerdict === 'new_shorts' ? `<span class="pc-only">${T('OI растёт, цена падает — новые шорты. Давление вниз, но при негативном funding возможен сквиз вверх.', 'OI rises, price falls — new shorts. Downward pressure, but a squeeze up is possible with negative funding.')}</span><span class="mobile-only">${T('🔻 Новые шорты. Давят вниз.', '🔻 New shorts. Pushing down.')}</span>`
+        : v.futuresVerdict === 'short_cover' ? `<span class="pc-only">${T('OI падает, цена растёт — шорты закрываются. Импульс вверх на закрытиях, но это не новые деньги.', 'OI falls, price rises — shorts are covering. Upward impulse on closes, but not new money.')}</span><span class="mobile-only">${T('⚡ Шорты закрываются. Растёт на закрытиях.', '⚡ Shorts covering. Rising on closures.')}</span>`
+        : v.futuresVerdict === 'long_liq' ? `<span class="pc-only">${T('OI падает, цена падает — лонги ликвидируются. Возможна капитуляция, но не входи против тренда без подтверждения.', 'OI falls, price falls — longs are being liquidated. Capitulation possible, but do not trade against the trend without confirmation.')}</span><span class="mobile-only">${T('💀 Ликвидация лонгов. Возможна капитуляция.', '💀 Long liquidation. Capitulation possible.')}</span>`
+        : `<span class="pc-only">${T('OI без явного сигнала.', 'OI without a clear signal.')}</span><span class="mobile-only">${T('OI без сигнала.', 'OI no signal.')}</span>`,
       active: abs >= 3,
     });
   }
@@ -367,18 +370,15 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: glob != null ? `${top.toFixed(2)} / ${glob.toFixed(2)}` : top.toFixed(2),
       color: isBull ? 'var(--mint)' : isBear ? 'var(--coral)' : 'var(--mut)',
       strength,
-      what: T(
-        'Long/Short Ratio. Первое число — топ-трейдеры, второе — толпа. Показывает, на чьей стороне умные деньги.',
-        'Long/Short Ratio. First number — top traders, second — the crowd. Shows which side smart money is on.'
-      ),
+      what: `
+        <span class="pc-only">${T('Long/Short Ratio. Первое число — топ-трейдеры, второе — толпа. Показывает, на чьей стороне умные деньги.', 'Long/Short Ratio. First number — top traders, second — the crowd. Shows which side smart money is on.')}</span>
+        <span class="mobile-only">${T('Топ-трейдеры / Толпа. Умные против толпы.', 'Top traders / Crowd. Smart vs crowd.')}</span>
+      `,
       react: isBull
-        ? T('Топ в лонгах, толпа в шортах — классический бычий сигнал. Умные против толпы.',
-            'Top in longs, crowd in shorts — classic bullish. Smart money against the crowd.')
+        ? `<span class="pc-only">${T('Топ в лонгах, толпа в шортах — классический бычий сигнал. Умные против толпы.', 'Top in longs, crowd in shorts — classic bullish. Smart money against the crowd.')}</span><span class="mobile-only">${T('🟢 Топ в лонг, толпа в шорт. Бычий.', '🟢 Top in long, crowd in short. Bullish.')}</span>`
         : isBear
-          ? T('Топ в шортах, толпа в лонгах — тревожно. Умные фиксируются, толпа покупает.',
-              'Top in shorts, crowd in longs — warning. Smart money is taking profit, crowd is buying.')
-          : T('Топ и толпа смотрят в одну сторону — сигнала нет.',
-              'Top and crowd on the same side — no signal.'),
+          ? `<span class="pc-only">${T('Топ в шортах, толпа в лонгах — тревожно. Умные фиксируются, толпа покупает.', 'Top in shorts, crowd in longs — warning. Smart money is taking profit, crowd is buying.')}</span><span class="mobile-only">${T('🔴 Топ в шорт, толпа в лонг. Медвежий.', '🔴 Top in short, crowd in long. Bearish.')}</span>`
+          : `<span class="pc-only">${T('Топ и толпа смотрят в одну сторону — сигнала нет.', 'Top and crowd on the same side — no signal.')}</span><span class="mobile-only">${T('⚖️ Смотрят в одну сторону.', '⚖️ Same side.')}</span>`,
       active: isBull || isBear,
     });
   }
@@ -396,17 +396,15 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: t.toFixed(2),
       color: isBull ? 'var(--mint)' : isBear ? 'var(--coral)' : 'var(--mut)',
       strength,
-      what: T(
-        'Соотношение агрессивных рыночных покупок и продаж. Показывает, кто бьёт по рынку прямо сейчас.',
-        'Ratio of aggressive market buys to sells. Shows who is hitting the market right now.'
-      ),
+      what: `
+        <span class="pc-only">${T('Соотношение агрессивных рыночных покупок и продаж. Показывает, кто бьёт по рынку прямо сейчас.', 'Ratio of aggressive market buys to sells. Shows who is hitting the market right now.')}</span>
+        <span class="mobile-only">${T('Агрессия. Кто бьёт по рынку прямо сейчас.', 'Aggression. Who hits the market now.')}</span>
+      `,
       react: isBull
-        ? T('Покупатели агрессивнее. Краткосрочно бычий, но если funding уже высокий — риск перегрева.',
-            'Buyers are more aggressive. Short-term bullish, but if funding is already high — risk of overheat.')
+        ? `<span class="pc-only">${T('Покупатели агрессивнее. Краткосрочно бычий, но если funding уже высокий — риск перегрева.', 'Buyers are more aggressive. Short-term bullish, but if funding is already high — risk of overheat.')}</span><span class="mobile-only">${T('🟢 Покупатели давят. Следи за funding.', '🟢 Buyers pushing. Watch funding.')}</span>`
         : isBear
-          ? T('Продавцы агрессивнее. Краткосрочно медвежий, но если funding отрицательный — возможен сквиз.',
-              'Sellers are more aggressive. Short-term bearish, but a squeeze is possible with negative funding.')
-          : T('Паритет. Рынок не определился.', 'Parity. Market is undecided.'),
+          ? `<span class="pc-only">${T('Продавцы агрессивнее. Краткосрочно медвежий, но если funding отрицательный — возможен сквиз.', 'Sellers are more aggressive. Short-term bearish, but a squeeze is possible with negative funding.')}</span><span class="mobile-only">${T('🔴 Продавцы давят. Возможен сквиз.', '🔴 Sellers pushing. Squeeze possible.')}</span>`
+          : `<span class="pc-only">${T('Паритет. Рынок не определился.', 'Parity. Market is undecided.')}</span><span class="mobile-only">${T('⚖️ Паритет.', '⚖️ Parity.')}</span>`,
       active: isBull || isBear,
     });
   }
@@ -610,22 +608,22 @@ function renderXray(x: XrayData): void {
   if (!card) return;
   card.style.display = 'block';
 
-  const whatFunding = T(
-    'Funding rate — периодическая плата между лонгами и шортами (обычно каждые 8 часов). Показывает, куда перекошены позиции.',
-    'Funding rate — periodic payment between longs and shorts (usually every 8 hours). Shows which side positions are skewed to.'
-  );
-  const reactFunding = T(
-    'Отрицательный funding = много шортов, возможен резкий рост (сквиз). Положительный > 0.05% = эйфория в лонгах, риск коррекции.',
-    'Negative funding = many shorts, sharp rise (squeeze) possible. Positive > 0.05% = long euphoria, risk of correction.'
-  );
-  const whatBook = T(
-    'Стакан — лимитные заявки на покупку (bids) и продажу (asks), агрегированные с нескольких бирж. Показывает, где стоят крупные лимитники.',
-    'Order book — limit orders to buy (bids) and sell (asks) aggregated from several exchanges. Shows where big limit orders sit.'
-  );
-  const reactBook = T(
-    'Bids > 60% — плотная поддержка снизу. Asks > 60% — давление сверху. Но крупная заявка может быть снята перед движением — это спуфинг.',
-    'Bids > 60% — dense support below. Asks > 60% — pressure above. But a big order can be pulled before the move — that is spoofing.'
-  );
+  const whatFunding = `
+    <span class="pc-only">${T('Funding rate — периодическая плата между лонгами и шортами (обычно каждые 8 часов). Показывает, куда перекошены позиции.', 'Funding rate — periodic payment between longs and shorts (usually every 8 hours). Shows which side positions are skewed to.')}</span>
+    <span class="mobile-only">${T('Плата между лонгами и шортами. Показывает перекос.', 'Payment between longs and shorts. Shows skew.')}</span>
+  `;
+  const reactFunding = `
+    <span class="pc-only">${T('Отрицательный funding = много шортов, возможен резкий рост (сквиз). Положительный > 0.05% = эйфория в лонгах, риск коррекции.', 'Negative funding = many shorts, sharp rise (squeeze) possible. Positive > 0.05% = long euphoria, risk of correction.')}</span>
+    <span class="mobile-only">${T('Минус = сквиз вверх. Плюс > 0.05% = перегрев лонгов.', 'Minus = squeeze up. Plus > 0.05% = long overheat.')}</span>
+  `;
+  const whatBook = `
+    <span class="pc-only">${T('Стакан — лимитные заявки на покупку (bids) и продажу (asks), агрегированные с нескольких бирж. Показывает, где стоят крупные лимитники.', 'Order book — limit orders to buy (bids) and sell (asks) aggregated from several exchanges. Shows where big limit orders sit.')}</span>
+    <span class="mobile-only">${T('Лимитные заявки. Где стоят крупные.', 'Limit orders. Where the big ones sit.')}</span>
+  `;
+  const reactBook = `
+    <span class="pc-only">${T('Bids > 60% — плотная поддержка снизу. Asks > 60% — давление сверху. Но крупная заявка может быть снята перед движением — это спуфинг.', 'Bids > 60% — dense support below. Asks > 60% — pressure above. But a big order can be pulled before the move — that is spoofing.')}</span>
+    <span class="mobile-only">${T('Bids > 60% = поддержка. Asks > 60% = давление. Осторожно: заявку могут снять (спуфинг).', 'Bids > 60% = support. Asks > 60% = pressure. Careful: order can be pulled (spoofing).')}</span>
+  `;
 
   setHTML('xray-content', `
     <div class="xray-item">
@@ -653,14 +651,15 @@ function renderWalls(w: WallsData | null): void {
   card.style.display = 'block';
   const en = isEN();
   const srcInfo = w.sourceCount ? ` · ${w.sourceCount} ${tm('exchange_count')}` : '';
-  const whatWalls = T(
-    'Крупный лимитный ордер в стакане. Может быть как реальной защитой уровня, так и манипуляцией (спуфинг — заявку снимают до исполнения).',
-    'A large limit order in the book. Can be real level defense or manipulation (spoofing — the order is pulled before execution).'
-  );
-  const reactWalls = T(
-    'Съедят плиту покупки — идём выше. Снимут — слабость, возможен пролив. Не входи против плиты, ставь стоп за неё.',
-    'If the buy wall is eaten — we go up. If it is pulled — weakness, a dump is possible. Do not trade against a wall, place your stop behind it.'
-  );
+  
+  const whatWalls = `
+    <span class="pc-only">${T('Крупный лимитный ордер в стакане. Может быть как реальной защитой уровня, так и манипуляцией (спуфинг — заявку снимают до исполнения).', 'A large limit order in the book. Can be real level defense or manipulation (spoofing — the order is pulled before execution).')}</span>
+    <span class="mobile-only">${T('Крупная заявка. Защита уровня или манипуляция.', 'Large order. Defense or manipulation.')}</span>
+  `;
+  const reactWalls = `
+    <span class="pc-only">${T('Съедят плиту покупки — идём выше. Снимут — слабость, возможен пролив. Не входи против плиты, ставь стоп за неё.', 'If the buy wall is eaten — we go up. If it is pulled — weakness, a dump is possible. Do not trade against a wall, place your stop behind it.')}</span>
+    <span class="mobile-only">${T('Съедят = рост. Снимут = слабость. Ставь стоп за плитой.', 'Eaten = growth. Pulled = weakness. Stop behind the wall.')}</span>
+  `;
 
   setHTML('walls-content', `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-family:'JetBrains Mono',monospace">
