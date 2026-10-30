@@ -1,209 +1,292 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · SPLASH v2.1 — звёзды + параллакс + защита от лагов
+// NEBULA v2 · SPLASH SCREEN
+// Улучшенный Canvas: параллакс (мышь + гироскоп), кометы, глубина
 // ═══════════════════════════════════════════════════════════════
 
-(function nebulaSplash() {
+interface Star {
+  x: number;
+  y: number;
+  z: number; // Глубина для параллакса
+  size: number;
+  baseOpacity: number;
+  twinkleSpeed: number;
+  twinklePhase: number;
+}
+
+interface ShootingStar {
+  x: number;
+  y: number;
+  length: number;
+  speed: number;
+  angle: number;
+  opacity: number;
+  life: number;
+  maxLife: number;
+}
+
+(function nebulaSplash(): void {
   'use strict';
 
-  const TOTAL_MS = 7000;
-  const FADE_MS  = 800;
-  const STAR_COUNT_BASE = 60;
-
-  const STAGES: { p: number; t: number; s: string }[] = [
-    { p: 15,  t: 500,  s: 'LOADING CORE...' },
-    { p: 40,  t: 2000, s: 'CONNECTING EXCHANGES...' },
-    { p: 65,  t: 3500, s: 'FETCHING MARKET DATA...' },
-    { p: 88,  t: 5000, s: 'CALIBRATING ORACLE...' },
-    { p: 100, t: 6500, s: 'READY' },
-  ];
+  const SPLASH_ID = 'nebula-splash';
+  const CANVAS_ID = 'splash-stars-canvas';
+  const STATUS_ID = 'splash-status';
+  const HIDE_DELAY = 8000; // Сколько висит заставка (мс)
 
   let canvas: HTMLCanvasElement | null = null;
   let ctx: CanvasRenderingContext2D | null = null;
-  let W = 0, H = 0;
-  let stars: { x: number; y: number; z: number; r: number; a: number; phase: number; speed: number }[] = [];
-  let rafId = 0;
-  let startTime = 0;
-  let isMobile = false;
-  let parallaxX = 0;
-  let parallaxY = 0;
-  let targetParallaxX = 0;
-  let targetParallaxY = 0;
-  let lastFrameTime = 0;
-  let frameDebt = 0;
-  let canvasDisabled = false;
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
 
-  function initStars(): void {
-    if (!canvas) return;
+  let stars: Star[] = [];
+  let shootingStars: ShootingStar[] = [];
 
-    // ─── Проверка на слабое устройство ───
-    const cores = (navigator as any).hardwareConcurrency || 4;
-    isMobile = window.innerWidth < 800 || /Android|iPhone|iPad/i.test(navigator.userAgent);
+  let mouseX = 0;
+  let mouseY = 0;
+  let tiltX = 0;
+  let tiltY = 0;
 
-    if (cores <= 2 && !isMobile) {
-      console.log('[splash] low-end device — canvas disabled');
-      canvasDisabled = true;
-      canvas.style.display = 'none';
-      return;
-    }
+  let currentOffsetX = 0;
+  let currentOffsetY = 0;
+  let targetOffsetX = 0;
+  let targetOffsetY = 0;
 
-    const maxDpr = isMobile ? 1.5 : 2;
-    const dpr = Math.min(maxDpr, window.devicePixelRatio || 1);
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
+  let animationFrameId = 0;
+  let isRunning = false;
+  let lastShootingStarTime = 0;
 
-    const c = canvas.getContext('2d');
-    if (!c) return;
-    c.scale(dpr, dpr);
-    ctx = c;
-
-    // Меньше звёзд на мобилке
-  let count: number;
-if (isMobile) {
-  count = 40;
-} else {
-  count = Math.max(30, Math.round(STAR_COUNT_BASE * (W * H) / (1920 * 1080)));
-}
-
-    stars = [];
-    for (let i = 0; i < count; i++) {
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        z: Math.random() * 0.7 + 0.3, // глубина (для параллакса)
-        r: Math.random() * 1.4 + 0.3,
-        a: Math.random() * 0.5 + 0.3,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.6 + Math.random() * 1.2,
-      });
-    }
-
-    console.log(`[splash] stars: ${count} (${W}×${H}, dpr=${dpr}, mobile=${isMobile})`);
+  function random(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
   }
 
-  function tick(now: number): void {
+  function initCanvas(): void {
+    canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement;
+    if (!canvas) return;
+
+    ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
-    if (!startTime) {
-      startTime = now;
-      lastFrameTime = now;
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Мышь (ПК)
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseY = (e.clientY / window.innerHeight) * 2 - 1;
+      updateTargetOffset();
+    });
+
+    // Гироскоп (Смартфоны)
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
     }
 
-    const t = (now - startTime) / 1000;
+    // Тач (fallback для iOS)
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        mouseX = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouseY = (e.touches[0].clientY / window.innerHeight) * 2 - 1;
+        updateTargetOffset();
+      }
+    }, { passive: true });
 
-    // ─── Пропуск кадров при лагах ───
-    const dt = now - lastFrameTime;
-    lastFrameTime = now;
+    createStars();
+    startAnimation();
+  }
 
-    if (dt > 33) frameDebt += 1;
-    else if (dt < 20) frameDebt = Math.max(0, frameDebt - 1);
+  function handleOrientation(e: DeviceOrientationEvent): void {
+    if (e.beta == null || e.gamma == null) return;
 
-    // Если система лагает >10 кадров подряд — сокращаем звёзды вдвое
-    if (frameDebt > 10 && stars.length > 20) {
-      const newLen = Math.floor(stars.length / 2);
-      stars = stars.slice(0, newLen);
-      frameDebt = 0;
-      console.log(`[splash] FPS drop — reduced to ${newLen} stars`);
+    // Нормализуем. Держим телефон обычно под углом ~45 градусов
+    const b = Math.max(-90, Math.min(90, e.beta - 45));
+    const g = Math.max(-90, Math.min(90, e.gamma));
+
+    tiltX = g / 45; // -1 до 1
+    tiltY = b / 45; // -1 до 1
+
+    updateTargetOffset();
+  }
+
+  function updateTargetOffset(): void {
+    const finalX = mouseX !== 0 ? mouseX : tiltX;
+    const finalY = mouseY !== 0 ? mouseY : tiltY;
+    const MAX_OFFSET = 40;
+    targetOffsetX = finalX * MAX_OFFSET;
+    targetOffsetY = finalY * MAX_OFFSET;
+  }
+
+  function resize(): void {
+    if (!canvas) return;
+    dpr = window.devicePixelRatio || 1;
+    width = window.innerWidth;
+    height = window.innerHeight;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+
+    if (ctx) ctx.scale(dpr, dpr);
+    createStars();
+  }
+
+  function createStars(): void {
+    stars = [];
+    const count = Math.floor((width * height) / 12000);
+    const maxStars = Math.min(count, 200);
+
+    for (let i = 0; i < maxStars; i++) {
+      stars.push({
+        x: random(0, width),
+        y: random(0, height),
+        z: random(0.1, 1.0),
+        size: random(0.5, 2),
+        baseOpacity: random(0.3, 0.9),
+        twinkleSpeed: random(0.01, 0.05),
+        twinklePhase: random(0, Math.PI * 2),
+      });
     }
+  }
 
-    // ─── Сглаживание параллакса ───
-    parallaxX += (targetParallaxX - parallaxX) * 0.08;
-    parallaxY += (targetParallaxY - parallaxY) * 0.08;
+  function spawnShootingStar(): void {
+    const fromLeft = Math.random() > 0.5;
+    const startX = fromLeft ? random(0, width * 0.5) : random(width * 0.5, width);
+    const startY = random(-100, height * 0.3);
+    const angle = fromLeft ? random(Math.PI * 0.1, Math.PI * 0.3) : random(Math.PI * 0.7, Math.PI * 0.9);
 
-    ctx.clearRect(0, 0, W, H);
+    shootingStars.push({
+      x: startX, y: startY,
+      length: random(80, 200),
+      speed: random(8, 15),
+      angle: angle,
+      opacity: 1,
+      life: 0,
+      maxLife: random(60, 120),
+    });
+  }
 
-    for (const s of stars) {
-      const twinkle = 0.6 + Math.sin(t * s.speed + s.phase) * 0.4;
-      const px = s.x + parallaxX * s.z * 20;
-      const py = s.y + parallaxY * s.z * 20;
+  function startAnimation(): void {
+    if (isRunning) return;
+    isRunning = true;
+    lastShootingStarTime = Date.now();
+    animate();
+  }
 
-      ctx.fillStyle = `rgba(255, 255, 255, ${s.a * twinkle})`;
+  function animate(): void {
+    if (!isRunning || !ctx) return;
+
+    // Сглаживание
+    currentOffsetX += (targetOffsetX - currentOffsetX) * 0.05;
+    currentOffsetY += (targetOffsetY - currentOffsetY) * 0.05;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // Звезды
+    for (const star of stars) {
+      const offsetX = currentOffsetX * star.z * 2;
+      const offsetY = currentOffsetY * star.z * 2;
+
+      star.twinklePhase += star.twinkleSpeed;
+      const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
+      const opacity = star.baseOpacity * twinkle;
+
       ctx.beginPath();
-      ctx.arc(px, py, s.r, 0, Math.PI * 2);
+      ctx.arc(star.x + offsetX, star.y + offsetY, star.size, 0, Math.PI * 2);
+      
+      if (star.size > 1.5) {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(94, 203, 255, 0.8)';
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
       ctx.fill();
     }
 
-    if (t * 1000 < TOTAL_MS + FADE_MS + 500) {
-      rafId = requestAnimationFrame(tick);
-    }
-  }
-
-  function onMouseMove(e: MouseEvent): void {
-    if (isMobile) return;
-    // Диапазон -1..1
-    targetParallaxX = (e.clientX / W - 0.5) * 2;
-    targetParallaxY = (e.clientY / H - 0.5) * 2;
-  }
-
-  function init(): void {
-    const splash = document.getElementById('nebula-splash');
-    if (!splash) {
-      console.warn('[splash] element not found');
-      return;
+    // Кометы
+    const now = Date.now();
+    if (now - lastShootingStarTime > 2000 + Math.random() * 3000) {
+      spawnShootingStar();
+      lastShootingStarTime = now;
     }
 
-    canvas = document.getElementById('splash-stars-canvas') as HTMLCanvasElement | null;
-    if (canvas) {
-      initStars();
-      if (!canvasDisabled) {
-        rafId = requestAnimationFrame(tick);
-        if (!isMobile) {
-          window.addEventListener('mousemove', onMouseMove, { passive: true });
-        }
+    for (let i = shootingStars.length - 1; i >= 0; i--) {
+      const s = shootingStars[i];
+      s.x += Math.cos(s.angle) * s.speed;
+      s.y += Math.sin(s.angle) * s.speed;
+      s.life++;
+
+      const tailX = s.x - Math.cos(s.angle) * s.length;
+      const tailY = s.y - Math.sin(s.angle) * s.length;
+
+      const gradient = ctx.createLinearGradient(s.x, s.y, tailX, tailY);
+      gradient.addColorStop(0, `rgba(255, 255, 255, ${s.opacity})`);
+      gradient.addColorStop(1, 'rgba(94, 203, 255, 0)');
+
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(tailX, tailY);
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      s.opacity = Math.max(0, 1 - (s.life / s.maxLife));
+
+      if (s.life >= s.maxLife || s.x < -200 || s.x > width + 200 || s.y > height + 200) {
+        shootingStars.splice(i, 1);
       }
     }
 
-      // Статус (текст). Ширину больше не меняем — теперь там SVG-пульс.
-    const stat = document.getElementById('splash-status');
-
-    STAGES.forEach(st => {
-      setTimeout(() => {
-        if (stat) stat.textContent = st.s;
-      }, st.t);
-    });
-
-    // Автоскрытие
-    setTimeout(() => {
-      splash.classList.add('hide');
-      setTimeout(() => {
-        // ─── Чистим ───
-        if (rafId) cancelAnimationFrame(rafId);
-        if (!isMobile) window.removeEventListener('mousemove', onMouseMove);
-        splash.remove();
-        console.log('[splash] hidden & cleaned');
-      }, FADE_MS);
-    }, TOTAL_MS);
+    animationFrameId = requestAnimationFrame(animate);
   }
 
-  // Публичный API
-  (window as any).NebulaSplash = {
-    hide(delay = 0): void {
-      setTimeout(() => {
-        const s = document.getElementById('nebula-splash');
-        if (!s) return;
-        s.classList.add('hide');
-        setTimeout(() => {
-          if (rafId) cancelAnimationFrame(rafId);
-          s.remove();
-        }, FADE_MS);
-      }, delay);
-    },
-    setStatus(text: string): void {
-      const el = document.getElementById('splash-status');
-      if (el) el.textContent = text;
-    },
-      setProgress(_pct: number): void {
-      // Прогресс-бар заменен на анимированный SVG-пульс
-    },
-  };
+  function stopAnimation(): void {
+    isRunning = false;
+    cancelAnimationFrame(animationFrameId);
+    window.removeEventListener('resize', resize);
+  }
+
+  function hideSplash(): void {
+    const splash = document.getElementById(SPLASH_ID);
+    if (!splash) return;
+
+    splash.classList.add('hide'); // Используем класс .hide как в CSS
+    stopAnimation();
+
+    setTimeout(() => splash.remove(), 800);
+  }
+
+  function updateStatus(text: string): void {
+    const el = document.getElementById(STATUS_ID);
+    if (el) el.textContent = text;
+  }
+
+  function initSplash(): void {
+    const splash = document.getElementById(SPLASH_ID);
+    if (!splash) return;
+
+    initCanvas();
+
+    // Растягиваем тайминги под 8 секунд
+    updateStatus('INITIALIZING...');
+    setTimeout(() => updateStatus('LOADING MARKET DATA...'), 2000);
+    setTimeout(() => updateStatus('CALIBRATING ORACLE...'), 4000);
+    setTimeout(() => updateStatus('SYNCING EXCHANGES...'), 6000);
+    setTimeout(() => updateStatus('READY'), 7500);
+
+    setTimeout(hideSplash, HIDE_DELAY);
+  }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
+    document.addEventListener('DOMContentLoaded', initSplash, { once: true });
   } else {
-    init();
+    initSplash();
+  }
+
+  if (typeof window !== 'undefined') {
+    (window as any).NebulaSplash = { hide: hideSplash, updateStatus };
   }
 })();
+
 export {};

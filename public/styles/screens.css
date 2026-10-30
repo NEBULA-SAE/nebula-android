@@ -363,6 +363,30 @@
 .dash-net-coral { color: var(--coral); font-weight: 700; }
 .dash-net-mut   { color: var(--mut); font-weight: 700; }
 
+/* ─── Dash: аккордеон + подсказки ─── */
+.dash-section-head { cursor: pointer; user-select: none; transition: background .15s; }
+.dash-section-head:hover { background: linear-gradient(90deg, rgba(94,203,255,.12), transparent 70%); }
+.dash-toggle {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--mut);
+  transition: transform .2s cubic-bezier(.2,.8,.2,1);
+  display: inline-block;
+  line-height: 1;
+}
+.dash-net-react {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: rgba(94,203,255,.06);
+  border-left: 2px solid rgba(94,203,255,.55);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--mut);
+}
+.dash-net-react b { color: var(--cyan); font-weight: 700; }
+
 /* ═══════════════════════════════════════════════════════
    HOME SCREEN · Desktop grid (≥ 1024px)
    ═══════════════════════════════════════════════════════ */
@@ -1266,4 +1290,120 @@ body.in-demo-mode #screen-home {
   font-size: 15px;
   font-weight: 700;
   color: var(--hi);
+}
+
+/* ═══ WHALE SCORE + СИГНАЛЫ (v2.1) ═══ */
+.whale-score-block {
+  padding: 12px;
+  background: rgba(0,0,0,.3);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.whale-score-row {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 8px; gap: 12px;
+}
+.whale-score-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.whale-score-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px; font-weight: 800; line-height: 1;
+}
+.whale-score-value span {
+  font-size: 12px; color: var(--mut); font-weight: 400;
+}
+.whale-signals-count { text-align: right; }
+.whale-signals-count .whale-score-value { font-size: 18px; }
+.whale-score-bar {
+  height: 6px; background: rgba(0,0,0,.5);
+  border-radius: 3px; overflow: hidden; margin-bottom: 8px;
+}
+.whale-score-fill {
+  height: 100%; border-radius: 3px;
+  transition: width .5s cubic-bezier(.2,.8,.2,1);
+}
+.whale-verdict-line {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px; font-weight: 600; margin-bottom: 4px;
+}
+.whale-sources {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--dim); letter-spacing: .3px;
+}
+.whale-signals { display: flex; flex-direction: column; gap: 8px; }
+.whale-signal {
+  padding: 10px 12px;
+  background: rgba(0,0,0,.32);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  border-left: 3px solid var(--border);
+}
+.whale-signal.whale-strength-strong {
+  border-left-color: var(--cyan);
+  background: rgba(94,203,255,.04);
+}
+.whale-signal.whale-strength-medium {
+  border-left-color: var(--amber);
+  background: rgba(255,184,88,.03);
+}
+.whale-signal.whale-strength-weak {
+  border-left-color: var(--border);
+  opacity: .85;
+}
+.whale-signal-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 4px; gap: 8px;
+}
+.whale-signal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--mut);
+  text-transform: uppercase; letter-spacing: .8px;
+}
+.whale-signal-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px; font-weight: 700; white-space: nowrap;
+}
+.whale-signal-what {
+  font-size: 11px; color: var(--dim);
+  line-height: 1.5; margin-bottom: 5px;
+}
+.whale-signal-react {
+  font-size: 11.5px; color: var(--tx);
+  line-height: 1.5;
+  padding: 6px 8px;
+  background: rgba(94,203,255,.05);
+  border-radius: 6px;
+  border-left: 2px solid rgba(94,203,255,.4);
+}
+.whale-footer-hint {
+  margin-top: 12px; padding: 10px;
+  background: rgba(255,101,132,.05);
+  border-left: 2px solid rgba(255,101,132,.4);
+  border-radius: 6px;
+  font-size: 11px; color: var(--mut); line-height: 1.5;
+}
+.xray-item { margin-bottom: 14px; }
+.xray-item:last-child { margin-bottom: 0; }
+.xray-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1.2px;
+  margin-bottom: 6px;
+}
+.xray-value { margin-bottom: 8px; }
+.xray-explain {
+  font-size: 11px; color: var(--dim);
+  line-height: 1.5; margin-bottom: 6px;
+}
+.xray-react {
+  font-size: 11.5px; color: var(--tx);
+  line-height: 1.5;
+  padding: 6px 8px;
+  background: rgba(94,203,255,.05);
+  border-radius: 6px;
+  border-left: 2px solid rgba(94,203,255,.4);
 }

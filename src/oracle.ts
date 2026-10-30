@@ -516,7 +516,19 @@ export interface OracleAnalyzeResult {
   market_context?: any;
   advanced?: any;
   dynamic_plan?: { entry: number; take_profit: number; stop_loss: number };
+  scenarios?: {
+    base: { verdict: string; prob: number };
+    bull: { verdict: string; prob: number };
+    bear: { verdict: string; prob: number };
+  };
   message?: string;
+}
+
+function verdictFromScore(s: number): string {
+  if (s >= 50) return 'strong_buy';
+  if (s >= 25) return 'buy';
+  if (s >= -10) return 'hold';
+  return 'avoid';
 }
 
 export async function oracleAnalyze(
@@ -716,12 +728,34 @@ export async function oracleAnalyze(
     const stp = price * (1 + (emfe * 0.7) / 100);
     const sst = price * (1 + (emae * 1.5) / 100);
 
-    let fr = `Скор: ${total}/100. `;
+      let fr = `Скор: ${total}/100. `;
     if (lc !== 0) fr += `Память: ${lc >= 0 ? '+' : ''}${lc.toFixed(1)}. `;
     if (aggr !== 0) fr += `Контекст: ${Math.round(aggr * 15) >= 0 ? '+' : ''}${Math.round(aggr * 15)}. `;
     if (verdict === 'buy' || verdict === 'strong_buy') fr += `Войти на ${pos}% депозита.`;
     else if (verdict === 'hold') fr += 'Сигнал смешанный.';
     else fr += 'Риск превышает потенциал.';
+
+    // ─── Трёхсценарный вердикт ───
+    const bullVerdict = verdictFromScore(total + 20);
+    const bearVerdict = verdictFromScore(total - 20);
+
+    const cf = Math.max(0, Math.min(1, (conf - 50) / 45));
+    let bullProb = 30;
+    let bearProb = 30;
+    if (total >= 25) {
+      bullProb = 45 + Math.round(cf * 20);
+      bearProb = 15;
+    } else if (total >= 0) {
+      bullProb = 30 + Math.round(cf * 15);
+      bearProb = 25;
+    } else if (total >= -10) {
+      bullProb = 25;
+      bearProb = 30 + Math.round(cf * 15);
+    } else {
+      bullProb = 15;
+      bearProb = 45 + Math.round(cf * 20);
+    }
+    const baseProb = Math.max(10, 100 - bullProb - bearProb);
 
     try { oracleSaveAnalysis(ticker, marketData, verdict, total, conf, false, regime); } catch { /* silent */ }
 
@@ -745,6 +779,11 @@ export async function oracleAnalyze(
       },
       advanced: hasAdv ? adv : undefined,
       dynamic_plan: { entry: se, take_profit: stp, stop_loss: sst },
+      scenarios: {
+        base: { verdict, prob: baseProb },
+        bull: { verdict: bullVerdict, prob: bullProb },
+        bear: { verdict: bearVerdict, prob: bearProb },
+      },
     };
   } catch (e: any) {
     return { status: 'error', message: String(e?.message || e) };

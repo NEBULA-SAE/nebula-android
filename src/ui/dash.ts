@@ -1,11 +1,35 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · DASH NETWORK (UI)
-// Отрисовка секции «Сеть Dash» внутри whale-card
-// Сам следит за появлением #dash-section и сам грузит данные
+// Сворачиваемая секция «Сеть Dash» + простые подсказки + переводы
 // ═══════════════════════════════════════════════════════════════
 
 import { esc } from '../utils';
+import { isEN } from '../i18n';
 import { getDashNetworkStats } from '../sources/dash';
+
+const COLLAPSE_KEY = 'nebula_dash_collapsed_v1';
+const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+
+let _loading = false;
+let _lastLoad = 0;
+let _lastData: any = null;
+
+// Хелпер для перевода длинных текстов
+const T = (ru: string, en: string): string => (isEN() ? en : ru);
+
+function isCollapsed(): boolean {
+  try { return localStorage.getItem(COLLAPSE_KEY) !== '0'; } catch { return true; }
+}
+function setCollapsed(v: boolean): void {
+  try { localStorage.setItem(COLLAPSE_KEY, v ? '1' : '0'); } catch { /* silent */ }
+}
+
+// ─── Рендер ───
+
+function react(text: string): string {
+  const label = isEN() ? 'How to react:' : 'Как реагировать:';
+  return `<div class="dash-net-react">💡 <b>${label}</b> ${text}</div>`;
+}
 
 function renderDashContent(d: any): string {
   let html = '';
@@ -17,12 +41,19 @@ function renderDashContent(d: any): string {
       <div class="dash-net-row">
         <div class="dash-net-icon">🖥️</div>
         <div class="dash-net-body">
-          <div class="dash-net-label">Мастерноды</div>
+          <div class="dash-net-label">${T('Мастерноды (узлы сети)', 'Masternodes (network nodes)')}</div>
           <div class="dash-net-value">
-            ${m.enabled} / ${m.total}
-            <span class="dash-net-sub">(${pct.toFixed(1)}% активны · ${esc(m.source)})</span>
+            ${m.enabled} ${T('из', 'of')} ${m.total} ${T('работают', 'active')}
+            <span class="dash-net-sub">(${pct.toFixed(1)}% ${T('активны', 'active')} · ${esc(m.source)})</span>
           </div>
-          <div class="dash-net-hint">Рост = крупные холдеры накапливают DASH</div>
+          <div class="dash-net-hint">${T(
+            'Крупные держатели DASH, которые держат узлы и получают награду. Чем больше мастернод — тем больше денег «заперто» в сети.',
+            'Large DASH holders who run nodes and earn rewards. More masternodes = more money "locked" in the network.'
+          )}</div>
+          ${react(T(
+            'Растёт — фон бычий, крупные накапливают. Резко падает — кто-то выходит, повод насторожиться.',
+            'Growing — bullish background, big players are accumulating. Sharp drop — someone is exiting, a reason to be cautious.'
+          ))}
         </div>
       </div>`;
   }
@@ -33,11 +64,19 @@ function renderDashContent(d: any): string {
       <div class="dash-net-row">
         <div class="dash-net-icon">⛏️</div>
         <div class="dash-net-body">
-          <div class="dash-net-label">Хэшрейт сети</div>
+          <div class="dash-net-label">${T('Хэшрейт (мощность майнеров)', 'Hashrate (miners power)')}</div>
           <div class="dash-net-value">
             ${m.hashrate_ph} PH/s
-            <span class="dash-net-sub">сложность ${m.difficulty} · ${esc(m.source)}</span>
+            <span class="dash-net-sub">${T('сложность', 'difficulty')} ${m.difficulty} · ${esc(m.source)}</span>
           </div>
+          <div class="dash-net-hint">${T(
+            'Сколько вычислительной мощности защищает сеть. Выше — сеть надёжнее и майнеры верят в DASH.',
+            'How much computing power secures the network. Higher — the network is more reliable and miners believe in DASH.'
+          )}</div>
+          ${react(T(
+            'Резкое падение хэшрейта = майнеры уходят, возможна слабость. Рост — сеть укрепляется.',
+            'Sharp hashrate drop = miners leaving, weakness possible. Growth — the network is getting stronger.'
+          ))}
         </div>
       </div>`;
   }
@@ -52,88 +91,146 @@ function renderDashContent(d: any): string {
       <div class="dash-net-row">
         <div class="dash-net-icon">💸</div>
         <div class="dash-net-body">
-          <div class="dash-net-label">Funding rate</div>
+          <div class="dash-net-label">${T('Funding rate (ставка за перенос позиции)', 'Funding rate (position holding fee)')}</div>
           <div class="dash-net-value">
             <span class="${cls}">${sign}${rate.toFixed(4)}%</span>
-            <span class="dash-net-sub">OI: $${oiM}M · bybit</span>
+            <span class="dash-net-sub">${T('Открытый интерес', 'Open interest')}: $${oiM}M · bybit</span>
           </div>
+          <div class="dash-net-hint">${T(
+            'Плюс — лонги платят шортам (рынок перегрет в лонг). Минус — шорты платят лонгам (возможен шорт-сквиз). Открытый интерес — сколько денег в фьючерсах DASH.',
+            'Positive — longs pay shorts (market overheated in longs). Negative — shorts pay longs (short squeeze possible). Open interest — how much money is in DASH futures.'
+          )}</div>
+          ${react(T(
+            '> +0.05% — лонги перегреты, осторожно с покупкой. < −0.05% — возможен резкий рост (сквиз). Рост OI = новые деньги, движение усилится.',
+            '> +0.05% — longs overheated, be careful with buying. < −0.05% — sharp rise (squeeze) possible. OI growth = new money, move will intensify.'
+          ))}
         </div>
       </div>`;
   }
 
-  if (!html) html = `<div class="empty-msg">Данные Dash недоступны</div>`;
+  if (!html) html = `<div class="empty-msg">${T('Данные Dash недоступны', 'Dash data unavailable')}</div>`;
   return html;
 }
 
-let _loading = false;
+// ─── Загрузка ───
 
-export async function refreshDashSection(): Promise<void> {
+async function loadAndRender(content: HTMLElement, badge: HTMLElement | null): Promise<void> {
   if (_loading) return;
-  const section = document.getElementById('dash-section');
-  const content = document.getElementById('dash-network-content');
-  const badge = document.getElementById('dash-network-status');
-  if (!section || !content) return;
+
+  if (_lastData && Date.now() - _lastLoad < CACHE_TTL) {
+    content.innerHTML = renderDashContent(_lastData);
+    if (badge) {
+      const ok = [_lastData.masternodes, _lastData.mining, _lastData.derivatives].filter(Boolean).length;
+      badge.textContent = `${ok}/3 ${T('источника', 'sources')}`;
+    }
+    return;
+  }
 
   _loading = true;
-  section.style.display = '';
-  content.innerHTML = `<div class="loader">Загрузка сети Dash…</div>`;
-  if (badge) badge.textContent = '';
+  content.innerHTML = `<div class="loader">${T('Загрузка сети Dash…', 'Loading Dash network…')}</div>`;
+  if (badge) badge.textContent = '…';
 
   try {
     const d = await getDashNetworkStats();
+    _lastData = d;
+    _lastLoad = Date.now();
+
     if (d.status !== 'success') {
-      content.innerHTML = `<div class="empty-msg">Сеть Dash недоступна</div>`;
-      if (badge) badge.textContent = 'ошибка';
+      content.innerHTML = `<div class="empty-msg">${T('Сеть Dash недоступна', 'Dash network unavailable')}</div>`;
+      if (badge) badge.textContent = T('ошибка', 'error');
       return;
     }
     content.innerHTML = renderDashContent(d);
     if (badge) {
       const ok = [d.masternodes, d.mining, d.derivatives].filter(Boolean).length;
-      badge.textContent = `${ok}/3 источника`;
+      badge.textContent = `${ok}/3 ${T('источника', 'sources')}`;
     }
   } catch (e: any) {
     console.warn('[dash-ui] failed:', e?.message || e);
-    content.innerHTML = `<div class="empty-msg">Ошибка: ${esc(e?.message || 'unknown')}</div>`;
-    if (badge) badge.textContent = 'ошибка';
+    content.innerHTML = `<div class="empty-msg">${T('Ошибка', 'Error')}: ${esc(e?.message || 'unknown')}</div>`;
+    if (badge) badge.textContent = T('ошибка', 'error');
   } finally {
     _loading = false;
   }
 }
 
-// ─── Авто-обнаружение: как только whale-card становится видимым — грузим ───
+// ─── Публичный вызов ───
 
-function watchWhaleCard(): void {
-  const whaleCard = document.getElementById('whale-card');
-  if (!whaleCard) return;
+export async function refreshDashSection(): Promise<void> {
+  const section = document.getElementById('dash-section');
+  const content = document.getElementById('dash-network-content');
+  const badge = document.getElementById('dash-network-status');
+  if (!section || !content) return;
 
-  let loaded = false;
+  section.style.display = '';
+  
+  // Динамический перевод заголовка «Сеть Dash» (он захардкожен в index.html)
+  const titleSpan = section.querySelector('.dash-section-title span');
+  if (titleSpan) titleSpan.textContent = T('Сеть Dash', 'Dash Network');
 
-  const tryLoad = () => {
-    if (loaded) return;
-    const visible = whaleCard.style.display !== 'none' && whaleCard.offsetParent !== null;
-    if (visible) {
-      loaded = true;
-      refreshDashSection();
-    }
+  if (isCollapsed()) return;
+
+  await loadAndRender(content, badge);
+}
+
+// ─── Аккордеон ───
+
+function initDashCollapse(): void {
+  const section = document.getElementById('dash-section');
+  if (!section) { setTimeout(initDashCollapse, 400); return; }
+
+  const head = section.querySelector('.dash-section-head') as HTMLElement | null;
+  const content = document.getElementById('dash-network-content');
+  if (!head || !content) { setTimeout(initDashCollapse, 400); return; }
+
+  if (head.dataset.dashInit === '1') {
+    const titleSpan = head.querySelector('.dash-section-title span');
+    if (titleSpan) titleSpan.textContent = T('Сеть Dash', 'Dash Network');
+    return;
+  }
+  head.dataset.dashInit = '1';
+
+  // Курсор и стрелка
+  head.style.cursor = 'pointer';
+  head.style.userSelect = 'none';
+
+  let toggle = head.querySelector('.dash-toggle') as HTMLElement | null;
+  if (!toggle) {
+    toggle = document.createElement('span');
+    toggle.className = 'dash-toggle';
+    toggle.textContent = '▼';
+    head.appendChild(toggle);
+  }
+
+  const badge = document.getElementById('dash-network-status');
+
+  const apply = (collapsed: boolean) => {
+    content.style.display = collapsed ? 'none' : '';
+    if (toggle) toggle.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+    if (!collapsed) loadAndRender(content, badge);
   };
 
-  const mo = new MutationObserver(tryLoad);
-  mo.observe(whaleCard, { attributes: true, attributeFilter: ['style', 'class'] });
+  head.addEventListener('click', () => {
+    const next = !isCollapsed();
+    setCollapsed(next);
+    apply(next);
+  });
 
-  // Плюс первый чек на случай, если карточка уже видима
-  setTimeout(tryLoad, 100);
+  apply(isCollapsed());
 }
+
+// ─── Автозапуск ───
 
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', watchWhaleCard, { once: true });
+    document.addEventListener('DOMContentLoaded', initDashCollapse, { once: true });
   } else {
-    watchWhaleCard();
+    initDashCollapse();
   }
 }
 
 if (typeof window !== 'undefined') {
   (window as any).refreshDashSection = refreshDashSection;
 }
-// Алиас для обратной совместимости (init.ts и oracle.ts вызывают renderDashNetwork)
+
 export const renderDashNetwork = refreshDashSection;

@@ -300,6 +300,33 @@ const I18N_RU: Dict = {
   keys_saved: '✅ Ключи сохранены',
   keys_save_failed: '❌ Ошибка сохранения',
   binance_geo_block: 'Binance заблокирован в вашем регионе',
+    // ─── VERDICT 3-SCENARIO ───
+  verdict_base_label: 'База',
+  verdict_bull_label: 'Бычий',
+  verdict_bear_label: 'Медвежий',
+  v_strong_buy: 'strong buy',
+  v_buy: 'buy',
+  v_hold: 'hold',
+  v_avoid: 'avoid',
+
+  // ─── AI TABS ───
+  ai_tab_base: '🧠 База',
+  ai_tab_bull: '🚀 Бычий',
+  ai_tab_bear: '⚠️ Медвежий',
+  ai_empty_response: 'Пустой ответ от AI',
+
+  // ─── WHALE V2 ───
+  whale_signals_label: 'Сигналы',
+  whale_sources_label: 'Источники',
+  whale_verdict_strong: 'Сильный сигнал — крупный капитал активен',
+  whale_verdict_moderate: 'Умеренная активность китов',
+  whale_verdict_calm: 'Киты спят — движения не подтверждены объёмом',
+  whale_footer_warn: '⚠️ Whale Score — это вероятность активности крупных, а не сигнал к покупке. Всегда проверяй funding и стакан перед входом.',
+  whale_sig_volume: 'Аномалия объёма',
+  whale_sig_obv: 'OBV (накопление)',
+  whale_sig_oi: 'Открытый интерес (OI)',
+  whale_sig_lsr: 'LSR (топ vs толпа)',
+  whale_sig_taker: 'Taker Buy/Sell',
 };
 
 const I18N_EN: Dict = {
@@ -595,6 +622,33 @@ const I18N_EN: Dict = {
   keys_saved: '✅ Keys saved',
   keys_save_failed: '❌ Save failed',
   binance_geo_block: 'Binance is blocked in your region',
+    // ─── VERDICT 3-SCENARIO ───
+  verdict_base_label: 'Base',
+  verdict_bull_label: 'Bull',
+  verdict_bear_label: 'Bear',
+  v_strong_buy: 'strong buy',
+  v_buy: 'buy',
+  v_hold: 'hold',
+  v_avoid: 'avoid',
+
+  // ─── AI TABS ───
+  ai_tab_base: '🧠 Base',
+  ai_tab_bull: '🚀 Bull',
+  ai_tab_bear: '⚠️ Bear',
+  ai_empty_response: 'Empty AI response',
+
+  // ─── WHALE V2 ───
+  whale_signals_label: 'Signals',
+  whale_sources_label: 'Sources',
+  whale_verdict_strong: 'Strong signal — big capital active',
+  whale_verdict_moderate: 'Moderate whale activity',
+  whale_verdict_calm: 'Whales are asleep — moves not confirmed by volume',
+  whale_footer_warn: '⚠️ Whale Score is a probability of big-player activity, not a buy signal. Always check funding and order book before entering.',
+  whale_sig_volume: 'Volume anomaly',
+  whale_sig_obv: 'OBV (accumulation)',
+  whale_sig_oi: 'Open Interest (OI)',
+  whale_sig_lsr: 'LSR (top vs crowd)',
+  whale_sig_taker: 'Taker Buy/Sell',
 };
 
 // ─── СОСТОЯНИЕ ───

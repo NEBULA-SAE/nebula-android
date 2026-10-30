@@ -59,7 +59,8 @@ export class PriceStream {
       return;
     }
 
-    const symbol = this.opts.ticker.replace('/', '').toUpperCase();
+      const raw = this.opts.ticker.replace('/', '').toUpperCase();
+    const symbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const url = `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`;
 
     try {
@@ -115,7 +116,8 @@ export class PriceStream {
       return;
     }
 
-    const symbol = this.opts.ticker.replace('/', '-').toUpperCase();
+      const raw = this.opts.ticker.replace('/', '-').toUpperCase();
+    const symbol = raw.endsWith('-USDT') ? raw : `${raw}-USDT`;
     const url = `wss://x-push-spot.kucoin.com`;
 
     try {

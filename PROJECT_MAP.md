@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.18** | Branch: `main` | Commit: `c93e08a`
-> Generated: 2026-10-30 08:31
+> Version: **2.0.19** | Branch: `main` | Commit: `d11ad41`
+> Generated: 2026-10-30 17:31
 
 ---
 
@@ -38,16 +38,32 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 46
-- Total LOC in `src/`: 14525
-- Bundle (`dist/`): 57 files, 538.1 KB
+- Total LOC in `src/`: 15007
+- Bundle (`dist/`): 57 files, 554.4 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.18**
-- Last git tag: `v2.0.17`
+- `package.json` version: **2.0.19**
+- Last git tag: `v2.0.18`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `d11ad41` - 2026-10-30 - chore(release): v2.0.18
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/chart.ts`
+- `src/ui/oracle.ts`
+- `src/ui/timeframes.ts`
 
 ### `c93e08a` - 2026-10-30 - chore(release): v2.0.17
 
@@ -109,27 +125,13 @@ Files:
 - `src-tauri/icons/icon.ico`
 - `src-tauri/tauri.conf.json`
 
-### `5a93e1f` - 2026-10-29 - chore(release): v2.0.13
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/favicon.ico`
-- `public/ic_launcher-playstore.png`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.17`
+No changes since `v2.0.18`
 
 ## Recent tags
 
+- `v2.0.18`
 - `v2.0.17`
 - `v2.0.16`
 - `v2.0.15`
@@ -139,7 +141,6 @@ No changes since `v2.0.17`
 - `v2.0.11`
 - `v2.0.10`
 - `v2.0.9`
-- `v2.0.8`
 
 ## File tree (src/)
 
@@ -156,41 +157,41 @@ src/
 |   +--   336 kucoin.ts
 |   +--   331 mexc.ts
 |   +--   192 orderbook.ts
-|   +--   232 stream.ts
+|   +--   234 stream.ts
 |   +--   248 whale-futures.ts
 +-- styles/
 |   +--   136 main.css
 +-- ui/
 |   +--   428 chart-overlay.ts
-|   +--   139 dash.ts
+|   +--   236 dash.ts
 |   +--   498 diagnostics.ts
 |   +--   226 init.ts
 |   +--   132 learning.ts
 |   +--    76 market.ts
-|   +--  1038 oracle.ts
+|   +--  1095 oracle.ts
 |   +--   436 pull-refresh.ts
 |   +--   311 risk.ts
 |   +--   256 scanner.ts
 |   +--   486 screens.ts
 |   +--   609 settings.ts
-|   +--   209 splash.ts
+|   +--   292 splash.ts
 |   +--   150 terms.ts
 |   +--   383 themes.ts
 |   +--   272 timeframes.ts
 |   +--   113 tooltip.ts
-|   +--   584 whale.ts
-+--   394 ai.ts
+|   +--   691 whale.ts
++--   437 ai.ts
 +--   277 alerts.ts
 +--   280 auth.ts
 +--   342 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
 +--   330 demo.ts
-+--   649 i18n.ts
++--   703 i18n.ts
 +--   411 indicators.ts
 +--   265 main.ts
 +--   475 market.ts
-+--   766 oracle.ts
++--   805 oracle.ts
 +--   185 patterns.ts
 +--   282 themes.ts
 +--   687 trading.ts
@@ -487,6 +488,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - renderPro()
 - renderConfluence()
 - askAIMentor()
+- switchAiScenario()
 - openAISettings()
 - saveGroqKeyFromModal()
 - deleteGroqKeyFromModal()
@@ -672,9 +674,9 @@ openLearning, refreshLearning
 
 openMarketPulse
 
-### `src/ui/oracle.ts` (19)
+### `src/ui/oracle.ts` (20)
 
-_currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, loadChartOnly, mobileAnalyze, openAISettings, openJournalEntry, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderConfluence, renderOracleAnalogies, renderOracleDashboard, renderPro, saveGroqKeyFromModal, showConfluenceHelp
+_currentDemoPlan, _journalRecords, answerQuizM, askAIMentor, deleteGroqKeyFromModal, executeDemoTrade, loadChartOnly, mobileAnalyze, openAISettings, openJournalEntry, openQuiz, oracleAnalyzeCurrent, refreshOracleStats, renderConfluence, renderOracleAnalogies, renderOracleDashboard, renderPro, saveGroqKeyFromModal, showConfluenceHelp, switchAiScenario
 
 ### `src/ui/pull-refresh.ts` (2)
 
@@ -822,6 +824,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- d11ad41  2026-10-30  chore(release): v2.0.18
 - c93e08a  2026-10-30  chore(release): v2.0.17
 - e189a69  2026-10-30  chore(release): v2.0.16
 - 8a239ea  2026-10-29  chore(release): v2.0.15
@@ -836,7 +839,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 3a37664  2026-10-28  chore(release): v2.0.6
 - 0afb819  2026-10-28  backup before chart race fix
 - 373f3de  2026-10-27  chore(release): v2.0.5
-- 37763e9  2026-10-25  chore(release): v2.0.4
 
 ---
 

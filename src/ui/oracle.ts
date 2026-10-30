@@ -272,14 +272,24 @@ export async function mobileAnalyze(): Promise<void> {
     if (myGen !== _analyzeGen) return;
 
     if (oracleResult.status === 'success') {
-      const vd2 = document.getElementById('verdict');
+          const vd2 = document.getElementById('verdict');
       if (vd2 && oracleResult.verdict_text) {
         const oldOracle = vd2.querySelector('.oracle-line');
         if (oldOracle) oldOracle.remove();
         const oracleDiv = document.createElement('div');
         oracleDiv.className = 'oracle-line';
-        oracleDiv.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.06);font-size:12px;color:var(--cyan);';
-        oracleDiv.textContent = `🔮 ${oracleResult.verdict_text} · ${oracleResult.confidence}%`;
+        oracleDiv.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.06);font-size:11.5px;color:var(--cyan);line-height:1.6;';
+
+              const sc = (oracleResult as any).scenarios;
+        if (sc) {
+          const vLabel = (v: string) => tm('v_' + v);
+          oracleDiv.innerHTML =
+            `🔮 <b>${tm('verdict_base_label')}:</b> ${vLabel(sc.base.verdict)} (${sc.base.prob}%)` +
+            ` · 🚀 <b>${tm('verdict_bull_label')}:</b> ${vLabel(sc.bull.verdict)} (${sc.bull.prob}%)` +
+            ` · ⚠️ <b>${tm('verdict_bear_label')}:</b> ${vLabel(sc.bear.verdict)} (${sc.bear.prob}%)`;
+        } else {
+          oracleDiv.textContent = `🔮 ${oracleResult.verdict_text} · ${oracleResult.confidence}%`;
+        }
         vd2.appendChild(oracleDiv);
       }
       state.lastOracleResult = oracleResult;
@@ -581,16 +591,62 @@ export async function askAIMentor(): Promise<void> {
   );
 
   if (result.status === 'success') {
-    const text = (result.advice || '')
+    const fmt = (s: string) => (s || '')
       .replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--hi);">$1</b>')
       .replace(/\n/g, '<br>');
-    resultBox.innerHTML = `<div style="font-size:13.5px;line-height:1.7;color:var(--tx);">${text}</div>`;
+
+    if (!result.base && !result.bull && !result.bear && result.advice) {
+      resultBox.innerHTML = `<div style="font-size:13.5px;line-height:1.7;color:var(--tx);">${fmt(result.advice)}</div>`;
+      return;
+    }
+
+    const base = fmt(result.base || '');
+    const bull = fmt(result.bull || '');
+    const bear = fmt(result.bear || '');
+    const verdict = fmt(result.verdictLine || '');
+
+    if (!base && !bull && !bear) {
+      resultBox.innerHTML = `<div class="empty-msg" style="padding:8px 0;">${tm('ai_empty_response')}</div>`;
+      return;
+    }
+
+    const bullLabel = result.bullProb != null
+      ? `${tm('ai_tab_bull')} (${result.bullProb}%)`
+      : tm('ai_tab_bull');
+    const bearLabel = result.bearProb != null
+      ? `${tm('ai_tab_bear')} (${result.bearProb}%)`
+      : tm('ai_tab_bear');
+
+    resultBox.innerHTML = `
+      <div class="ai-scenario-tabs">
+        <button class="ai-scenario-tab base active" onclick="switchAiScenario('base')">${tm('ai_tab_base')}</button>
+        <button class="ai-scenario-tab bull" onclick="switchAiScenario('bull')">${bullLabel}</button>
+        <button class="ai-scenario-tab bear" onclick="switchAiScenario('bear')">${bearLabel}</button>
+      </div>
+      <div class="ai-scenario-panel base active" id="ai-scenario-base">${base}</div>
+      <div class="ai-scenario-panel bull" id="ai-scenario-bull">${bull}</div>
+      <div class="ai-scenario-panel bear" id="ai-scenario-bear">${bear}</div>
+      ${verdict ? `<div class="ai-verdict-line">🔮 ${verdict}</div>` : ''}
+    `;
   } else if (result.message === 'no_key') {
     toast(tm('ai_no_key'), 'warn', 3500);
     resultBox.innerHTML = `<div class="empty-msg" style="padding:8px 0;">${tm('ai_no_key')}</div>`;
   } else {
     resultBox.innerHTML = `<div class="empty-msg" style="padding:8px 0;">${tm('error')}: ${esc(result.message || 'unknown')}</div>`;
   }
+}
+
+export function switchAiScenario(name: 'base' | 'bull' | 'bear'): void {
+  document.querySelectorAll('.ai-scenario-tab').forEach(t => {
+    t.classList.remove('active');
+  });
+  document.querySelectorAll('.ai-scenario-panel').forEach(p => {
+    p.classList.remove('active');
+  });
+  const tab = document.querySelector(`.ai-scenario-tab.${name}`) as HTMLElement | null;
+  const panel = document.getElementById(`ai-scenario-${name}`);
+  if (tab) tab.classList.add('active');
+  if (panel) panel.classList.add('active');
 }
 
 // ═══ AI SETTINGS (кнопка шестерёнки в топбаре) ═══
@@ -1019,6 +1075,7 @@ if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     mobileAnalyze,
     askAIMentor,
+    switchAiScenario,
     loadChartOnly,
     renderPro,
     renderConfluence,
