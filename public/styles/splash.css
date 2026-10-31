@@ -271,3 +271,46 @@
   .splash-title { font-size: 42px; gap: 3px; letter-spacing: 2px; }
   .splash-line { width: 160px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ИДЕАЛЬНАЯ ЗАСТАВКА ДЛЯ ГОРИЗОНТАЛЬНОГО ЭКРАНА
+   ═══════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (max-height: 600px) {
+  .splash-content {
+    transform: none !important; /* Убираем сдвиг */
+    height: 100vh; /* Растягиваем на весь экран */
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    gap: 4px; /* Минимальный отступ между элементами */
+    padding: 5px;
+  }
+  
+  .splash-logo {
+    max-height: 40vh !important; /* Строго 40% от высоты экрана */
+    width: auto !important;
+    max-width: 60vw;
+    object-fit: contain;
+  }
+  
+  .splash-line {
+    margin-top: 0 !important;
+    width: 140px;
+  }
+  
+  .splash-title {
+    font-size: 8vh !important; /* Шрифт масштабируется от высоты */
+    margin-top: 0 !important;
+    gap: 2px;
+  }
+  
+  .splash-sub {
+    font-size: 2.5vh !important;
+    margin-top: 2px !important;
+  }
+  
+  .splash-status {
+    font-size: 2vh !important;
+    margin-top: 2px !important;
+  }
+}
