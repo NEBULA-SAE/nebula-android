@@ -264,3 +264,104 @@ select.form-input { cursor:pointer; }
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+
+/* ═══ CRYPTO HUB ═══ */
+.hub-tabs {
+  display: flex; gap: 6px; margin-bottom: 16px;
+  background: rgba(0,0,0,.4); padding: 4px; border-radius: 10px;
+}
+.hub-tab {
+  flex: 1; padding: 10px; border: none; border-radius: 8px;
+  background: transparent; color: var(--mut);
+  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+}
+.hub-tab.active {
+  background: linear-gradient(135deg, rgba(94,203,255,.2), rgba(167,139,250,.2));
+  color: var(--hi); box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+.hub-list { display: flex; flex-direction: column; gap: 8px; }
+.hub-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; background: rgba(0,0,0,.3);
+  border: 1px solid var(--border); border-radius: 12px;
+  text-decoration: none; transition: all .2s;
+}
+.hub-card:hover { background: rgba(94,203,255,.05); border-color: var(--cyan); transform: translateY(-1px); }
+.hub-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--hi);
+  flex-shrink: 0;
+}
+.hub-info { flex: 1; min-width: 0; }
+.hub-name { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--hi); margin-bottom: 2px; }
+.hub-desc { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.hub-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+  padding: 4px 6px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+}
+.hub-badge.ru { background: rgba(69,224,168,.15); color: var(--mint); border: 1px solid rgba(69,224,168,.3); }
+.hub-badge.vpn { background: rgba(255,184,88,.15); color: var(--amber); border: 1px solid rgba(255,184,88,.3); }
+.hub-badge.global { background: rgba(94,203,255,.15); color: var(--cyan); border: 1px solid rgba(94,203,255,.3); }
+
+.hub-footer {
+  margin-top: 16px; text-align: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--dim);
+}
+
+/* Обновленные карточки */
+.hub-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: rgba(0,0,0,.3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all .2s;
+  gap: 10px;
+}
+.hub-card:hover { background: rgba(94,203,255,.05); border-color: var(--cyan); }
+
+.hub-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.hub-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hub-info-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--mut);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all .15s;
+}
+.hub-info-btn:hover {
+  background: rgba(94,203,255,.2);
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.hub-badge.no { background: rgba(255,101,132,.15); color: var(--coral); border: 1px solid rgba(255,101,132,.3); }

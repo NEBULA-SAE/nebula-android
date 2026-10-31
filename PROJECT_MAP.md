@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.25** | Branch: `main` | Commit: `8984049`
-> Generated: 2026-10-31 19:22
+> Version: **2.0.26** | Branch: `main` | Commit: `44c550b`
+> Generated: 2026-10-31 20:14
 
 ---
 
@@ -37,17 +37,32 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Stats
 
-- TypeScript files in `src/`: 49
-- Total LOC in `src/`: 15440
-- Bundle (`dist/`): 57 files, 577.6 KB
+- TypeScript files in `src/`: 51
+- Total LOC in `src/`: 15918
+- Bundle (`dist/`): 57 files, 599.8 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.25**
-- Last git tag: `v2.0.24`
+- `package.json` version: **2.0.26**
+- Last git tag: `v2.0.25`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `44c550b` - 2026-10-31 - chore(release): v2.0.25
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/sources/orderbook.ts`
+- `src/ui/whale.ts`
 
 ### `8984049` - 2026-10-31 - chore(release): v2.0.24
 
@@ -127,30 +142,13 @@ Files:
 - `src/ui/oracle.ts`
 - `src/ui/white-paper.ts`
 
-### `63944ba` - 2026-10-30 - chore(release): v2.0.20
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/screens.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/chart.ts`
-- `src/ui/dash.ts`
-- `src/ui/whale.ts`
-
 ## Last release diff
 
-No changes since `v2.0.24`
+No changes since `v2.0.25`
 
 ## Recent tags
 
+- `v2.0.25`
 - `v2.0.24`
 - `v2.0.23`
 - `v2.0.22`
@@ -160,13 +158,13 @@ No changes since `v2.0.24`
 - `v2.0.18`
 - `v2.0.17`
 - `v2.0.16`
-- `v2.0.15`
 
 ## File tree (src/)
 
 ```
 src/
 +-- data/
+|   +--   310 hub.ts
 |   +--    34 info.ts
 +-- platform/
 |   +--   103 http.ts
@@ -187,14 +185,15 @@ src/
 |   +--   428 chart-overlay.ts
 |   +--   236 dash.ts
 |   +--   498 diagnostics.ts
-|   +--   238 init.ts
+|   +--   121 hub.ts
+|   +--   239 init.ts
 |   +--   132 learning.ts
 |   +--    76 market.ts
 |   +--  1147 oracle.ts
 |   +--   436 pull-refresh.ts
 |   +--   311 risk.ts
 |   +--   256 scanner.ts
-|   +--   486 screens.ts
+|   +--   488 screens.ts
 |   +--   609 settings.ts
 |   +--   292 splash.ts
 |   +--   150 terms.ts
@@ -211,7 +210,7 @@ src/
 +--   210 crypto.ts
 +--    52 db.ts
 +--   330 demo.ts
-+--   729 i18n.ts
++--   773 i18n.ts
 +--   411 indicators.ts
 +--   265 main.ts
 +--   482 market.ts
@@ -292,6 +291,11 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - saveGroqKey()
 - loadGroqKey()
 - deleteGroqKey()
+
+### `src/data/hub.ts`
+- HUB_DATA (const)
+- HubText (iface)
+- HubItem (iface)
 
 ### `src/data/info.ts`
 - WHITE_PAPER (const)
@@ -503,6 +507,10 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - closeDiagnostics()
 - DiagnosticsReport (iface)
 
+### `src/ui/hub.ts`
+- openCryptoHub()
+- openHubDetails()
+
 ### `src/ui/init.ts`
 - initApp()
 
@@ -700,6 +708,10 @@ refreshDashSection
 
 closeDiagnostics, openDiagnostics, runFullDiagnostics, showDiagnosticsModal
 
+### `src/ui/hub.ts` (2)
+
+openCryptoHub, openHubDetails
+
 ### `src/ui/learning.ts` (2)
 
 openLearning, refreshLearning
@@ -770,6 +782,7 @@ wCall
 
 ## Network endpoints
 
+- `academy.binance.com` (in `hub.ts`)
 - `api.alternative.me` (in `market.ts`)
 - `api.binance.com` (in `trading.ts`)
 - `api.blockchair.com` (in `dash.ts`)
@@ -781,18 +794,29 @@ wCall
 - `api.kucoin.com` (in `candles.ts`)
 - `api.mexc.com` (in `candles.ts`)
 - `api.qrserver.com` (in `terms.ts`)
+- `bingx.com` (in `hub.ts`)
+- `cointelegraph.com` (in `hub.ts`)
 - `dash-rpc.publicnode.com` (in `dash.ts`)
 - `fapi.binance.com` (in `whale-futures.ts`)
 - `github.com` (in `themes.ts`)
+- `learn.bybit.com` (in `hub.ts`)
 - `nebula-oracle.duckdns.org` (in `config.ts`)
+- `rapira.exchange` (in `hub.ts`)
 - `raw.githubusercontent.com` (in `themes.ts`)
 - `shared.eu-central-1.getblock.io` (in `diagnostics.ts`)
 - `t.me` (in `settings.ts`)
+- `whitebird.io` (in `hub.ts`)
 - `WS stream.binance.com` (in `trading.ts`)
 - `WS x-push-spot.kucoin.com` (in `stream.ts`)
+- `www.binance.com` (in `hub.ts`)
+- `www.bybit.com` (in `hub.ts`)
 - `www.cbr-xml-daily.ru` (in `market.ts`)
+- `www.coingecko.com` (in `hub.ts`)
 - `www.dashcentral.org` (in `dash.ts`)
+- `www.gate.io` (in `hub.ts`)
+- `www.mexc.com` (in `hub.ts`)
 - `www.okx.com` (in `market.ts`)
+- `www.tradingview.com` (in `hub.ts`)
 
 ## State shape (src/utils.ts)
 
@@ -836,9 +860,9 @@ demoHistory: []
 
 Critical list: ticker, chart-container, chart-stats, tf-bar, verdict, verdict-title, verdict-text, plan-card, agent-card, whale-card, dash-section, dash-network-content, screen-home, screen-pro, screen-scanner, sheet, sheet-overlay, sheet-title, sheet-body, toast-wrap, app-lock-overlay, al-input, al-submit
 
-All IDs in index.html (178 total):
+All IDs in index.html (180 total):
 
-about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, btc-advice, btc-change, btc-drop, btc-price, btc-rebound, btc-rsi, btc-trend, chart-container, chart-stats, confluence-badge, confluence-card, confluence-content, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-oracle-content, demo-orders-list, demo-panel, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, fav-count, fav-list, i-bell, i-bolt, i-brain, i-chart, i-check, i-clock, i-flask, i-globe, i-info, i-lock, i-oracle, i-play, i-pulse, i-radar, i-refresh, i-scan, i-search, i-settings, i-shield, i-star, i-star-fill, i-target, i-trending, i-wallet, i-whale, i-x, lang-en, lang-ru, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-confluence, lbl-drop, lbl-fav, lbl-oracle-analogs, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-trend, lbl-walls, lbl-whale, lbl-white-paper, lbl-xray, main-nav, monitor-panel, nav-fav, nav-home, nav-oracle, nav-portfolio, nav-pro, nav-risk, nav-scanner, nebula-splash, oracle-analogs-card, oracle-analogs-content, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, radar-center-orb, radar-items, radar-laser-line, radar-overlay, radar-trigger, radar-trigger-wrap, risk-content, risk-page-title-text, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-risk, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, star-btn, star-icon, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
+about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, btc-advice, btc-change, btc-drop, btc-price, btc-rebound, btc-rsi, btc-trend, chart-container, chart-stats, confluence-badge, confluence-card, confluence-content, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-oracle-content, demo-orders-list, demo-panel, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, fav-count, fav-list, i-bell, i-bolt, i-brain, i-chart, i-check, i-clock, i-flask, i-globe, i-info, i-lock, i-oracle, i-play, i-pulse, i-radar, i-refresh, i-scan, i-search, i-settings, i-shield, i-star, i-star-fill, i-target, i-trending, i-wallet, i-whale, i-x, lang-en, lang-ru, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-confluence, lbl-drop, lbl-fav, lbl-oracle-analogs, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-trend, lbl-walls, lbl-whale, lbl-white-paper, lbl-xray, main-nav, monitor-panel, nav-fav, nav-home, nav-hub, nav-oracle, nav-portfolio, nav-pro, nav-risk, nav-scanner, nebula-splash, oracle-analogs-card, oracle-analogs-content, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, radar-center-orb, radar-hub, radar-items, radar-laser-line, radar-overlay, radar-trigger, radar-trigger-wrap, risk-content, risk-page-title-text, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-risk, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, star-btn, star-icon, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
 
 ## Key dependencies
 
@@ -862,6 +886,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 44c550b  2026-10-31  chore(release): v2.0.25
 - 8984049  2026-10-31  chore(release): v2.0.24
 - e62752a  2026-10-31  chore(release): v2.0.23
 - b05ea08  2026-10-31  chore(release): v2.0.22
@@ -876,7 +901,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 5a93e1f  2026-10-29  chore(release): v2.0.13
 - 3ef9fd6  2026-10-29  chore(release): v2.0.12
 - caf4a6a  2026-10-28  chore(release): v2.0.11
-- 2410041  2026-10-28  chore(release): v2.0.10
 
 ---
 

@@ -6,6 +6,7 @@
 import { toast, isEN, state } from '../utils';
 import { setLang } from '../i18n';
 import './white-paper';
+import './hub';
 
 // ─── Реальные модули ───
 import { applyStaticTranslations, loadBTC } from './screens';

@@ -493,6 +493,10 @@
 </main>
 
 <nav class="bottom-nav" id="main-nav">
+<button class="nav-btn hide-on-mobile" onclick="openCryptoHub('exchanges')">
+    <svg><use href="#i-globe"/></svg>
+    <span class="lbl" id="nav-hub">Крипто-Хаб</span>
+</button>
   <button class="nav-btn active" data-tab="home" onclick="switchTab('home')">
     <svg><use href="#i-chart"/></svg>
     <span class="lbl" id="nav-home">График</span>
@@ -546,6 +550,13 @@
   </svg>
 
   <div class="radar-items-container" id="radar-items">
+
+      <!-- 0 deg (Центр верх) -->
+    <div class="radar-item" data-action="func" data-value="openCryptoHub">
+      <div class="radar-icon-wrap" style="color:var(--cyan);"><svg><use href="#i-globe"/></svg></div>
+      <span class="radar-label" id="radar-hub">Хаб</span>
+    </div>
+
     <!-- 0 deg -->
     <div class="radar-item" data-action="func" data-value="openMarketPulse">
       <div class="radar-icon-wrap" style="color:var(--amber);"><svg><use href="#i-globe"/></svg></div>
@@ -618,7 +629,7 @@
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.25</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.26</div>
     </div>
 
     <div class="terms-body">
@@ -667,7 +678,7 @@
 
       <h4>Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.25</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.26</b><br>
         Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>

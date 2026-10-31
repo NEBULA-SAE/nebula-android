@@ -73,9 +73,11 @@ export function setLanguage(lang: 'ru' | 'en'): void {
 
 export function applyStaticTranslations(): void {
   const map: Record<string, string> = {
+    'nav-hub': 'nav_hub',
     'nav-home': 'dashboard', 'nav-pro': 'analytics', 'nav-scanner': 'scanner',
     'nav-fav': 'favorites', 'nav-oracle': 'oracle', 'nav-portfolio': 'portfolio',
     'nav-risk': 'nav_risk',
+    'radar-hub': 'nav_hub',
     'risk-page-title-text': 'risk',
     'lbl-rebound': 'rebound', 'lbl-drop': 'drop', 'lbl-trend': 'trend',
     'lbl-plan': 'plan', 'lbl-agent': 'agent', 'lbl-xray': 'xray', 'lbl-walls': 'walls',

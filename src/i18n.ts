@@ -328,7 +328,7 @@ const I18N_RU: Dict = {
   whale_sig_lsr: 'LSR (топ vs толпа)',
   whale_sig_taker: 'Taker Buy/Sell',
 
-    // ─── WHITE PAPER ───
+  // ─── WHITE PAPER ───
   wp_title: 'Белая Книга',
   wp_mission: 'Наша Миссия',
   wp_creators: 'Создатели проекта',
@@ -340,6 +340,28 @@ const I18N_RU: Dict = {
   wp_footer_btn: 'White Paper & Partners',
   wp_footer_copy: 'NEBULA © 2026 · Powered by VELOX',
   wp_built_with: 'Создано с 🖤 для крипто-сообщества',
+
+  // ─── CRYPTO HUB ───
+  hub_title: 'Крипто-Хаб',
+  hub_tab_exchanges: 'Биржи',
+  hub_tab_learning: 'Обучение',
+  hub_tab_tools: 'Инструменты',
+  hub_status_ru: 'Доступно',
+  hub_status_vpn: 'Нужен VPN',
+  hub_status_no: 'Недоступно',
+  hub_status_global: 'Глобально',
+  hub_details_title: 'Детали',
+  hub_back: 'Назад к списку',
+  hub_close: 'Закрыть',
+  hub_access: 'Доступ',
+  hub_kyc: 'KYC',
+  hub_p2p: 'P2P',
+  hub_fees: 'Комиссии',
+  hub_pros: 'Плюсы',
+  hub_cons: 'Минусы',
+  hub_summary: 'Вывод',
+  hub_footer_warn: 'Доступность может меняться. Всегда проверяйте местные законы.',
+  nav_hub: 'Крипто-Хаб',
 };
 
 const I18N_EN: Dict = {
@@ -663,7 +685,7 @@ const I18N_EN: Dict = {
   whale_sig_lsr: 'LSR (top vs crowd)',
   whale_sig_taker: 'Taker Buy/Sell',
 
-    // ─── WHITE PAPER ───
+  // ─── WHITE PAPER ───
   wp_title: 'White Paper',
   wp_mission: 'Our Mission',
   wp_creators: 'Project Creators',
@@ -675,6 +697,28 @@ const I18N_EN: Dict = {
   wp_footer_btn: 'White Paper & Partners',
   wp_footer_copy: 'NEBULA © 2026 · Powered by VELOX',
   wp_built_with: 'Designed & Built with 🖤 for the Crypto Community',
+
+  // ─── CRYPTO HUB ───
+  hub_title: 'Crypto Hub',
+  hub_tab_exchanges: 'Exchanges',
+  hub_tab_learning: 'Education',
+  hub_tab_tools: 'Tools',
+  hub_status_ru: 'RU OK',
+  hub_status_vpn: 'VPN',
+  hub_status_no: 'NOT AVAILABLE',
+  hub_status_global: 'Global',
+  hub_details_title: 'Details',
+  hub_back: 'Back to list',
+  hub_close: 'Close',
+  hub_access: 'Access',
+  hub_kyc: 'KYC',
+  hub_p2p: 'P2P',
+  hub_fees: 'Fees',
+  hub_pros: 'Pros',
+  hub_cons: 'Cons',
+  hub_summary: 'Summary',
+  hub_footer_warn: 'Availability may change. Always check local laws.',
+  nav_hub: 'Crypto Hub',
 };
 
 // ─── СОСТОЯНИЕ ───
