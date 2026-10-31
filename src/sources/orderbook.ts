@@ -93,12 +93,11 @@ const EXCHANGES = [
 function cleanSpoof(levels: [number, number][], mid: number): [number, number][] {
   const side = levels.filter(([p]) => p > 0 && p < mid * 1.5);
   if (side.length < 3) return side;
-  const total = side.reduce((s, [, q]) => s + q, 0);
-  const maxOne = Math.max(...side.map(([, q]) => q));
-  if (maxOne / total < 0.3) return side;
-  const avg = (total - maxOne) / (side.length - 1);
-  const cut = avg * 2.5;
-  return side.map(([p, q]) => [p, q > cut ? cut : q] as [number, number]);
+  
+  // Мы убрали жесткое обрезание объема. Теперь мы просто отсеиваем 
+  // совсем уж фейковые заявки, которые стоят в 10 раз дороже рынка.
+  // Реальные "плиты" мы оставляем, чтобы их видел трейдер.
+  return side;
 }
 
 function pressureWeighted(bids: [number, number][], asks: [number, number][], mid: number): number {
@@ -176,11 +175,40 @@ export async function getAggregatedOrderbook(ticker: string): Promise<OrderbookR
     const pressureW = pressureWeighted(bidsClean, asksClean, midPrice);
     const pressureN = pressureNear(bidsClean, asksClean, midPrice);
 
-    const isFar = (p: number) => Math.abs(p - midPrice) / midPrice * 100 >= 1.0;
-    const farBids = bidsClean.filter(([p]) => isFar(p));
-    const farAsks = asksClean.filter(([p]) => isFar(p));
-    const wallBid = farBids.length ? farBids.reduce((b, c) => c[0] * c[1] > b[0] * b[1] ? c : b) : null;
-    const wallAsk = farAsks.length ? farAsks.reduce((b, c) => c[0] * c[1] > b[0] * b[1] ? c : b) : null;
+    // Ищем плиты в диапазоне от 0.5% до 5% от текущей цены
+  const isFar = (p: number) => {
+    const dist = Math.abs(p - midPrice) / midPrice * 100;
+    return dist >= 0.5 && dist <= 5.0;
+  };
+  
+  const farBids = bidsClean.filter(([p]) => isFar(p));
+  const farAsks = asksClean.filter(([p]) => isFar(p));
+  
+  // Функция поиска лучшей плиты (суммирует соседние ордера)
+  const findBestWall = (levels: [number, number][]) => {
+    if (!levels.length) return null;
+    // Сортируем по цене (для бидов от макс к мин, для асков от мин к макс)
+    const sorted = levels.sort((a, b) => b[0] - a[0]); 
+    
+    let bestWall = sorted[0];
+    let maxVolume = bestWall[0] * bestWall[1];
+
+    for (let i = 0; i < sorted.length; i++) {
+      const [p, q] = sorted[i];
+      // Суммируем объем с соседними заявками (в радиусе 0.2% от цены)
+      const cluster = sorted.filter(([cp]) => Math.abs(cp - p) / p < 0.002);
+      const clusterVol = cluster.reduce((sum, [, cq]) => sum + cq * p, 0);
+      
+      if (clusterVol > maxVolume) {
+        maxVolume = clusterVol;
+        bestWall = [p, clusterVol / p]; // Возвращаем цену и суммарный объем
+      }
+    }
+    return bestWall;
+  };
+
+  const wallBid = findBestWall(farBids);
+  const wallAsk = findBestWall(farAsks);
 
     const ms = Math.round(performance.now() - t0);
     console.log(`[perf] orderbook ${ticker} in ${ms}ms, sources: ${sourcesOk.join(',')}, pressure: raw=${pressureRaw.toFixed(3)} w=${pressureW.toFixed(3)} near=${pressureN.toFixed(3)}`);

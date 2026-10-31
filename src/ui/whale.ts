@@ -8,6 +8,8 @@ import { fmtP, setHTML } from '../utils';
 import { getAggregatedFunding } from '../sources/funding';
 import { getAggregatedOrderbook } from '../sources/orderbook';
 
+let _extrasTimer: ReturnType<typeof setInterval> | null = null;
+
 // ─── ТИПЫ ───
 
 export interface Candle {
@@ -65,10 +67,9 @@ export interface WhaleMergedData {
   futuresVerdict: 'new_longs' | 'new_shorts' | 'short_cover' | 'long_liq' | 'neutral';
 }
 
-// Хелпер: коротко для длинных текстов
 const T = (ru: string, en: string): string => (isEN() ? en : ru);
 
-// ─── РАСЧЁТ АНОМАЛИЙ (без изменений) ───
+// ─── РАСЧЁТ АНОМАЛИЙ ───
 
 export function calculateVolumeAnomalies(data: Candle[]): WhaleSpotData | null {
   if (!data || data.length < 30) return null;
@@ -169,7 +170,7 @@ export function calculateVolumeAnomalies(data: Candle[]): WhaleSpotData | null {
   };
 }
 
-// ─── ОБЪЕДИНЕНИЕ SPOT + FUTURES (без изменений) ───
+// ─── ОБЪЕДИНЕНИЕ SPOT + FUTURES ───
 
 export function mergeWhaleMetrics(
   spot: WhaleSpotData | null,
@@ -506,13 +507,32 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
 // ─── XRAY + WALLS ───
 
 export async function fetchExtras(ticker: string): Promise<void> {
-  try {
-    const [xray, walls] = await Promise.all([fetchXray(ticker), scanWalls(ticker)]);
-    renderXray(xray);
-    renderWalls(walls);
-  } catch (e) {
-    console.warn('[whale] fetchExtras:', e);
+  // Очищаем старый таймер, если он был
+  if (_extrasTimer) {
+    clearInterval(_extrasTimer);
+    _extrasTimer = null;
   }
+
+  const load = async () => {
+    try {
+      const [xray, walls] = await Promise.all([fetchXray(ticker), scanWalls(ticker)]);
+      renderXray(xray);
+      renderWalls(walls);
+    } catch (e) {
+      console.warn('[whale] fetchExtras:', e);
+    }
+  };
+
+  // Загружаем сразу
+  await load();
+
+  // И запускаем автообновление каждые 45 секунд
+  _extrasTimer = setInterval(() => {
+    // Проверяем, активна ли вкладка (чтобы не грузить в фоне)
+    if (document.visibilityState === 'visible') {
+      load();
+    }
+  }, 45000);
 }
 
 export interface XrayData {
@@ -651,6 +671,7 @@ function renderWalls(w: WallsData | null): void {
   card.style.display = 'block';
   const en = isEN();
   const srcInfo = w.sourceCount ? ` · ${w.sourceCount} ${tm('exchange_count')}` : '';
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   
   const whatWalls = `
     <span class="pc-only">${T('Крупный лимитный ордер в стакане. Может быть как реальной защитой уровня, так и манипуляцией (спуфинг — заявку снимают до исполнения).', 'A large limit order in the book. Can be real level defense or manipulation (spoofing — the order is pulled before execution).')}</span>
@@ -662,6 +683,10 @@ function renderWalls(w: WallsData | null): void {
   `;
 
   setHTML('walls-content', `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--dim); text-transform:uppercase; letter-spacing:1.2px;">📊 ${en ? 'Order book depth' : 'Глубина стакана'}</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--mut);">${en ? 'Updated' : 'Обновлено'}: ${timeStr}</div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-family:'JetBrains Mono',monospace">
       <div>
         <div style="color:var(--dim);font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:6px">🛡️ ${en ? 'Buy wall' : 'Плита покупки'}</div>
