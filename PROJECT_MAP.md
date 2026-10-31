@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.23** | Branch: `main` | Commit: `b05ea08`
-> Generated: 2026-10-31 18:45
+> Version: **2.0.24** | Branch: `main` | Commit: `e62752a`
+> Generated: 2026-10-31 18:58
 
 ---
 
@@ -39,15 +39,30 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 - TypeScript files in `src/`: 49
 - Total LOC in `src/`: 15387
-- Bundle (`dist/`): 57 files, 574 KB
+- Bundle (`dist/`): 57 files, 576.9 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.23**
-- Last git tag: `v2.0.22`
+- `package.json` version: **2.0.24**
+- Last git tag: `v2.0.23`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `e62752a` - 2026-10-31 - chore(release): v2.0.23
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/layout.css`
+- `public/styles/splash.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
 
 ### `b05ea08` - 2026-10-31 - chore(release): v2.0.22
 
@@ -140,28 +155,13 @@ Files:
 - `src/ui/splash.ts`
 - `src/ui/whale.ts`
 
-### `d11ad41` - 2026-10-30 - chore(release): v2.0.18
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/chart.ts`
-- `src/ui/oracle.ts`
-- `src/ui/timeframes.ts`
-
 ## Last release diff
 
-No changes since `v2.0.22`
+No changes since `v2.0.23`
 
 ## Recent tags
 
+- `v2.0.23`
 - `v2.0.22`
 - `v2.0.21`
 - `v2.0.20`
@@ -171,7 +171,6 @@ No changes since `v2.0.22`
 - `v2.0.16`
 - `v2.0.15`
 - `v2.0.14`
-- `v2.0.13`
 
 ## File tree (src/)
 
@@ -873,6 +872,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- e62752a  2026-10-31  chore(release): v2.0.23
 - b05ea08  2026-10-31  chore(release): v2.0.22
 - fe48597  2026-10-31  chore(release): v2.0.21
 - 63944ba  2026-10-30  chore(release): v2.0.20
@@ -887,7 +887,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - caf4a6a  2026-10-28  chore(release): v2.0.11
 - 2410041  2026-10-28  chore(release): v2.0.10
 - 1f2c272  2026-10-28  chore(release): v2.0.9
-- 4d05231  2026-10-28  chore(release): v2.0.8
 
 ---
 

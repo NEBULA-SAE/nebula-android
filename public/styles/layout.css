@@ -280,10 +280,15 @@
    ═══════════════════════════════════════════════════════════════ */
 @media (orientation: landscape) and (max-height: 600px) and (max-width: 1023px) {
   :root {
-    --sidebar-w: 85px;
+    --sidebar-w: 90px; /* Ширина боковой панели */
   }
 
-  /* 1. Меню превращается в боковую панель слева */
+  /* 1. Принудительно возвращаем скрытые кнопки */
+  .bottom-nav .nav-btn.hide-on-mobile {
+    display: flex !important; 
+  }
+
+  /* 2. Настройка самой панели (делаем её колонкой) */
   .bottom-nav {
     top: var(--topbar-h) !important;
     bottom: 0 !important;
@@ -292,29 +297,41 @@
     width: var(--sidebar-w) !important;
     height: auto !important;
     flex-direction: column !important;
-    justify-content: flex-start !important;
+    justify-content: space-evenly !important; /* Равномерно распределяем по высоте */
     padding: 10px 0 !important;
     border-top: none !important;
     border-right: 1px solid var(--border) !important;
     background: linear-gradient(180deg, rgba(3,5,9,1) 0%, rgba(3,5,9,.98) 100%) !important;
+    overflow-y: auto !important; /* Если не влезут, можно будет прокрутить */
   }
 
-  .bottom-nav::before { display: none !important; /* Убираем надпись */ }
-
+  /* 3. Настройка кнопок */
   .nav-btn {
-    flex: 0 0 auto !important;
+    flex: 0 0 auto !important; /* Запрещаем растягиваться */
     flex-direction: column !important;
     padding: 8px 0 !important;
-    gap: 4px !important;
+    gap: 6px !important;
     width: 100% !important;
     border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .nav-btn svg {
+    width: 22px !important;
+    height: 22px !important;
   }
 
   .nav-btn .lbl {
-    font-size: 9px !important;
-    text-transform: none !important;
+    display: block !important;
+    font-size: 9.5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .5px !important;
+    white-space: normal !important; /* Разрешаем перенос текста */
+    text-align: center !important;
+    line-height: 1.2 !important;
   }
 
+  /* Активная кнопка (полоска слева) */
   .nav-btn.active::before {
     top: 0 !important;
     bottom: 0 !important;
@@ -324,20 +341,49 @@
     height: 100% !important;
     border-radius: 0 3px 3px 0 !important;
   }
+  .nav-btn.active { background: rgba(94,203,255,.05) !important; }
 
-  /* 2. Сдвигаем топбар и контент вправо */
-  .top-bar { left: var(--sidebar-w) !important; right: 0 !important; }
-  .screens { left: var(--sidebar-w) !important; right: 0 !important; }
+  /* 4. Центральный радар NEBUL в меню */
+  .radar-center-wrap {
+    display: flex !important;
+    position: relative !important;
+    width: 60px !important;
+    height: 60px !important;
+    margin: 15px 0 !important; /* Отступы сверху и снизу */
+    flex: 0 0 auto !important;
+    transform: none !important;
+  }
+  
+  .radar-trigger {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .rt-core {
+    font-size: 10px !important;
+  }
 
-  /* 3. Настраиваем сетку на главном экране (как на ПК, но компактнее) */
+  /* 5. Сдвигаем контент и топбар вправо */
+  .top-bar { 
+    left: var(--sidebar-w) !important; 
+    right: 0 !important; 
+  }
+  
+  .screens { 
+    left: var(--sidebar-w) !important; 
+    right: 0 !important; 
+  }
+
+  /* 6. Сетка на главном экране (как на ПК) */
   #screen-home, #screen-pro {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
+    gap: 12px !important;
+    padding: 12px !important;
     align-content: start !important;
   }
 
-  /* Растягиваем важные карточки на всю ширину */
+  /* Важные карточки на всю ширину */
   #screen-home > .btc-card,
   #screen-home > .chart-card,
   #screen-home > #verdict,
@@ -347,14 +393,22 @@
   #screen-home > .app-footer {
     grid-column: 1 / -1 !important;
   }
-  
-  #chart-container {
-    height: 40vh !important; /* График повыше */
-    min-height: 180px !important;
+
+  /* Сетка для вкладки ПРО (Аналитика) */
+  #screen-pro > #pro-content {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
   }
 
-  /* Скрываем центральный радар NEBUL, он не влезет в сайдбар */
-  .radar-center-wrap {
-    display: none !important;
+  /* График повыше */
+  #chart-container {
+    height: 40vh !important;
+    min-height: 220px !important;
   }
+  
+  /* Скрываем лишнее в топбаре, чтобы не мешало */
+  .demo-badge-btn { display: none !important; }
+  .top-right .chip:not(.cyan) { display: none !important; }
 }

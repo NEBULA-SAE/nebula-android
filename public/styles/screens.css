@@ -1557,3 +1557,26 @@ body.in-demo-mode #screen-home {
     grid-column: 1 / -1 !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ИСПРАВЛЕНИЕ ДЛЯ ГОРИЗОНТАЛЬНОГО РЕЖИМА (Landscape Sidebar)
+   Перебиваем мобильные правила, чтобы боковая панель работала идеально
+   ═══════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1023px) {
+  /* 1. Принудительно показываем все кнопки, которые скрыты для мобилки */
+  .hide-on-mobile {
+    display: flex !important; 
+  }
+  
+  /* 2. Убираем сжатие кнопок, чтобы они заняли всю ширину панели */
+  .nav-btn {
+    flex: 0 0 auto !important; 
+    max-width: none !important; 
+  }
+  
+  /* 3. Возвращаем кнопку NEBUL в нормальный поток (убираем -30px) */
+  .radar-center-wrap {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+  }
+}
