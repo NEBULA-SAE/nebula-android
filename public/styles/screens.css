@@ -1481,3 +1481,79 @@ body.in-demo-mode #screen-home {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ИСПРАВЛЕНИЕ ГОРИЗОНТАЛЬНОГО РЕЖИМА (Смартфоны)
+   Возвращаем меню вниз и выпрямляем контент.
+   ═══════════════════════════════════════════════════════════════ */
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1023px) {
+  /* 1. Нижнее меню принудительно вниз */
+  .bottom-nav {
+    flex-direction: row !important;
+    width: 100% !important;
+    height: var(--navbar-h) !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    border-top: 1px solid var(--border) !important;
+    border-right: none !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: space-around !important;
+  }
+
+  .nav-btn {
+    flex: 1 !important;
+    max-width: none !important;
+    flex-direction: row !important; /* Иконка и текст в ряд */
+    gap: 6px !important;
+  }
+  
+  .nav-btn .lbl {
+    display: block !important;
+    font-size: 10px !important;
+  }
+
+  /* 2. Убираем отступ слева у контента */
+  .screens {
+    left: 0 !important;
+    right: 0 !important;
+    top: var(--topbar-h) !important;
+    bottom: var(--navbar-h) !important;
+  }
+
+  /* 3. Настраиваем сетку главного экрана для горизонта */
+  #screen-home {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    padding: 10px !important;
+    gap: 10px !important;
+    align-content: start !important;
+  }
+
+  /* Карточки, которые должны быть на всю ширину */
+  #screen-home > .btc-card, 
+  #screen-home > .chart-card, 
+  #screen-home > #verdict, 
+  #screen-home > #whale-card {
+    grid-column: 1 / -1 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Чарт делаем пониже */
+  #chart-container {
+    height: 35vh !important;
+    min-height: 180px !important;
+  }
+
+  /* Скрываем радар-пузырь (NEBUL) в центре меню, так как он мешает в горизонтали */
+  .radar-center-wrap {
+    display: none !important;
+  }
+
+  /* Прячем большие заголовки или лишние блоки */
+  .app-footer {
+    grid-column: 1 / -1 !important;
+  }
+}

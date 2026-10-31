@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.21** | Branch: `main` | Commit: `63944ba`
-> Generated: 2026-10-31 11:17
+> Version: **2.0.22** | Branch: `main` | Commit: `fe48597`
+> Generated: 2026-10-31 18:31
 
 ---
 
@@ -39,15 +39,49 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 - TypeScript files in `src/`: 49
 - Total LOC in `src/`: 15387
-- Bundle (`dist/`): 57 files, 571.2 KB
+- Bundle (`dist/`): 57 files, 573.8 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.21**
-- Last git tag: `v2.0.20`
+- `package.json` version: **2.0.22**
+- Last git tag: `v2.0.21`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `fe48597` - 2026-10-31 - chore(release): v2.0.21
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `deps.json`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/favicon.ico`
+- `public/ic_launcher-playstore.png`
+- `public/images/partners-main.jpg`
+- `public/styles/components.css`
+- `public/styles/screens.css`
+- `public/styles/splash.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ai.ts`
+- `src/data/info.ts`
+- `src/db.ts`
+- `src/i18n.ts`
+- `src/market.ts`
+- `src/oracle.ts`
+- `src/sources/candles.ts`
+- `src/sources/confluence.ts`
+- `src/sources/orderbook.ts`
+- `src/sources/stream.ts`
+- `src/ui/init.ts`
+- `src/ui/oracle.ts`
+- `src/ui/white-paper.ts`
 
 ### `63944ba` - 2026-10-30 - chore(release): v2.0.20
 
@@ -122,30 +156,13 @@ Files:
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 
-### `e189a69` - 2026-10-30 - chore(release): v2.0.16
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/screens.css`
-- `resources/icon.png`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/oracle.ts`
-- `src/sources/whale-futures.ts`
-- `src/ui/oracle.ts`
-
 ## Last release diff
 
-No changes since `v2.0.20`
+No changes since `v2.0.21`
 
 ## Recent tags
 
+- `v2.0.21`
 - `v2.0.20`
 - `v2.0.19`
 - `v2.0.18`
@@ -155,7 +172,6 @@ No changes since `v2.0.20`
 - `v2.0.14`
 - `v2.0.13`
 - `v2.0.12`
-- `v2.0.11`
 
 ## File tree (src/)
 
@@ -857,6 +873,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- fe48597  2026-10-31  chore(release): v2.0.21
 - 63944ba  2026-10-30  chore(release): v2.0.20
 - 405a221  2026-10-30  chore(release): v2.0.19
 - d11ad41  2026-10-30  chore(release): v2.0.18
@@ -871,7 +888,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 1f2c272  2026-10-28  chore(release): v2.0.9
 - 4d05231  2026-10-28  chore(release): v2.0.8
 - c2a620d  2026-10-28  chore(release): v2.0.7
-- 3a37664  2026-10-28  chore(release): v2.0.6
 
 ---
 
