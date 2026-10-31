@@ -247,3 +247,20 @@ select.form-input { cursor:pointer; }
   color: var(--tx);
 }
 .ai-verdict-line b { color: var(--cyan); font-weight: 700; }
+
+/* ═══ AI STREAMING CURSOR ═══ */
+.ai-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background-color: var(--cyan);
+  margin-left: 4px;
+  margin-top: 4px;
+  vertical-align: text-bottom;
+  animation: blinkCursor 0.8s step-end infinite;
+}
+
+@keyframes blinkCursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

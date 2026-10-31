@@ -198,7 +198,10 @@ export class PriceStream {
     this.heartbeatTimer = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         try {
-          this.ws.send(JSON.stringify({ method: 'ping' }));
+          // Отправляем пинг ТОЛЬКО для KuCoin (Binance не требует JSON-пингов)
+          if (this.exchange === 'kucoin') {
+            this.ws.send(JSON.stringify({ type: 'ping' }));
+          }
         } catch { /* silent */ }
       }
     }, HEARTBEAT_MS);

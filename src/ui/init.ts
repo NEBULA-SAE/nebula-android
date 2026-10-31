@@ -5,6 +5,7 @@
 
 import { toast, isEN, state } from '../utils';
 import { setLang } from '../i18n';
+import './white-paper';
 
 // ─── Реальные модули ───
 import { applyStaticTranslations, loadBTC } from './screens';
@@ -199,6 +200,17 @@ export function initApp(): void {
       console.warn('[init] alerts failed:', e);
     }
   }, 1000);
+
+    // ─── 14b. Инициализация базы данных Оракула (IndexedDB) ───
+  setTimeout(async () => {
+    try {
+      const m = await import('../oracle');
+      await m.initOracleDb();
+      console.log('[init] Oracle DB ready');
+    } catch (e) {
+      console.warn('[init] Oracle DB failed:', e);
+    }
+  }, 500);
 
   // ─── 15. Risk Center — первый рендер (когда данные уже есть) ───
   setTimeout(async () => {

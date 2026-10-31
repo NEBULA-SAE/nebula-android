@@ -232,6 +232,7 @@ async function trySources(
 // ─── КЭШ (15 сек) ───
 
 const _candleCache = new Map<string, { value: { data: Candle[]; source: string }; ts: number }>();
+const _candlePendingCache = new Map<string, Promise<{ data: Candle[]; source: string }>>(); // <-- НОВОЕ
 
 export async function fetchCandlesWithSource(
   ticker: string,
@@ -249,18 +250,38 @@ export async function fetchCandlesWithSource(
   }
 
   const key = `${ticker.toUpperCase()}:${tf}`;
-  const cached = _candleCache.get(key);
-  if (!force && cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-    return cached.value;
+  
+  if (!force) {
+    const cached = _candleCache.get(key);
+    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+      return cached.value;
+    }
+
+    const pending = _candlePendingCache.get(key);
+    if (pending) {
+      // Если запрос уже в процессе, возвращаем тот же Promise (склеиваем запросы)
+      return pending;
+    }
   }
 
-  const value = await trySources(ticker, tf);
+  const fetchPromise = (async () => {
+    const value = await trySources(ticker, tf);
+    value.data = sortAndDedupe(value.data);
+    _candleCache.set(key, { value, ts: Date.now() });
+    return value;
+  })();
 
-  // Бронебойная нормализация: гарантированно asc-порядок, без дублей.
-  value.data = sortAndDedupe(value.data);
+  if (!force) {
+    _candlePendingCache.set(key, fetchPromise);
+  }
 
-  _candleCache.set(key, { value, ts: Date.now() });
-  return value;
+  try {
+    return await fetchPromise;
+  } finally {
+    if (!force) {
+      _candlePendingCache.delete(key);
+    }
+  }
 }
 
 export async function fetchCandles(ticker: string, tf: Timeframe = '1d'): Promise<Candle[]> {

@@ -327,6 +327,19 @@ const I18N_RU: Dict = {
   whale_sig_oi: 'Открытый интерес (OI)',
   whale_sig_lsr: 'LSR (топ vs толпа)',
   whale_sig_taker: 'Taker Buy/Sell',
+
+    // ─── WHITE PAPER ───
+  wp_title: 'Белая Книга',
+  wp_mission: 'Наша Миссия',
+  wp_creators: 'Создатели проекта',
+  wp_partners: 'Партнеры и Поддержка',
+  wp_investors: 'Инвесторы',
+  wp_close: 'Закрыть',
+  wp_no_partners: 'Пока нет партнеров.',
+  wp_open_invest: 'Открыты для стратегических инвестиций.',
+  wp_footer_btn: 'White Paper & Partners',
+  wp_footer_copy: 'NEBULA © 2026 · Powered by VELOX',
+  wp_built_with: 'Создано с 🖤 для крипто-сообщества',
 };
 
 const I18N_EN: Dict = {
@@ -649,6 +662,19 @@ const I18N_EN: Dict = {
   whale_sig_oi: 'Open Interest (OI)',
   whale_sig_lsr: 'LSR (top vs crowd)',
   whale_sig_taker: 'Taker Buy/Sell',
+
+    // ─── WHITE PAPER ───
+  wp_title: 'White Paper',
+  wp_mission: 'Our Mission',
+  wp_creators: 'Project Creators',
+  wp_partners: 'Partners & Support',
+  wp_investors: 'Investors',
+  wp_close: 'Close',
+  wp_no_partners: 'No partners yet.',
+  wp_open_invest: 'Open for strategic investments.',
+  wp_footer_btn: 'White Paper & Partners',
+  wp_footer_copy: 'NEBULA © 2026 · Powered by VELOX',
+  wp_built_with: 'Designed & Built with 🖤 for the Crypto Community',
 };
 
 // ─── СОСТОЯНИЕ ───

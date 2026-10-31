@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { fetchCandlesWithSource } from './candles';
-import type { Timeframe } from './candles';
+import type { Timeframe, Candle } from './candles';
 import { calcRsi, calcMacd, calcStochRsi } from '../indicators';
 
 export type ConfluenceTF = '1h' | '1d' | '1w';
@@ -34,14 +34,22 @@ export interface ConfluenceResult {
 
 const TFS: ConfluenceTF[] = ['1h', '1d', '1w'];
 
-async function analyzeTF(ticker: string, tf: ConfluenceTF): Promise<TFSignal> {
+async function analyzeTF(ticker: string, tf: ConfluenceTF, preCandles?: Candle[]): Promise<TFSignal> {
   const empty: TFSignal = {
     tf, rsi: 50, macdBullish: false, macdHist: 0, stoch: 50,
     score: 0, verdict: 'hold', ok: false,
   };
 
   try {
-    const { data } = await fetchCandlesWithSource(ticker, tf as Timeframe);
+    let data: Candle[];
+    // Если это 1d и нам передали готовые свечи — используем их!
+    if (tf === '1d' && preCandles && preCandles.length >= 30) {
+      data = preCandles;
+    } else {
+      const res = await fetchCandlesWithSource(ticker, tf as Timeframe);
+      data = res.data;
+    }
+    
     if (!data || data.length < 30) return empty;
 
     const closes = data.map(c => c.close);
@@ -51,17 +59,14 @@ async function analyzeTF(ticker: string, tf: ConfluenceTF): Promise<TFSignal> {
 
     let score = 0;
 
-    // RSI: 0..100
     if (rsi < 30) score += 25;
     else if (rsi < 45) score += 10;
     else if (rsi > 70) score -= 25;
     else if (rsi > 60) score -= 10;
 
-    // MACD: гистограмма
     if (macd.hist > 0) score += 15;
     else score -= 15;
 
-    // Stoch RSI: 0..100
     if (stoch < 20) score += 10;
     else if (stoch > 80) score -= 10;
 
@@ -70,25 +75,19 @@ async function analyzeTF(ticker: string, tf: ConfluenceTF): Promise<TFSignal> {
     else if (score <= -20) verdict = 'avoid';
 
     return {
-      tf,
-      rsi,
-      macdBullish: macd.hist > 0,
-      macdHist: macd.hist,
-      stoch,
-      score,
-      verdict,
-      ok: true,
+      tf, rsi, macdBullish: macd.hist > 0, macdHist: macd.hist,
+      stoch, score, verdict, ok: true,
     };
   } catch {
     return empty;
   }
 }
 
-export async function getConfluence(ticker: string): Promise<ConfluenceResult> {
+export async function getConfluence(ticker: string, preCandles1d?: Candle[]): Promise<ConfluenceResult> {
   const upper = ticker.toUpperCase();
 
   try {
-    const signals = await Promise.all(TFS.map(tf => analyzeTF(upper, tf)));
+    const signals = await Promise.all(TFS.map(tf => analyzeTF(upper, tf, preCandles1d)));
     const okSignals = signals.filter(s => s.ok);
 
     if (okSignals.length < 2) {
@@ -109,13 +108,13 @@ export async function getConfluence(ticker: string): Promise<ConfluenceResult> {
 
     if (buyCount === totalCount) {
       overall = 'strong_buy';
-      confidence = 85 + totalCount * 4; // 3/3 → 97
+      confidence = 85 + totalCount * 4;
     } else if (buyCount >= 2 && avoidCount === 0) {
       overall = 'buy';
-      confidence = 65 + buyCount * 5; // 2/3 → 75
+      confidence = 65 + buyCount * 5;
     } else if (avoidCount === totalCount) {
       overall = 'avoid';
-      confidence = 80 + totalCount * 4; // 3/3 → 92
+      confidence = 80 + totalCount * 4;
     } else if (avoidCount >= 2) {
       overall = 'avoid';
       confidence = 60 + avoidCount * 5;
@@ -127,14 +126,8 @@ export async function getConfluence(ticker: string): Promise<ConfluenceResult> {
     confidence = Math.min(99, confidence);
 
     return {
-      status: 'success',
-      ticker: upper,
-      signals,
-      buyCount,
-      avoidCount,
-      totalCount,
-      overall,
-      confidence,
+      status: 'success', ticker: upper, signals,
+      buyCount, avoidCount, totalCount, overall, confidence,
     };
   } catch (e: any) {
     return {

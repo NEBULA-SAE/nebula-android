@@ -1424,3 +1424,60 @@ body.in-demo-mode #screen-home {
   .xray-explain { font-size: 12px; color: var(--tx); }
   .xray-react { font-size: 12px; }
 }
+
+/* ═══ APP FOOTER (БЕЛАЯ КНИГА И ПАРТНЕРЫ) ═══ */
+.app-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0 20px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+
+.footer-partner-img {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+  transition: opacity 0.3s, transform 0.3s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.footer-partner-img:hover {
+  opacity: 1;
+  transform: scale(1.02);
+}
+
+.footer-btn {
+  display: flex;
+  align-items: center;
+  background: rgba(0,0,0,.4);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: var(--mut);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 12px;
+}
+
+.footer-btn:hover {
+  background: rgba(94,203,255,.1);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  transform: translateY(-2px);
+}
+
+.footer-copy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}

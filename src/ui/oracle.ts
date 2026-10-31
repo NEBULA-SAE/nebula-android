@@ -11,6 +11,7 @@ import { fetchCandlesWithSource } from '../sources/candles';
 import { getWhaleFuturesMetrics } from '../sources/whale-futures';
 import { getAdvancedAnalytics } from '../market';
 import type { AdvancedAnalytics } from '../market';
+import type { Candle } from '../sources/candles'; // <-- ИСПРАВЛЕНО ТУТ (две точки)
 import { getConfluence } from '../sources/confluence';
 import type { ConfluenceResult } from '../sources/confluence';
 import {
@@ -263,9 +264,13 @@ export async function mobileAnalyze(): Promise<void> {
     state.lastMarketData = marketData;
 
     const profile = loadRiskProfile();
-      const [oracleResult, adv] = await Promise.all([
-      engineOracleAnalyze(raw, marketData, {}, profile),
-      getAdvancedAnalytics(raw),
+    
+    // Передаем уже загруженные свечи во все модули (если это 1d)
+    const passCandles = tf === '1d' ? candles : undefined;
+
+    const [oracleResult, adv] = await Promise.all([
+      engineOracleAnalyze(raw, marketData, {}, profile, passCandles),
+      getAdvancedAnalytics(raw, passCandles),
     ]);
 
     // GUARD: пока считали oracle/adv, пользователь мог переключиться
@@ -339,7 +344,7 @@ export async function mobileAnalyze(): Promise<void> {
     }
 
     // ═══ Multi-TF Confluence (не блокируем основной рендер) ═══
-    getConfluence(raw).then(conf => {
+    getConfluence(raw, passCandles).then(conf => {
       if (myGen !== _analyzeGen) return;
       if (state.currentTicker === raw) {
         renderConfluence(conf);
@@ -577,7 +582,46 @@ export async function askAIMentor(): Promise<void> {
     return;
   }
 
-  resultBox.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);padding:8px 0;">${tm('ai_thinking')}</div>`;
+  // Показываем контейнер для стриминга с мигающим курсором
+  resultBox.innerHTML = `
+    <div id="ai-stream-text" style="font-size:13.5px;line-height:1.7;color:var(--tx);white-space:pre-wrap;"></div>
+    <div id="ai-stream-cursor" class="ai-cursor"></div>
+  `;
+  const streamText = document.getElementById('ai-stream-text');
+
+  const fmt = (s: string) => (s || '')
+    .replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--hi);">$1</b>')
+    .replace(/\n/g, '<br>');
+
+  // ─── ЛОГИКА ПЕЧАТНОЙ МАШИНКИ ───
+  let targetText = '';
+  let displayedLength = 0;
+  let typingTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const startTyping = () => {
+    if (typingTimer) return;
+    
+    const typeChar = () => {
+      if (displayedLength < targetText.length) {
+        // Скорость печати: 3 символа каждые 15мс (примерно 200 символов в секунду)
+        displayedLength += 3; 
+        if (displayedLength > targetText.length) displayedLength = targetText.length;
+        
+        if (streamText) {
+          streamText.innerHTML = fmt(targetText.slice(0, displayedLength));
+        }
+        
+        // Автоскролл вниз
+        const sheetBody = document.getElementById('sheet-body') || resultBox.parentElement;
+        if (sheetBody) sheetBody.scrollTop = sheetBody.scrollHeight;
+
+        typingTimer = setTimeout(typeChar, 15);
+      } else {
+        typingTimer = null;
+      }
+    };
+    typeChar();
+  };
 
   const result = await getAiMentor(
     state.currentTicker,
@@ -587,26 +631,34 @@ export async function askAIMentor(): Promise<void> {
     oracleResult.warnings || [],
     loadRiskProfile(),
     state.lastAdv || {},
-    oracleResult.market_context || {}
+    oracleResult.market_context || {},
+    (text) => {
+      targetText = text;
+      startTyping();
+    }
   );
 
+  // Ждём, пока печатная машинка допечатает остаток текста до конца
+  await new Promise<void>((resolve) => {
+    const check = setInterval(() => {
+      if (!typingTimer && displayedLength >= targetText.length) {
+        clearInterval(check);
+        resolve();
+      }
+    }, 50);
+  });
+
+  const cursor = document.getElementById('ai-stream-cursor');
+  if (cursor) cursor.remove();
+
+  // ─── ПОКАЗЫВАЕМ КРАСИВЫЕ ТАБЫ ПОСЛЕ ЗАВЕРШЕНИЯ ───
   if (result.status === 'success') {
-    const fmt = (s: string) => (s || '')
-      .replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--hi);">$1</b>')
-      .replace(/\n/g, '<br>');
-
-    if (!result.base && !result.bull && !result.bear && result.advice) {
-      resultBox.innerHTML = `<div style="font-size:13.5px;line-height:1.7;color:var(--tx);">${fmt(result.advice)}</div>`;
-      return;
-    }
-
     const base = fmt(result.base || '');
     const bull = fmt(result.bull || '');
     const bear = fmt(result.bear || '');
     const verdict = fmt(result.verdictLine || '');
 
-    if (!base && !bull && !bear) {
-      resultBox.innerHTML = `<div class="empty-msg" style="padding:8px 0;">${tm('ai_empty_response')}</div>`;
+    if (!base && !bull && !bear && result.advice) {
       return;
     }
 

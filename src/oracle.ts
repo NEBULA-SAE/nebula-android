@@ -1,12 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · ORACLE ENGINE
 // Точный порт из python/oracle.py — память, обучение, риск, analyze
-// НЕ ПУТАТЬ с src/ui/oracle.ts (там UI-логика)
 // ═══════════════════════════════════════════════════════════════
 
 import { getAdvancedAnalytics } from './market';
 import { getMarketContext } from './market';
 import { humanizePattern } from './patterns';
+import type { Candle } from './sources/candles';
+import { db } from './db';
 
 // ═══════════════════════════════════════════════════════════════
 // STORAGE KEYS
@@ -110,19 +111,41 @@ interface Memory {
   created: number;
 }
 
+let _memCache: Memory | null = null;
+
+export async function initOracleDb(): Promise<void> {
+  await db.init();
+  const stored = await db.get(MEMORY_KEY);
+  
+  if (stored) {
+    _memCache = stored;
+  } else {
+    // Миграция со старого LocalStorage
+    try {
+      const old = localStorage.getItem(MEMORY_KEY);
+      if (old) {
+        _memCache = JSON.parse(old);
+        await db.set(MEMORY_KEY, _memCache);
+        localStorage.removeItem(MEMORY_KEY); // Очищаем старое, чтобы не занимало место
+        console.log('[oracle] Memory migrated to IndexedDB');
+      }
+    } catch { /* silent */ }
+  }
+  
+  if (!_memCache) {
+    _memCache = { analyses: [], stats: {}, version: 2, created: Math.floor(Date.now() / 1000) };
+  }
+}
+
 function loadMemory(): Memory {
-  try {
-    const raw = localStorage.getItem(MEMORY_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch { /* silent */ }
-  return { analyses: [], stats: {}, version: 2, created: Math.floor(Date.now() / 1000) };
+  return _memCache || { analyses: [], stats: {}, version: 2, created: Math.floor(Date.now() / 1000) };
 }
 
 export function saveMemory(mem: Memory): boolean {
-  try {
-    localStorage.setItem(MEMORY_KEY, JSON.stringify(mem));
-    return true;
-  } catch { return false; }
+  _memCache = mem;
+  // Сохраняем в фоне, чтобы не блокировать интерфейс
+  db.set(MEMORY_KEY, mem).catch(() => {});
+  return true;
 }
 
 function genRecordId(ticker: string): string {
@@ -334,7 +357,6 @@ export async function oracleLearnPatterns(): Promise<any> {
 
 export function oracleGetAnalogies(current: any): any {
   const mem = loadMemory();
-  // Берем только завершенные анализы, где мы знаем результат
   const completed = mem.analyses.filter(a => a.outcome !== null && a.outcome !== 'flat');
 
   if (completed.length < 5) {
@@ -353,13 +375,11 @@ export function oracleGetAnalogies(current: any): any {
     const rsiDiff = Math.abs(rec.rsi - rsi);
     const dropDiff = Math.abs(rec.drop_pct - drop);
 
-    // Ищем ситуации, где RSI был ±10, а падение ±15%
     if (rsiDiff <= 10 && dropDiff <= 15) {
       matches++;
       if (rec.outcome === 'win' || rec.outcome === 'win_big') wins++;
       totalReturn += rec.outcome_pct || 0;
 
-      // Сохраняем первые 5 найденных аналогов для красивого списка
       if (recentMatches.length < 5) {
         recentMatches.push({
           ticker: rec.ticker,
@@ -412,7 +432,7 @@ export function oracleGetStats(): any {
   const worst = reliable.sort((a: any, b: any) => a[1].win_rate - b[1].win_rate).slice(0, 5);
 
   const ms = (() => {
-    try { return Math.round((localStorage.getItem(MEMORY_KEY)?.length || 0) / 1024 * 10) / 10; }
+    try { return Math.round((JSON.stringify(loadMemory()).length) / 1024 * 10) / 10; }
     catch { return 0; }
   })();
 
@@ -443,7 +463,6 @@ export function oracleGetRecent(limit = 5): any[] {
   try {
     const mem = loadMemory();
     const recent = [...mem.analyses].sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
-    // Возвращаем полную запись (со всеми метриками) для Дневника
     return recent.map(a => ({
       ...a,
       ticker: a.ticker || '?',
@@ -535,7 +554,8 @@ export async function oracleAnalyze(
   ticker: string,
   marketData: any,
   onchainData: any,
-  riskProfile: RiskProfile | null
+  riskProfile: RiskProfile | null,
+  preCandles?: Candle[]
 ): Promise<OracleAnalyzeResult> {
   try {
     const steps: any[] = [];
@@ -553,7 +573,7 @@ export async function oracleAnalyze(
     const profileLevel = riskProfile?.level || 'balanced';
     const maxRisk = riskProfile?.max_risk_per_trade ?? 1.5;
 
-    const adv = await getAdvancedAnalytics(ticker);
+    const adv = await getAdvancedAnalytics(ticker, preCandles);
     const hasAdv = adv.status === 'success';
 
     steps.push({
@@ -735,7 +755,6 @@ export async function oracleAnalyze(
     else if (verdict === 'hold') fr += 'Сигнал смешанный.';
     else fr += 'Риск превышает потенциал.';
 
-    // ─── Трёхсценарный вердикт ───
     const bullVerdict = verdictFromScore(total + 20);
     const bearVerdict = verdictFromScore(total - 20);
 

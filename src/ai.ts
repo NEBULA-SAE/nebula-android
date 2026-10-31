@@ -117,7 +117,8 @@ export async function getAiMentor(
   warnings: string[],
   riskProfile: any,
   advanced?: any,
-  marketCtx?: any
+  marketCtx?: any,
+  onStream?: (text: string) => void // <-- ДОБАВЛЕНО
 ): Promise<AiMentorResult> {
   const apiKey = await loadGroqKey();
   if (!apiKey) return { status: 'error', message: 'no_key' };
@@ -265,17 +266,48 @@ ${patternsText}
         ],
         temperature: 0.55,
         max_tokens: 2500,
+        stream: !!onStream, // Включаем стриминг, если есть коллбэк
       }),
       signal: AbortSignal.timeout(60000),
     });
 
-    if (r.status === 200) {
-      const data = await r.json();
-      let advice = data.choices?.[0]?.message?.content || '';
+    if (r.status !== 200) {
+      let err = r.statusText;
+      try { const e = await r.json(); err = e?.error?.message || err; } catch { /* silent */ }
+      return { status: 'error', message: err };
+    }
 
-      // XSS-защита: esc'аем весь ответ, ** оставляем — их потом красит UI
-      advice = esc(advice);
+    // ─── РЕЖИМ СТРИМИНГА ───
+    if (onStream && r.body) {
+      const reader = r.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let fullText = '';
+      let buffer = '';
 
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Оставляем недописанную строку в буфере
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              const delta = data.choices[0]?.delta?.content || '';
+              if (delta) {
+                fullText += delta;
+                onStream(esc(fullText)); // Отдаем ЭКРАНИРОВАННЫЙ текст в UI
+              }
+            } catch { /* Игнорируем неполные JSON чанки */ }
+          }
+        }
+      }
+
+      const advice = esc(fullText);
       const parsed = parseScenarios(advice);
       return {
         status: 'success',
@@ -286,13 +318,27 @@ ${patternsText}
         bullProb: parsed.bullProb,
         bearProb: parsed.bearProb,
         raw: advice,
-        advice, // legacy: склеенный текст для обратной совместимости
+        advice,
       };
-    } else {
-      let err = r.statusText;
-      try { const e = await r.json(); err = e?.error?.message || err; } catch { /* silent */ }
-      return { status: 'error', message: err };
-    }
+    } 
+    
+    // ─── ОБЫЧНЫЙ РЕЖИМ (если стриминг не запрошен) ───
+    const data = await r.json();
+    let advice = data.choices?.[0]?.message?.content || '';
+    advice = esc(advice);
+
+    const parsed = parseScenarios(advice);
+    return {
+      status: 'success',
+      base: parsed.base,
+      bull: parsed.bull,
+      bear: parsed.bear,
+      verdictLine: parsed.verdictLine,
+      bullProb: parsed.bullProb,
+      bearProb: parsed.bearProb,
+      raw: advice,
+      advice,
+    };
   } catch (e: any) {
     return { status: 'error', message: String(e?.message || e) };
   }

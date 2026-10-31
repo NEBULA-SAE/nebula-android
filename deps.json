@@ -1,0 +1,233 @@
+﻿{
+  "ai.ts": [
+    "crypto.ts",
+    "patterns.ts",
+    "sources/whale-futures.ts",
+    "utils.ts"
+  ],
+  "alerts.ts": [
+    "i18n.ts",
+    "ui/screens.ts",
+    "utils.ts"
+  ],
+  "auth.ts": [
+    "utils.ts"
+  ],
+  "chart.ts": [
+    "utils.ts"
+  ],
+  "config.ts": [],
+  "crypto.ts": [
+    "auth.ts"
+  ],
+  "demo.ts": [
+    "oracle.ts",
+    "sources/mexc.ts",
+    "utils.ts"
+  ],
+  "i18n.ts": [],
+  "indicators.ts": [],
+  "main.ts": [
+    "ai.ts",
+    "auth.ts",
+    "chart.ts",
+    "crypto.ts",
+    "i18n.ts",
+    "indicators.ts",
+    "market.ts",
+    "oracle.ts",
+    "patterns.ts",
+    "platform/http.ts",
+    "platform/index.ts",
+    "sources/candles.ts",
+    "sources/dash.ts",
+    "sources/funding.ts",
+    "sources/mexc.ts",
+    "sources/orderbook.ts",
+    "sources/whale-futures.ts",
+    "themes.ts",
+    "trading.ts",
+    "ui/dash.ts",
+    "ui/diagnostics.ts",
+    "ui/init.ts",
+    "ui/learning.ts",
+    "ui/market.ts",
+    "ui/oracle.ts",
+    "ui/scanner.ts",
+    "ui/screens.ts",
+    "ui/settings.ts",
+    "ui/splash.ts",
+    "ui/terms.ts",
+    "ui/themes.ts",
+    "ui/tooltip.ts",
+    "ui/whale.ts",
+    "utils.ts",
+    "worker.ts"
+  ],
+  "market.ts": [
+    "config.ts",
+    "indicators.ts",
+    "sources/candles.ts"
+  ],
+  "oracle.ts": [
+    "market.ts",
+    "patterns.ts"
+  ],
+  "patterns.ts": [],
+  "platform/http.ts": [
+    "platform/index.ts"
+  ],
+  "platform/index.ts": [],
+  "sources/candles.ts": [
+    "config.ts"
+  ],
+  "sources/confluence.ts": [
+    "indicators.ts",
+    "sources/candles.ts"
+  ],
+  "sources/dash.ts": [],
+  "sources/funding.ts": [],
+  "sources/kucoin.ts": [
+    "crypto.ts"
+  ],
+  "sources/mexc.ts": [
+    "crypto.ts",
+    "market.ts"
+  ],
+  "sources/orderbook.ts": [],
+  "sources/stream.ts": [
+    "sources/candles.ts"
+  ],
+  "sources/whale-futures.ts": [
+    "config.ts"
+  ],
+  "themes.ts": [],
+  "trading.ts": [
+    "ai.ts",
+    "auth.ts",
+    "crypto.ts",
+    "i18n.ts",
+    "market.ts",
+    "sources/kucoin.ts",
+    "sources/mexc.ts",
+    "utils.ts"
+  ],
+  "ui/chart-overlay.ts": [
+    "i18n.ts",
+    "sources/candles.ts",
+    "utils.ts"
+  ],
+  "ui/dash.ts": [
+    "i18n.ts",
+    "sources/dash.ts",
+    "utils.ts"
+  ],
+  "ui/diagnostics.ts": [
+    "config.ts",
+    "utils.ts"
+  ],
+  "ui/init.ts": [
+    "alerts.ts",
+    "i18n.ts",
+    "themes.ts",
+    "ui/chart-overlay.ts",
+    "ui/dash.ts",
+    "ui/diagnostics.ts",
+    "ui/pull-refresh.ts",
+    "ui/risk.ts",
+    "ui/scanner.ts",
+    "ui/screens.ts",
+    "ui/timeframes.ts",
+    "utils.ts"
+  ],
+  "ui/learning.ts": [
+    "i18n.ts",
+    "ui/screens.ts",
+    "utils.ts"
+  ],
+  "ui/market.ts": [
+    "i18n.ts",
+    "market.ts",
+    "ui/screens.ts",
+    "utils.ts"
+  ],
+  "ui/oracle.ts": [
+    "ai.ts",
+    "chart.ts",
+    "crypto.ts",
+    "demo.ts",
+    "i18n.ts",
+    "market.ts",
+    "oracle.ts",
+    "sources/candles.ts",
+    "sources/confluence.ts",
+    "sources/whale-futures.ts",
+    "ui/dash.ts",
+    "ui/screens.ts",
+    "ui/whale.ts",
+    "utils.ts",
+    "worker.ts"
+  ],
+  "ui/pull-refresh.ts": [
+    "ui/oracle.ts",
+    "ui/risk.ts",
+    "ui/scanner.ts",
+    "ui/screens.ts",
+    "utils.ts"
+  ],
+  "ui/risk.ts": [
+    "i18n.ts",
+    "utils.ts"
+  ],
+  "ui/scanner.ts": [
+    "utils.ts",
+    "worker.ts"
+  ],
+  "ui/screens.ts": [
+    "demo.ts",
+    "i18n.ts",
+    "market.ts",
+    "trading.ts",
+    "ui/oracle.ts",
+    "ui/risk.ts",
+    "ui/scanner.ts",
+    "utils.ts"
+  ],
+  "ui/settings.ts": [
+    "auth.ts",
+    "crypto.ts",
+    "i18n.ts",
+    "trading.ts",
+    "ui/diagnostics.ts",
+    "ui/screens.ts",
+    "ui/terms.ts",
+    "ui/themes.ts",
+    "utils.ts"
+  ],
+  "ui/splash.ts": [],
+  "ui/terms.ts": [
+    "utils.ts"
+  ],
+  "ui/themes.ts": [
+    "i18n.ts",
+    "themes.ts",
+    "utils.ts"
+  ],
+  "ui/timeframes.ts": [
+    "chart.ts",
+    "sources/candles.ts",
+    "sources/stream.ts",
+    "utils.ts"
+  ],
+  "ui/tooltip.ts": [],
+  "ui/whale.ts": [
+    "i18n.ts",
+    "sources/funding.ts",
+    "sources/orderbook.ts",
+    "utils.ts"
+  ],
+  "utils.ts": [
+    "i18n.ts"
+  ],
+  "worker.ts": []
+}

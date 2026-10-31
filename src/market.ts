@@ -12,6 +12,7 @@ import {
 } from './indicators';
 import { fetchCandlesWithSource } from './sources/candles';
 import { P } from './config';
+import type { Candle } from './sources/candles';
 
 const COINPAPRIKA = P('coinpaprika', 'https://api.coinpaprika.com');
 const FNG         = P('fng',         'https://api.alternative.me');
@@ -380,14 +381,20 @@ export interface AdvancedAnalytics {
 
 const _advCache = new Map<string, { value: AdvancedAnalytics; ts: number }>();
 
-export async function getAdvancedAnalytics(ticker: string): Promise<AdvancedAnalytics> {
+export async function getAdvancedAnalytics(ticker: string, preCandles?: Candle[]): Promise<AdvancedAnalytics> {
   const cached = _advCache.get(ticker);
   if (cached && Date.now() - cached.ts < 300_000) {
     return cached.value;
   }
 
   try {
-    const { data } = await fetchCandlesWithSource(ticker, 120);
+    let data: Candle[];
+    if (preCandles && preCandles.length >= 120) {
+      data = preCandles.slice(-120); // Берем последние 120 свечей
+    } else {
+      const res = await fetchCandlesWithSource(ticker, 120);
+      data = res.data;
+    }
     const closes = data.map(c => c.close);
     const highs = data.map(c => c.high);
     const lows = data.map(c => c.low);

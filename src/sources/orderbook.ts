@@ -115,78 +115,99 @@ function pressureNear(bids: [number, number][], asks: [number, number][], mid: n
   return (b - a) / (b + a + 1e-9);
 }
 
+const _orderbookPending = new Map<string, Promise<OrderbookResult>>();
+
 export async function getAggregatedOrderbook(ticker: string): Promise<OrderbookResult> {
-  const t0 = performance.now();
-  const results = await Promise.allSettled(
-    EXCHANGES.map(async (ex) => {
-      const [bids, asks] = await ex.fetch(ticker);
-      return { name: ex.name, bids, asks };
-    })
-  );
-
-  const rawBids: [number, number][] = [];
-  const rawAsks: [number, number][] = [];
-  const sourcesOk: string[] = [];
-  const sourcesFailed: string[] = [];
-
-  for (let i = 0; i < results.length; i++) {
-    const res = results[i];
-    if (res.status === 'fulfilled') {
-      const { bids, asks } = res.value;
-      for (const [p, q] of bids) rawBids.push([parseFloat(p), parseFloat(q)]);
-      for (const [p, q] of asks) rawAsks.push([parseFloat(p), parseFloat(q)]);
-      sourcesOk.push(EXCHANGES[i].name);
-    } else {
-      sourcesFailed.push(EXCHANGES[i].name);
-    }
+  const key = ticker.toUpperCase();
+  
+  // Если запрос уже в процессе — возвращаем его же (не создаем новый)
+  if (_orderbookPending.has(key)) {
+    return _orderbookPending.get(key)!;
   }
 
-  if (!rawBids.length || !rawAsks.length) {
+  const fetchPromise = (async (): Promise<OrderbookResult> => {
+    const t0 = performance.now();
+    const results = await Promise.allSettled(
+      EXCHANGES.map(async (ex) => {
+        const [bids, asks] = await ex.fetch(ticker);
+        return { name: ex.name, bids, asks };
+      })
+    );
+
+    const rawBids: [number, number][] = [];
+    const rawAsks: [number, number][] = [];
+    const sourcesOk: string[] = [];
+    const sourcesFailed: string[] = [];
+
+    for (let i = 0; i < results.length; i++) {
+      const res = results[i];
+      if (res.status === 'fulfilled') {
+        const { bids, asks } = res.value;
+        for (const [p, q] of bids) rawBids.push([parseFloat(p), parseFloat(q)]);
+        for (const [p, q] of asks) rawAsks.push([parseFloat(p), parseFloat(q)]);
+        sourcesOk.push(EXCHANGES[i].name);
+      } else {
+        sourcesFailed.push(EXCHANGES[i].name);
+      }
+    }
+
+    if (!rawBids.length || !rawAsks.length) {
+      return {
+        status: 'error', bidsPct: 50, asksPct: 50,
+        pressureRaw: 0, pressureWeighted: 0, pressureNear: 0,
+        totalBidsUsdt: 0, totalAsksUsdt: 0,
+        midPrice: null, bestBidWall: null, bestAskWall: null,
+        sources: sourcesOk, sourceCount: sourcesOk.length, sourcesFailed,
+      };
+    }
+
+    const bestBid = Math.max(...rawBids.map(([p]) => p));
+    const bestAsk = Math.min(...rawAsks.map(([p]) => p));
+    const midPrice = (bestBid + bestAsk) / 2;
+
+    const bidsClean = cleanSpoof(rawBids, midPrice);
+    const asksClean = cleanSpoof(rawAsks, midPrice);
+
+    const totalBids = bidsClean.reduce((s, [p, q]) => s + p * q, 0);
+    const totalAsks = asksClean.reduce((s, [p, q]) => s + p * q, 0);
+    const total = totalBids + totalAsks;
+    const bidsPct = total > 0 ? (totalBids / total) * 100 : 50;
+    const pressureRaw = (totalBids - totalAsks) / (totalBids + totalAsks + 1e-9);
+    const pressureW = pressureWeighted(bidsClean, asksClean, midPrice);
+    const pressureN = pressureNear(bidsClean, asksClean, midPrice);
+
+    const isFar = (p: number) => Math.abs(p - midPrice) / midPrice * 100 >= 1.0;
+    const farBids = bidsClean.filter(([p]) => isFar(p));
+    const farAsks = asksClean.filter(([p]) => isFar(p));
+    const wallBid = farBids.length ? farBids.reduce((b, c) => c[0] * c[1] > b[0] * b[1] ? c : b) : null;
+    const wallAsk = farAsks.length ? farAsks.reduce((b, c) => c[0] * c[1] > b[0] * b[1] ? c : b) : null;
+
+    const ms = Math.round(performance.now() - t0);
+    console.log(`[perf] orderbook ${ticker} in ${ms}ms, sources: ${sourcesOk.join(',')}, pressure: raw=${pressureRaw.toFixed(3)} w=${pressureW.toFixed(3)} near=${pressureN.toFixed(3)}`);
+
     return {
-      status: 'error', bidsPct: 50, asksPct: 50,
-      pressureRaw: 0, pressureWeighted: 0, pressureNear: 0,
-      totalBidsUsdt: 0, totalAsksUsdt: 0,
-      midPrice: null, bestBidWall: null, bestAskWall: null,
+      status: 'success',
+      bidsPct: Math.round(bidsPct * 10) / 10,
+      asksPct: Math.round((100 - bidsPct) * 10) / 10,
+      pressureRaw: Math.round(pressureRaw * 1000) / 1000,
+      pressureWeighted: Math.round(pressureW * 1000) / 1000,
+      pressureNear: Math.round(pressureN * 1000) / 1000,
+      totalBidsUsdt: Math.round(totalBids * 100) / 100,
+      totalAsksUsdt: Math.round(totalAsks * 100) / 100,
+      midPrice,
+      bestBidWall: wallBid ? { price: wallBid[0], total: wallBid[0] * wallBid[1] } : null,
+      bestAskWall: wallAsk ? { price: wallAsk[0], total: wallAsk[0] * wallAsk[1] } : null,
       sources: sourcesOk, sourceCount: sourcesOk.length, sourcesFailed,
     };
+  })();
+
+  // Сохраняем промис в кэш
+  _orderbookPending.set(key, fetchPromise);
+
+  try {
+    return await fetchPromise;
+  } finally {
+    // Удаляем из кэша, когда запрос завершился (успешно или с ошибкой)
+    _orderbookPending.delete(key);
   }
-
-  const bestBid = Math.max(...rawBids.map(([p]) => p));
-  const bestAsk = Math.min(...rawAsks.map(([p]) => p));
-  const midPrice = (bestBid + bestAsk) / 2;
-
-  const bidsClean = cleanSpoof(rawBids, midPrice);
-  const asksClean = cleanSpoof(rawAsks, midPrice);
-
-  const totalBids = bidsClean.reduce((s, [p, q]) => s + p * q, 0);
-  const totalAsks = asksClean.reduce((s, [p, q]) => s + p * q, 0);
-  const total = totalBids + totalAsks;
-  const bidsPct = total > 0 ? (totalBids / total) * 100 : 50;
-  const pressureRaw = (totalBids - totalAsks) / (totalBids + totalAsks + 1e-9);
-  const pressureW = pressureWeighted(bidsClean, asksClean, midPrice);
-  const pressureN = pressureNear(bidsClean, asksClean, midPrice);
-
-  const isFar = (p: number) => Math.abs(p - midPrice) / midPrice * 100 >= 1.0;
-  const farBids = bidsClean.filter(([p]) => isFar(p));
-  const farAsks = asksClean.filter(([p]) => isFar(p));
-  const wallBid = farBids.length ? farBids.reduce((b, c) => c[0] * c[1] > b[0] * b[1] ? c : b) : null;
-  const wallAsk = farAsks.length ? farAsks.reduce((b, c) => c[0] * c[1] > b[0] * b[1] ? c : b) : null;
-
-  const ms = Math.round(performance.now() - t0);
-  console.log(`[perf] orderbook ${ticker} in ${ms}ms, sources: ${sourcesOk.join(',')}, pressure: raw=${pressureRaw.toFixed(3)} w=${pressureW.toFixed(3)} near=${pressureN.toFixed(3)}`);
-
-  return {
-    status: 'success',
-    bidsPct: Math.round(bidsPct * 10) / 10,
-    asksPct: Math.round((100 - bidsPct) * 10) / 10,
-    pressureRaw: Math.round(pressureRaw * 1000) / 1000,
-    pressureWeighted: Math.round(pressureW * 1000) / 1000,
-    pressureNear: Math.round(pressureN * 1000) / 1000,
-    totalBidsUsdt: Math.round(totalBids * 100) / 100,
-    totalAsksUsdt: Math.round(totalAsks * 100) / 100,
-    midPrice,
-    bestBidWall: wallBid ? { price: wallBid[0], total: wallBid[0] * wallBid[1] } : null,
-    bestAskWall: wallAsk ? { price: wallAsk[0], total: wallAsk[0] * wallAsk[1] } : null,
-    sources: sourcesOk, sourceCount: sourcesOk.length, sourcesFailed,
-  };
 }

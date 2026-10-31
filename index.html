@@ -351,18 +351,22 @@
       <div class="card-body" id="walls-content"></div>
     </div>
 
-    <div class="card" id="monitor-panel" style="display:none;border-color:rgba(69,224,168,.3);">
-      <div class="card-head" style="color:var(--mint);background:linear-gradient(90deg, rgba(69,224,168,.08), transparent 60%);">
-        <div class="card-head-icon">
-          <svg style="color:var(--mint);"><use href="#i-trending"/></svg>
-          <span id="lbl-monitor">Live monitoring</span>
-          <span id="mon-sym" style="color:var(--mint);margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:11px;">—</span>
-        </div>
-        <button onclick="stopMonitoring()" style="background:rgba(255,101,132,.12);border:1px solid rgba(255,101,132,.3);color:var(--coral);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;padding:5px 9px;border-radius:7px;letter-spacing:.5px;">STOP</button>
-      </div>
-      <div class="card-body">
-        <div class="monitor-price" id="mon-price">0.0000</div>
-        <div id="monitor-content"></div>
+      <div class="card" id="monitor-panel" style="display:none;border-color:rgba(69,224,168,.3);">
+      ...
+    </div>
+
+    <!-- ═══ APP FOOTER (ПАРТНЕРЫ И БЕЛАЯ КНИГА) ═══ -->
+    <div class="app-footer">
+      <!-- Твоя картинка-баннер -->
+      <img src="/images/partners-main.jpg" class="footer-partner-img" onerror="this.style.display='none'">
+      
+      <button class="footer-btn" onclick="openWhitePaper()">
+        <svg style="width:14px;height:14px;margin-right:6px;"><use href="#i-info"/></svg>
+        <span id="lbl-white-paper">White Paper & Partners</span>
+      </button>
+      
+      <div class="footer-copy">
+        NEBULA © 2026 · Powered by VELOX
       </div>
     </div>
   </section>
@@ -614,7 +618,7 @@
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.20</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.21</div>
     </div>
 
     <div class="terms-body">
@@ -663,7 +667,7 @@
 
       <h4>Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.20</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.21</b><br>
         Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
