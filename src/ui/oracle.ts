@@ -14,6 +14,7 @@ import type { AdvancedAnalytics } from '../market';
 import type { Candle } from '../sources/candles'; // <-- ИСПРАВЛЕНО ТУТ (две точки)
 import { getConfluence } from '../sources/confluence';
 import type { ConfluenceResult } from '../sources/confluence';
+import { openProModal } from '../pro';
 import {
   oracleAnalyze as engineOracleAnalyze,
   loadRiskProfile,
@@ -373,6 +374,26 @@ export function renderPro(adv: AdvancedAnalytics): void {
   if (!target) return;
   const en = isEN();
 
+  // ДОБАВЛЯЕМ ПРОВЕРКУ PRO:
+    if (!state.isPro) {
+    target.style.display = 'block';
+    target.innerHTML = `
+      <div style="text-align:center; padding: 40px 20px; background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 16px; margin-top: 20px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+        <div style="font-family:'Space Grotesk'; font-size: 18px; font-weight: 800; color: var(--hi); margin-bottom: 8px;">
+          Продвинутая аналитика (PRO)
+        </div>
+        <div style="font-size: 13px; color: var(--mut); line-height: 1.5; margin-bottom: 20px;">
+          Детальный разбор MACD, Bollinger Bands, Volume Profile и дивергенций доступен только в PRO версии.
+        </div>
+        <button class="btn-primary btn-mint" onclick="openProModal()" style="max-width: 250px; margin: 0 auto;">
+          💎 Открыть в PRO
+        </button>
+      </div>
+    `;
+    return;
+  }
+
   if (!adv || adv.status !== 'success') {
     target.innerHTML = `<div class="empty-msg">${tm('pro_hint')}</div>`;
     return;
@@ -571,6 +592,26 @@ export function renderConfluence(result: ConfluenceResult): void {
 
 export async function askAIMentor(): Promise<void> {
   if (!state.currentTicker) { toast(tm('enter_ticker'), 'warn'); return; }
+
+  // Лимит для Free
+  if (!state.isPro) {
+    const today = new Date().toDateString();
+    const limitStr = localStorage.getItem('nebulaAiLimit');
+    let limit = limitStr ? JSON.parse(limitStr) : { date: today, count: 0 };
+
+    if (limit.date !== today) {
+      limit = { date: today, count: 0 };
+    }
+
+    if (limit.count >= 3) {
+      toast('Лимит 3 запроса в день. Купи PRO для безлимита!', 'warn', 4000);
+      openProModal();
+      return;
+    }
+    
+    limit.count++;
+    localStorage.setItem('nebulaAiLimit', JSON.stringify(limit));
+  }
 
   const resultBox = document.getElementById('ai-result');
   if (!resultBox) return;

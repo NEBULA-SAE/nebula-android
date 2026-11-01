@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "NEBULA",
-  "version": "2.0.26",
+  "version": "2.0.27",
   "identifier": "com.nebula.oracle",
   "build": {
     "frontendDist": "../dist",
@@ -11,7 +11,7 @@
   },
   "app": {
     "windows": [
-      {
+            {
         "label": "main",
         "title": "NEBULA Oracle Terminal",
         "width": 1440,
@@ -24,7 +24,7 @@
         "decorations": false,
         "transparent": false,
         "theme": "Dark",
-        "backgroundColor": "#000000",
+        "backgroundColor": "#050811",
         "visible": false
       },
       {

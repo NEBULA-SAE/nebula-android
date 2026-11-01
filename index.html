@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="/styles/tauri.css">
   <link rel="stylesheet" href="/styles/themes.css">
 </head>
-<body>
+<body style="background-color: #050811; margin: 0; padding: 0;">
 
 <!-- ═══ SPLASH ═══ -->
 <div class="splash" id="nebula-splash">
@@ -134,19 +134,18 @@
 
 <header class="top-bar">
   <div class="top-row-1">
-        <div class="brand-mini-wrap">
-      <div class="brand-mini" style="display: flex; align-items: center; gap: 6px;">
-        <span class="brand-dot"></span>NEBULA
+              <div class="brand-mini-wrap">
+      <div class="brand-mini" id="main-brand" style="display: flex; align-items: center; gap: 6px;">
+        <span class="brand-dot"></span>
+        <span id="brand-text">NEBULA</span>
+        <button id="brand-pro-btn" onclick="openProModal()">PRO</button>
       </div>
-      <button class="demo-badge-btn" onclick="enterDemoMode()" title="Виртуальная торговля без риска">
-        🧪 DEMO
-      </button>
     </div>
     <div class="top-right">
       <button class="chip amber hide-on-mobile" onclick="openMarketPulse()" title="Market"><svg class="ico-sm"><use href="#i-globe"/></svg></button>
       <button class="chip mint hide-on-mobile" onclick="openLearning()" title="Learning"><svg class="ico-sm"><use href="#i-brain"/></svg></button>
       <button class="chip violet hide-on-mobile" onclick="openOrdersSheet()" title="Orders"><svg class="ico-sm"><use href="#i-bolt"/></svg></button>
-
+  
       <button class="chip cyan" onclick="openSettings()" title="Settings"><svg class="ico-sm"><use href="#i-settings"/></svg></button>
       <div class="lang-mini">
         <button id="lang-ru" onclick="setLanguage('ru')">RU</button>
@@ -493,7 +492,15 @@
 </main>
 
 <nav class="bottom-nav" id="main-nav">
-<button class="nav-btn hide-on-mobile" onclick="openCryptoHub('exchanges')">
+  
+  <!-- Логотип для ПК -->
+  <div class="brand-mini-pc hide-on-mobile" id="main-brand-pc" onclick="openProModal()" style="display: flex; align-items: center; gap: 8px; padding: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; cursor: pointer;">
+    <span class="brand-dot"></span>
+    <span id="brand-text-pc" style="font-family:'Space Grotesk', sans-serif; font-size:16px; font-weight:700; letter-spacing:1px;">NEBULA</span>
+    <button id="brand-pro-btn-pc">PRO</button>
+  </div>
+
+  <button class="nav-btn hide-on-mobile" onclick="openCryptoHub('exchanges')">
     <svg><use href="#i-globe"/></svg>
     <span class="lbl" id="nav-hub">Крипто-Хаб</span>
 </button>
@@ -508,7 +515,7 @@
 
   <div class="radar-center-wrap" id="radar-trigger-wrap">
     <button class="radar-trigger" id="radar-trigger">
-      <span class="rt-core">NEBUL</span>
+      <span class="rt-core" id="rt-core-text" style="font-size: 9px;">NEBULA PRO</span>
     </button>
   </div>
 
@@ -535,9 +542,9 @@
     <svg><use href="#i-wallet"/></svg>
     <span class="lbl" id="nav-portfolio">Баланс</span>
   </button>
-  <button class="nav-btn demo-nav-btn hide-on-mobile" onclick="enterDemoMode()" style="margin-top: auto; border: 1px dashed var(--violet); background: rgba(167,139,250,.05);">
-    <svg style="color:var(--violet)"><use href="#i-flask"/></svg>
-    <span class="lbl" style="color:var(--violet)">Демо-режим</span>
+  <button class="nav-btn hide-on-mobile" onclick="enterDemoMode()">
+    <svg><use href="#i-flask"/></svg>
+    <span class="lbl">Демо-режим</span>
   </button>
 </nav>
 
@@ -629,7 +636,7 @@
     <div class="about-hero">
       <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.26</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.27</div>
     </div>
 
     <div class="terms-body">
@@ -678,7 +685,7 @@
 
       <h4>Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.26</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.27</b><br>
         Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>

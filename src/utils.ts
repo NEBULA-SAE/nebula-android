@@ -85,6 +85,9 @@ export const state = {
   lastFuturesMetrics: null as any,      // funding_rate, oi, lsr
   lastMarketContext: null as any,       // fear_greed, regime, btc_trend
 
+  // ─── PRO LICENSE ───
+  isPro: false,
+
   // ─── DEMO MODE ───
   isDemoMode: false,
   demoBalance: 10000,

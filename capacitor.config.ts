@@ -4,11 +4,12 @@ const config: CapacitorConfig = {
   appId: 'com.nebula.oracle',
   appName: 'NEBULA',
   webDir: 'dist',
+  backgroundColor: '#050811', // <--- ДОБАВИТЬ ЭТО
   android: {
     allowMixedContent: true,
   },
   server: {
-    androidScheme: 'https', // ОБЯЗАТЕЛЬНО для работы Web Crypto
+    androidScheme: 'https',
   },
   plugins: {
     CapacitorHttp: {

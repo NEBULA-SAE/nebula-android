@@ -171,22 +171,6 @@
     background: linear-gradient(90deg, rgba(3,5,9,1) 0%, rgba(3,5,9,.98) 100%);
   }
 
-  .bottom-nav::before {
-    content: 'NEBULA';
-    display: block;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    padding: 0 16px 20px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(120deg, #fff 0%, #5ecbff 60%, #a78bfa 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
   .nav-btn {
     flex: 0 0 auto;
     flex-direction: row;

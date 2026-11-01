@@ -7,6 +7,7 @@ import { toast, isEN, state } from '../utils';
 import { setLang } from '../i18n';
 import './white-paper';
 import './hub';
+import { checkLocalProStatus } from '../pro';
 
 // ─── Реальные модули ───
 import { applyStaticTranslations, loadBTC } from './screens';
@@ -23,6 +24,24 @@ type TF = typeof VALID_TFS[number];
 
 export function initApp(): void {
   console.log('[init] NEBULA v2 стартует...');
+
+  // Проверка PRO статуса
+  const proStatus = checkLocalProStatus();
+  state.isPro = proStatus.active;
+  if (state.isPro) {
+    console.log('[init] PRO License Active ✓');
+    
+    // Меняем текст на NEBULA PRO и включаем золотой цвет для ПК и Мобилки
+    const updateBrand = (textId: string, brandId: string) => {
+      const textEl = document.getElementById(textId);
+      const brandEl = document.getElementById(brandId);
+      if (textEl) textEl.textContent = 'NEBULA PRO';
+      if (brandEl) brandEl.classList.add('pro-active');
+    };
+    
+    updateBrand('brand-text', 'main-brand');
+    updateBrand('brand-text-pc', 'main-brand-pc');
+  }
 
   // ─── 0. Восстанавливаем сохранённый таймфрейм ДО первого анализа ───
   //        (иначе первый mobileAnalyze стартует с дефолтным '1d',

@@ -1580,3 +1580,56 @@ body.in-demo-mode #screen-home {
     margin-bottom: 10px !important;
   }
 }
+
+/* ═══ КНОПКА PRO И ЦВЕТ NEBULA ═══ */
+
+/* Базовый градиент для текста (как было раньше) */
+#brand-text, #brand-text-pc {
+  background: linear-gradient(120deg, #fff 0%, #5ecbff 60%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Кнопка PRO */
+#brand-pro-btn, #brand-pro-btn-pc {
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 4px;
+  animation: proBlink 1.5s infinite;
+}
+
+@keyframes proBlink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(94,203,255,0.4); }
+  50% { opacity: 0.5; box-shadow: 0 0 0 rgba(94,203,255,0); }
+}
+
+/* Если подписка активна — текст становится золотым */
+.brand-mini.pro-active #brand-text, 
+.brand-mini-pc.pro-active #brand-text-pc {
+  background: linear-gradient(120deg, #fff 0%, #ffd700 60%, #ffb858 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+}
+
+/* Золотая точка */
+.brand-mini.pro-active .brand-dot, 
+.brand-mini-pc.pro-active .brand-dot {
+  background: #ffd700 !important;
+  box-shadow: 0 0 10px #ffd700 !important;
+}
+
+/* Прячем кнопку PRO, когда подписка есть */
+.brand-mini.pro-active #brand-pro-btn, 
+.brand-mini-pc.pro-active #brand-pro-btn-pc {
+  display: none !important;
+}

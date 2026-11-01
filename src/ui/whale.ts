@@ -7,6 +7,7 @@ import { tm, isEN } from '../i18n';
 import { fmtP, setHTML } from '../utils';
 import { getAggregatedFunding } from '../sources/funding';
 import { getAggregatedOrderbook } from '../sources/orderbook';
+import { state } from '../utils';
 
 let _extrasTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -436,7 +437,13 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
   }
 
   const isActive = volData.isWhaleActive || volData.score > 50;
-  const signals = buildSignals(volData);
+  
+  // Если не PRO — оставляем только Volume и OBV
+  let signals = buildSignals(volData);
+  if (!state.isPro) {
+    signals = signals.filter(s => s.key === 'volume' || s.key === 'obv');
+  }
+  
   const activeSignals = signals.filter(s => s.active);
 
   if (badge) {
@@ -507,10 +514,29 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
 // ─── XRAY + WALLS ───
 
 export async function fetchExtras(ticker: string): Promise<void> {
-  // Очищаем старый таймер, если он был
   if (_extrasTimer) {
     clearInterval(_extrasTimer);
     _extrasTimer = null;
+  }
+
+  // Если не PRO — показываем заглушки вместо X-Ray и Walls
+  if (!state.isPro) {
+    const xrayCard = document.getElementById('xray-card');
+    const wallsCard = document.getElementById('walls-card');
+    
+    if (xrayCard) {
+      xrayCard.style.display = 'block';
+      setHTML('xray-content', `
+        <div style="text-align:center; padding: 20px; color: var(--mut); font-size: 12px;">
+          🔒 Рентген толпы и Плиты в стакане доступны в PRO.<br>
+          <button class="btn-primary btn-mint" onclick="openProModal()" style="margin-top: 10px; font-size: 10px; padding: 8px 16px;">Открыть PRO</button>
+        </div>
+      `);
+    }
+    if (wallsCard) {
+      wallsCard.style.display = 'none'; // Или тоже заглушку, если хочешь
+    }
+    return;
   }
 
   const load = async () => {
@@ -523,12 +549,9 @@ export async function fetchExtras(ticker: string): Promise<void> {
     }
   };
 
-  // Загружаем сразу
   await load();
 
-  // И запускаем автообновление каждые 45 секунд
   _extrasTimer = setInterval(() => {
-    // Проверяем, активна ли вкладка (чтобы не грузить в фоне)
     if (document.visibilityState === 'visible') {
       load();
     }

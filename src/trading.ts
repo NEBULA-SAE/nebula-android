@@ -77,6 +77,13 @@ export function switchAiMode(mode: 'insight' | 'agent'): void {
 // ─── UI · Sheet с ордерами ───
 
 export async function openOrdersSheet(): Promise<void> {
+    // ДОБАВЛЯЕМ ПРОВЕРКУ PRO:
+  if (!state.isPro) {
+    if (typeof window !== 'undefined' && (window as any).openProModal) {
+      (window as any).openProModal();
+    }
+    return;
+  }
   const en = isEN();
   const isKucoin = state.currentExchange === 'kucoin';
 
