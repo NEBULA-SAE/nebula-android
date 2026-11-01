@@ -1,7 +1,7 @@
 # NEBULA Oracle Terminal — AI Context & Operations Manual
 
 > **Ручной handoff-файл** для передачи контекста ИИ-ассистенту в новом чате.
-> **Версия файла:** соответствует релизу **v2.0.22+** (2026-11-01)
+> **Версия файла:** соответствует релизу **v2.0.27+** (2026-11-01)
 > **Актуальная версия кода:** см. `package.json`
 
 ---
@@ -12,6 +12,8 @@
 
 **Ключевая фишка:** алгоритм **Oracle** — скоринг от -100 до +100, агрегирующий технические индикаторы, поведение китов, стакан, funding rate и историю. Выдаёт вердикт (strong_buy / buy / hold / avoid), рекомендует позицию и генерирует 3 сценария через AI (Groq).
 
+**Монетизация:** Внедрена система подписок PRO. Есть бесплатный функционал и закрытые фичи (ИИ без лимитов, Продвинутая аналитика, Риски, Радар китов). Лицензия привязывается к железу (HWID).
+
 ---
 
 ## 2. Стек и платформы
@@ -20,29 +22,24 @@
 |---|---|
 | Frontend | TypeScript + Vite 5.4 |
 | Графики | lightweight-charts 4.2 |
-| Android | Capacitor 8.5 |
+| Android | Capacitor 8.5 (настроен `cleartext: true` для HTTP) |
 | Windows | Tauri 2.x |
 | AI | Groq API (`openai/gpt-oss-120b`) + SSE Streaming |
 | Криптография | Web Crypto API (AES-256-GCM + PBKDF2) |
-| Хранилище | **IndexedDB** (память Оракула) + localStorage (настройки) |
+| Хранилище | **IndexedDB** (память Оракула) + localStorage (настройки, токен PRO) |
+| **License Server** | Node.js + SQLite (VPS: `http://85.192.42.177:3000`) |
 
 **Идентификатор приложения:** `com.nebula.oracle`
 
 ---
 
-## 3. РЕАЛЬНАЯ Архитектура (оптимизированная)
+## 3. РЕАЛЬНАЯ Архитектура
 
-В ходе последнего рефакторинга (v2.0.22) архитектура была значительно улучшена.
-
-### ✅ Выполненные оптимизации:
-1. **Promise-Кэш (Network Deduplication):** В `candles.ts` и `orderbook.ts` внедрен кэш на основе `Promise`. Если 5 модулей одновременно запрашивают одни и те же свечи или стакан, уходит **только один** сетевой запрос.
-2. **Data Threading (Единый пайплайн):** В `ui/oracle.ts` массив свечей загружается один раз и передается напрямую в `market.ts`, `oracle.ts` и `confluence.ts`. Больше нет дублирующих запросов.
-3. **IndexedDB:** Память Оракула (`nebulaMemory`) перенесена с `localStorage` на `IndexedDB` (файл `src/db.ts`). Это убрало лимит в 5 МБ и синхронные фризы.
-
-### ⚠️ Оставшиеся архитектурные проблемы:
-1. **God Object `main.ts`:** Импортирует 36 файлов из 46, раздувая бандл.
-2. **Циклические зависимости:** `ui/screens.ts` ↔ `ui/oracle.ts` ↔ `ui/pull-refresh.ts`.
-3. **Duplicate Exports:** Интерфейс `Candle` объявлен в нескольких файлах.
+### ✅ Ключевые модули:
+1. **PRO License System (`src/pro.ts`)**: Проверяет лицензию, генерирует HWID, отправляет запросы на VPS (активация, проверка).
+2. **Promise-Кэш (Network Deduplication):** В `candles.ts` и `orderbook.ts` внедрен кэш на основе `Promise`. Если 5 модулей одновременно запрашивают одни и те же свечи или стакан, уходит **только один** сетевой запрос.
+3. **Data Threading (Единый пайплайн):** В `ui/oracle.ts` массив свечей загружается один раз и передается напрямую в `market.ts`, `oracle.ts` и `confluence.ts`.
+4. **IndexedDB:** Память Оракула (`nebulaMemory`) перенесена с `localStorage` на `IndexedDB` (файл `src/db.ts`).
 
 ---
 
@@ -55,49 +52,65 @@
 
 ### 4.2 AI Mentor (Groq) с печатной машинкой
 Файл: `src/ai.ts` → `getAiMentor()`, `src/ui/oracle.ts` → `askAIMentor()`.
-**Новое:** Используется Server-Sent Events (SSE) стриминг. Функция `getAiMentor` возвращает данные чанками (`onStream`), а UI накапливает их и выводит на экран по 3 символа каждые 15мс (эффект печатной машинки ChatGPT).
+**Лимиты:** Free — 3 запроса в день (счетчик в localStorage). PRO — безлимит.
+Используется Server-Sent Events (SSE) стриминг (эффект печатной машинки).
 
-### 4.3 Whale Radar
+### 4.3 Whale Radar + PRO блокировки
 Файл: `src/ui/whale.ts`
-Собирает метрики (OI, LSR, Taker) с Bybit, OKX, Binance. Считает Whale Score. Выводит сигналы с простыми пояснениями (адаптировано под ПК `.pc-only` и мобилки `.mobile-only`).
+Собирает метрики (OI, LSR, Taker) с Bybit, OKX, Binance. 
+**Free-версия:** видит только Volume (Z-score) и OBV.
+**PRO-версия:** открывает OI, LSR, Taker, X-Ray, Walls (Плиты).
 
 ### 4.4 Multi-TF Confluence
 Файл: `src/sources/confluence.ts`
 Анализирует 1h, 1d, 1w. Для 1d использует свечи, переданные из `ui/oracle.ts` (Data Threading).
 
-### 4.5 Crypto Hub (Новое)
+### 4.5 Crypto Hub (Справочник)
 Файлы: `src/data/hub.ts` (данные) и `src/ui/hub.ts` (UI).
 Информационный справочник по биржам, обучающим материалам и инструментам. Показывает статус доступности для РФ (Работает / VPN / Недоступно). У каждой биржи есть подробное описание (плюсы, минусы, KYC, P2P, комиссии).
 
+### 4.6 PRO License System (Монетизация)
+- **Сервер:** Node.js + SQLite (порт 3000). Код сервера лежит на VPS в `/var/www/nebula-api/server.js` (запущен через PM2). Секретный пароль в коде: `ADMIN_SECRET`.
+- **Генерация:** Отдельный HTML-файл `admin-gen.html` на ПК (только у админа). Отправляет запрос на VPS и получает ключ.
+- **Привязка:** Один ключ = 1 ПК + 1 Смартфон. Сервер записывает HWID при первой активации. Попытка активации на другом устройстве выдаст ошибку.
+- **Клиент:** `src/pro.ts`. При активации токен сохраняется в `localStorage` (`nebulaProToken`). При старте `checkLocalProStatus()` проверяет срок действия.
+- **Стоимость:** Early Bird $29, Regular $249, Monthly $2.99, Yearly $19.99.
+
 ---
 
-## 5. Безопасность
+## 5. UI и Заставка
+Файл: `index.html`
+**7 экранов:** home, pro, scanner, fav, oracle, risk, portfolio.
+**Splash Screen:** 8 секунд. Canvas-анимация. Загрузка данных (графики/анализ) идет параллельно, заставка скрывается через `hideSplash()`.
+**Шапка (NEBULA PRO):** 
+- Надпись `NEBULA` (с градиентом) и рядом кнопка `[PRO]`, которая мигает контуром, если подписки нет.
+- При клике на `[PRO]` открывается окно тарифов.
+- Если PRO активна, кнопка исчезает, а надпись становится золотой `NEBULA PRO`.
+**Блокировка PRO в UI:**
+- `Risk Center` (`src/ui/risk.ts`) — полностью закрыт замочком.
+- `Аналитика` (`src/ui/oracle.ts` → `renderPro`) — закрыта замочком.
+- `Ордера` (`src/trading.ts` → `openOrdersSheet`) — при клике открывает окно PRO.
+
+---
+
+## 6. Безопасность
 Файлы: `src/auth.ts`, `src/crypto.ts`
 Шифрование ключей AES-256-GCM + PBKDF2 (150k). Пароль в sessionStorage, хеш в localStorage. Биометрия (Android).
 
 ---
 
-## 6. WebSocket и Real-time
+## 7. WebSocket и Real-time
 Файл: `src/sources/stream.ts` (класс `PriceStream`)
 **Критический фикс:** Символ всегда дополняется до `USDT` (`DASHUSDT`), иначе Binance закрывает соединение с кодом 1008.
 **Фикс Heartbeat:** Пинг `{"method":"ping"}` отправляется только для KuCoin. Для Binance полагаемся на нативные WS-пинги браузера.
-**Защита:** Флаг `chartLoading` блокирует отрисовку WS-свечей во время загрузки графика.
-
----
-
-## 7. UI и Заставка
-Файл: `index.html`
-**7 экранов:** home, pro, scanner, fav, oracle, risk, portfolio.
-**Splash Screen:** 8 секунд. Canvas-анимация с гироскопом (на мобилках) и мышью (на ПК). Кометы, глубокий космос, огромный логотип.
-**White Paper:** Внизу главного экрана находится футер с баннером партнеров и кнопкой вызова Белой Книги (`src/ui/white-paper.ts` и `src/data/info.ts`).
-**Radar Menu:** Кнопка NEBUL (на мобилках) открывает круговое меню. Кнопка «Крипто-Хаб» находится ровно вверху по центру.
 
 ---
 
 ## 8. Известные проблемы / TODO
 1. **Tauri:** Процесс `nebula.exe` висит после закрытия (WebSocket не убивается при закрытии окна).
-2. **God Object `main.ts`:** Разбить на более мелкие точки входа.
-3. **Duplicate Exports:** Убрать дублирование интерфейса `Candle`.
+2. **God Object `main.ts`:** Импортирует 36 файлов из 46.
+3. **Duplicate Exports:** Интерфейс `Candle` объявлен в нескольких файлах.
+4. **HTTPS на сервере:** Сейчас сервер лицензий работает по HTTP (`http://85.192.42.177:3000`). Для Android пришлось включить `cleartext: true` в `capacitor.config.ts`. В будущем стоит повесить SSL (Caddy/Nginx), чтобы не зависеть от этого флага.
 
 ---
 
@@ -120,64 +133,49 @@
 ## 11. История версий (последние)
 | Версия | Ключевое |
 |---|---|
-| v2.0.22+ | Crypto Hub (справочник бирж с деталями), фикс Landscape Mode (боковая панель), кнопка «Назад» в деталях хаба, актуализация данных по биржам РФ. |
-| v2.0.20+ | IndexedDB для Оракула, Promise-кэш (свечи/стакан), AI Streaming (эффект печатной машинки), White Paper (футер и партнеры), фикс heartbeat WS. |
-| v2.0.19+ | Dash Accordion, Whale Radar v2 (подсказки), AI 3-сценария, Blockbuster Splash, фикс WS (1008). |
+| v2.0.27+ | Внедрена система PRO (сервер, HWID, UI-заглушки), золотая надпись NEBULA PRO, фикс Android HTTP (cleartext), фикс верстки замочков. |
+| v2.0.22+ | Crypto Hub (справочник бирж с деталями), фикс Landscape Mode (боковая панель), кнопка «Назад» в деталях хаба. |
+| v2.0.20+ | IndexedDB для Оракула, Promise-кэш (свечи/стакан), AI Streaming (эффект печатной машинки), White Paper. |
 
 ---
 
 ## 12. ПОЛНАЯ ШПАРГАЛКА КОМАНД (PowerShell)
 
-Здесь собраны все команды для работы с проектом: от запуска до релиза.
-
 ### 🚀 Запуск и разработка
-| Действие | Команда | Описание |
-|---|---|---|
-| **Запуск Web (Браузер)** | `npm run dev` | Открывает `http://localhost:5173` (или 127.0.0.1). Используй для быстрой проверки UI. |
-| **Запуск Windows (Tauri)** | `npm run pc:dev` | Запускает нативное приложение (WebView2). Удобно для проверки нативных фич. |
-| **Запуск Android (Live Reload)** | `npx cap run android` | Собирает и запускает на подключенном устройстве/эмуляторе. |
-
-### 🛠️ Проверка и сборка
-| Действие | Команда | Описание |
-|---|---|---|
-| **Проверка типов** | `npm run check` | Запускает `tsc --noEmit`. **Всегда** запускай перед коммитом. |
-| **Сборка Windows (.exe)** | `npm run pc:build` | Создает установщик в `src-tauri/target/release/bundle/`. |
-| **Сборка Android (.apk)** | `npm run android:build:release` | Создает подписанный APK в `android/app/build/outputs/apk/release/`. |
-| **Полный релиз (Всё сразу)** | `.\scripts\release.ps1` | Скрипт сам поднимет версию, проверит секреты, соберет Web/PC/Android, сделает Git commit + push. |
-| **Генерация карты проекта** | `npm run context` | Обновляет `PROJECT_MAP.md` (сканирует структуру файлов). |
-
-### 🧹 Очистка и переустановка (Если что-то сломалось)
-| Действие | Команда | Описание |
-|---|---|---|
-| **Очистка кэша Vite** | `Remove-Item -Recurse -Force node_modules/.vite` | Если Vite начал выдавать странные ошибки или не видит изменения. |
-| **Полная переустановка** | `Remove-Item -Recurse -Force node_modules; Remove-Item -Force package-lock.json; npm install` | Удаляет все пакеты и ставит заново (займет время). |
-| **Очистка сборки Tauri** | `Remove-Item -Recurse -Force src-tauri/target` | Если сборка `.exe` падает с ошибками компиляции Rust. |
-
-### 🔍 Отладка и Инструменты
-| Действие | Инструкция |
-|---|---|
-| **Посмотреть базу Оракула** | 1. Открой `npm run dev` в Chrome. 2. Нажми `F12`. 3. Вкладка **Application** -> **IndexedDB** -> **NebulaDB** -> **oracleMemory**. |
-| **Посмотреть сохраненные ключи** | 1. Открой `npm run dev` в Chrome. 2. Нажми `F12`. 3. Вкладка **Application** -> **Local Storage** -> `http://localhost:5173`. (Ищи `nebulaGroqKey`, `nebulaConfig`). |
-| **Посмотреть логи WebSocket** | Открой консоль (F12), ищи строки `[stream] Binance open...`. Если видишь `close code=1008` — значит биржа отклонила соединение. |
-| **Проверить скорость загрузки** | В консоли ищи `[perf] candles ... in XXXms`. Если время > 1000ms — возможно, биржа тормозит или пропал интернет. |
-
-### 🌐 Git и версии
 | Действие | Команда |
 |---|---|
-| **Посмотреть последние коммиты** | `git log --oneline -5` |
-| **Посмотреть статус изменений** | `git status --short` |
-| **Сделать коммит вручную** | `git add .; git commit -m "Твое сообщение"; git push` |
-| **Откатиться к последнему коммиту** | `git reset --hard HEAD` (Осторожно: удалит все несохраненные изменения). |
+| **Запуск Web** | `npm run dev` |
+| **Запуск Windows (Tauri)** | `npm run pc:dev` |
+| **Запуск Android (Live)** | `npx cap run android` |
 
-### 📱 Android (Вспомогательные)
-| Действие | Команда / Инструкция |
+### 🛠️ Проверка и сборка
+| Действие | Команда |
 |---|---|
-| **Открыть Android Studio** | `npx cap open android` (Откроет проект в Android Studio для настройки подписи или эмулятора). |
-| **Синхронизировать Web -> Android** | `npx cap sync android` (Копирует свежие файлы из `dist/` в `android/app/src/main/assets/`). |
-| **Где лежит Keystore** | `android/app/nebula-release.keystore` (Пароль: `Nebula2026!`, Alias: `nebula`). |
+| **Проверка типов** | `npm run check` |
+| **Сборка Windows (.exe)** | `npm run pc:build` |
+| **Сборка Android (.apk)** | `npm run android:build:release` |
+| **Полный релиз (Всё сразу)** | `.\scripts\release.ps1` |
+| **Синхронизировать Web -> Android** | `npx cap sync android` |
 
-### 🪟 Windows (Tauri Вспомогательные)
-| Действие | Команда / Инструкция |
+### 🧹 Очистка и переустановка
+| Действие | Команда |
 |---|---|
-| **Открыть конфиг Tauri** | `src-tauri/tauri.conf.json` (Здесь настраиваются иконки, название, размеры окна). |
-| **Где лежат иконки** | `src-tauri/icons/` (Генерируются через `npx tauri icon path/to/image.png`). |
+| **Очистка кэша Vite** | `Remove-Item -Recurse -Force node_modules/.vite` |
+| **Полная переустановка** | `Remove-Item -Recurse -Force node_modules; Remove-Item -Force package-lock.json; npm install` |
+| **Очистка сборки Tauri** | `Remove-Item -Recurse -Force src-tauri/target` |
+
+### ☁️ Сервер (VPS Ubuntu)
+Зайти на сервер: `ssh -p 22 root@85.192.42.177`
+| Действие | Команда |
+|---|---|
+| **Перезагрузить сервер ключей** | `pm2 restart nebula-api` |
+| **Посмотреть логи сервера** | `pm2 logs nebula-api` |
+| **Посмотреть пароль админа** | `cat /var/www/nebula-api/server.js \| grep ADMIN_SECRET` |
+| **Посмотреть базу ключей** | `sqlite3 /var/www/nebula-api/licenses.db "SELECT * FROM keys;"` |
+
+### 🔍 Отладка
+| Действие | Инструкция |
+|---|---|
+| **Посмотреть базу Оракула** | F12 -> Application -> IndexedDB -> NebulaDB -> oracleMemory. |
+| **Посмотреть токен PRO** | F12 -> Application -> Local Storage -> `nebulaProToken`. |
+| **Проверить HWID** | В консоли приложения ввести: `localStorage.getItem('nebulaDeviceHwid')` |

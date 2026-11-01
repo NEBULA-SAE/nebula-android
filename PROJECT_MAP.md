@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.27** | Branch: `main` | Commit: `d7db1b1`
-> Generated: 2026-11-01 10:33
+> Version: **2.0.28** | Branch: `main` | Commit: `c30bae8`
+> Generated: 2026-11-01 10:53
 
 ---
 
@@ -38,16 +38,40 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 52
-- Total LOC in `src/`: 16237
-- Bundle (`dist/`): 57 files, 612.1 KB
+- Total LOC in `src/`: 16242
+- Bundle (`dist/`): 57 files, 612.2 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.27**
-- Last git tag: `v2.0.26`
+- `package.json` version: **2.0.28**
+- Last git tag: `v2.0.27`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `c30bae8` - 2026-11-01 - chore(release): v2.0.27
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `android/app/src/main/res/values/styles.xml`
+- `capacitor.config.ts`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/layout.css`
+- `public/styles/screens.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/pro.ts`
+- `src/trading.ts`
+- `src/ui/init.ts`
+- `src/ui/oracle.ts`
+- `src/ui/risk.ts`
+- `src/ui/whale.ts`
+- `src/utils.ts`
 
 ### `d7db1b1` - 2026-10-31 - chore(release): v2.0.26
 
@@ -114,26 +138,13 @@ Files:
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 
-### `b05ea08` - 2026-10-31 - chore(release): v2.0.22
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/screens.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.26`
+No changes since `v2.0.27`
 
 ## Recent tags
 
+- `v2.0.27`
 - `v2.0.26`
 - `v2.0.25`
 - `v2.0.24`
@@ -143,7 +154,6 @@ No changes since `v2.0.26`
 - `v2.0.20`
 - `v2.0.19`
 - `v2.0.18`
-- `v2.0.17`
 
 ## File tree (src/)
 
@@ -202,7 +212,7 @@ src/
 +--   482 market.ts
 +--   824 oracle.ts
 +--   185 patterns.ts
-+--   206 pro.ts
++--   211 pro.ts
 +--   282 themes.ts
 +--   694 trading.ts
 +--   228 utils.ts
@@ -886,6 +896,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- c30bae8  2026-11-01  chore(release): v2.0.27
 - d7db1b1  2026-10-31  chore(release): v2.0.26
 - 44c550b  2026-10-31  chore(release): v2.0.25
 - 8984049  2026-10-31  chore(release): v2.0.24
@@ -900,7 +911,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - 8a239ea  2026-10-29  chore(release): v2.0.15
 - c695e5d  2026-10-29  chore(release): v2.0.14
 - 5a93e1f  2026-10-29  chore(release): v2.0.13
-- 3ef9fd6  2026-10-29  chore(release): v2.0.12
 
 ---
 

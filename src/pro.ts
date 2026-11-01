@@ -15,7 +15,12 @@ export interface ProStatus {
 export function getHardwareId(): string {
   let hwid = localStorage.getItem(HWID_KEY);
   if (!hwid) {
-    hwid = crypto.randomUUID();
+    // Безопасная генерация ID (работает на всех устройствах)
+    try {
+      hwid = crypto.randomUUID();
+    } catch (e) {
+      hwid = 'dev-' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    }
     localStorage.setItem(HWID_KEY, hwid);
   }
   return hwid;
