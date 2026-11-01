@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.29** | Branch: `main` | Commit: `1d8acd6`
-> Generated: 2026-11-01 11:10
+> Version: **2.0.30** | Branch: `main` | Commit: `6f7a1b1`
+> Generated: 2026-11-01 11:16
 
 ---
 
@@ -39,15 +39,30 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 - TypeScript files in `src/`: 52
 - Total LOC in `src/`: 16273
-- Bundle (`dist/`): 57 files, 613.3 KB
+- Bundle (`dist/`): 57 files, 614.2 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.29**
-- Last git tag: `v2.0.28`
+- `package.json` version: **2.0.30**
+- Last git tag: `v2.0.29`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `6f7a1b1` - 2026-11-01 - chore(release): v2.0.29
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/screens.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/pro.ts`
 
 ### `1d8acd6` - 2026-11-01 - chore(release): v2.0.28
 
@@ -124,27 +139,13 @@ Files:
 - `src/sources/orderbook.ts`
 - `src/ui/whale.ts`
 
-### `8984049` - 2026-10-31 - chore(release): v2.0.24
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/layout.css`
-- `public/styles/screens.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.28`
+No changes since `v2.0.29`
 
 ## Recent tags
 
+- `v2.0.29`
 - `v2.0.28`
 - `v2.0.27`
 - `v2.0.26`
@@ -154,7 +155,6 @@ No changes since `v2.0.28`
 - `v2.0.22`
 - `v2.0.21`
 - `v2.0.20`
-- `v2.0.19`
 
 ## File tree (src/)
 
@@ -900,6 +900,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 6f7a1b1  2026-11-01  chore(release): v2.0.29
 - 1d8acd6  2026-11-01  chore(release): v2.0.28
 - c30bae8  2026-11-01  chore(release): v2.0.27
 - d7db1b1  2026-10-31  chore(release): v2.0.26
@@ -914,7 +915,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - c93e08a  2026-10-30  chore(release): v2.0.17
 - e189a69  2026-10-30  chore(release): v2.0.16
 - 8a239ea  2026-10-29  chore(release): v2.0.15
-- c695e5d  2026-10-29  chore(release): v2.0.14
 
 ---
 

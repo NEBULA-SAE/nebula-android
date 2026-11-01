@@ -1643,3 +1643,27 @@ body.in-demo-mode #screen-home {
 .brand-mini.pro-active #brand-text {
   pointer-events: auto !important;
 }
+
+/* ═══ ФИКС КЛИКА ПО ЗОЛОТОМУ ТЕКСТУ НА ANDROID ═══ */
+.brand-mini, .brand-mini-pc {
+  position: relative;
+  z-index: 10;
+  padding: 8px; /* Увеличиваем зону нажатия */
+  margin: -8px; /* Компенсируем отступ, чтобы верстка не поехала */
+}
+
+/* Запрещаем кликать по самому тексту, чтобы клик проходил на родительский div */
+#brand-text, #brand-text-pc {
+  pointer-events: none !important;
+}
+
+/* Кнопку PRO (которая мигает) оставляем кликабельной */
+#brand-pro-btn, #brand-pro-btn-pc {
+  pointer-events: auto !important;
+}
+
+/* Убеждаемся, что контейнер точно ловит клики */
+.brand-mini, .brand-mini-pc {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
