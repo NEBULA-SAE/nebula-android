@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.28** | Branch: `main` | Commit: `c30bae8`
-> Generated: 2026-11-01 10:53
+> Version: **2.0.29** | Branch: `main` | Commit: `1d8acd6`
+> Generated: 2026-11-01 11:10
 
 ---
 
@@ -38,16 +38,32 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 52
-- Total LOC in `src/`: 16242
-- Bundle (`dist/`): 57 files, 612.2 KB
+- Total LOC in `src/`: 16273
+- Bundle (`dist/`): 57 files, 613.3 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.28**
-- Last git tag: `v2.0.27`
+- `package.json` version: **2.0.29**
+- Last git tag: `v2.0.28`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `1d8acd6` - 2026-11-01 - chore(release): v2.0.28
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `capacitor.config.ts`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/pro.ts`
 
 ### `c30bae8` - 2026-11-01 - chore(release): v2.0.27
 
@@ -123,27 +139,13 @@ Files:
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 
-### `e62752a` - 2026-10-31 - chore(release): v2.0.23
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/layout.css`
-- `public/styles/splash.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.27`
+No changes since `v2.0.28`
 
 ## Recent tags
 
+- `v2.0.28`
 - `v2.0.27`
 - `v2.0.26`
 - `v2.0.25`
@@ -153,7 +155,6 @@ No changes since `v2.0.27`
 - `v2.0.21`
 - `v2.0.20`
 - `v2.0.19`
-- `v2.0.18`
 
 ## File tree (src/)
 
@@ -212,7 +213,7 @@ src/
 +--   482 market.ts
 +--   824 oracle.ts
 +--   185 patterns.ts
-+--   211 pro.ts
++--   242 pro.ts
 +--   282 themes.ts
 +--   694 trading.ts
 +--   228 utils.ts
@@ -390,7 +391,10 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - checkLocalProStatus()
 - activateProKey()
 - openProModal()
+- showProTariffs()
 - submitProKey()
+- renewProKey()
+- deleteProLicense()
 - ProStatus (iface)
 
 ### `src/sources/candles.ts`
@@ -693,9 +697,9 @@ getAllKeys, getLang, isEN, setLang, tm
 
 oracleGetAnalogies, oracleGetRecent, oracleGetStats, oracleLearnPatterns, oracleUpdateOutcomes
 
-### `src/pro.ts` (3)
+### `src/pro.ts` (4)
 
-checkLocalProStatus, openProModal, submitProKey
+checkLocalProStatus, openProModal, renewProKey, submitProKey
 
 ### `src/themes.ts` (12)
 
@@ -896,6 +900,7 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 
 ## Release history (last 15 commits)
 
+- 1d8acd6  2026-11-01  chore(release): v2.0.28
 - c30bae8  2026-11-01  chore(release): v2.0.27
 - d7db1b1  2026-10-31  chore(release): v2.0.26
 - 44c550b  2026-10-31  chore(release): v2.0.25
@@ -910,7 +915,6 @@ about-overlay, about-title, agent-card, agent-content, ai-cmd-input, ai-cmd-resu
 - e189a69  2026-10-30  chore(release): v2.0.16
 - 8a239ea  2026-10-29  chore(release): v2.0.15
 - c695e5d  2026-10-29  chore(release): v2.0.14
-- 5a93e1f  2026-10-29  chore(release): v2.0.13
 
 ---
 

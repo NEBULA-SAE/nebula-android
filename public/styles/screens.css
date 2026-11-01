@@ -1633,3 +1633,13 @@ body.in-demo-mode #screen-home {
 .brand-mini-pc.pro-active #brand-pro-btn-pc {
   display: none !important;
 }
+
+.brand-mini {
+  touch-action: manipulation !important;
+  cursor: pointer !important;
+}
+
+/* Чтобы золотой текст не блокировал клики */
+.brand-mini.pro-active #brand-text {
+  pointer-events: auto !important;
+}

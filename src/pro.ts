@@ -15,7 +15,6 @@ export interface ProStatus {
 export function getHardwareId(): string {
   let hwid = localStorage.getItem(HWID_KEY);
   if (!hwid) {
-    // Безопасная генерация ID (работает на всех устройствах)
     try {
       hwid = crypto.randomUUID();
     } catch (e) {
@@ -81,11 +80,11 @@ export function openProModal(): void {
   const en = isEN();
   const currentStatus = checkLocalProStatus();
 
-  // Если уже активен — показываем статус
+  // Если уже активен — показываем статус и кнопки управления
   if (currentStatus.active) {
     const expDate = currentStatus.expiresAt === 0 
       ? (en ? 'Lifetime' : 'Навсегда') 
-          : new Date(currentStatus.expiresAt || 0).toLocaleDateString();
+      : new Date(currentStatus.expiresAt || 0).toLocaleDateString();
 
     const html = `
       <div style="text-align:center; padding: 20px 0;">
@@ -103,16 +102,31 @@ export function openProModal(): void {
             <span style="color: var(--hi); font-weight: bold; font-size: 12px;">${expDate}</span>
           </div>
         </div>
-        <button class="btn-primary" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top: 20px;">
-          ${en ? 'Close' : 'Закрыть'}
-        </button>
+
+        <!-- Кнопки управления подпиской -->
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+          <button class="btn-primary" onclick="renewProKey()" style="background: linear-gradient(135deg, #4e8fff, #5ecbff); color: #fff;">
+            🔄 ${en ? 'Renew / Upgrade' : 'Продлить / Обновить ключ'}
+          </button>
+          <button class="btn-primary" onclick="deleteProLicense()" style="background: transparent; border: 1px solid var(--coral); color: var(--coral);">
+            🗑️ ${en ? 'Reset License' : 'Сбросить лицензию'}
+          </button>
+        </div>
+
+        <div style="font-size: 11px; color: var(--dim);">HWID: ${getHardwareId().slice(0, 13)}...</div>
       </div>
     `;
     (window as any).openSheet?.(en ? 'PRO Status' : 'Статус PRO', html);
     return;
   }
 
-  // Если не активен — показываем цены и ввод ключа
+  // Если не активен — показываем тарифы
+  showProTariffs();
+}
+
+// Показ тарифов (вынесено отдельно, чтобы использовать и при "Продлить")
+export function showProTariffs(): void {
+  const en = isEN();
   const html = `
     <div style="text-align:center; margin-bottom: 20px;">
       <div style="font-size: 40px; margin-bottom: 10px;">💎</div>
@@ -153,8 +167,8 @@ export function openProModal(): void {
       </div>
     </div>
 
-    <!-- Кнопка покупки -->
-    <a href="https://t.me/ВАШ_ТЕЛЕГРАМ" target="_blank" style="display: block; width: 100%; padding: 12px; background: linear-gradient(135deg, #a78bfa, #5ecbff); color: #000; font-family: 'Space Grotesk'; font-size: 14px; font-weight: 800; border-radius: 12px; text-decoration: none; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(94,203,255,.4);">
+    <!-- Кнопка покупки (ССЫЛКА ИЗМЕНЕНА НА VELOX_DEPIN) -->
+    <a href="https://t.me/VELOX_DEPIN" target="_blank" style="display: block; width: 100%; padding: 12px; background: linear-gradient(135deg, #a78bfa, #5ecbff); color: #000; font-family: 'Space Grotesk'; font-size: 14px; font-weight: 800; border-radius: 12px; text-decoration: none; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(94,203,255,.4);">
       ${en ? '💳 Buy License via Telegram' : '💳 Купить лицензию в Telegram'}
     </a>
 
@@ -201,11 +215,28 @@ export async function submitProKey(): Promise<void> {
   }
 }
 
+// Обработчик "Продлить"
+export function renewProKey(): void {
+  showProTariffs();
+}
+
+// Обработчик "Сбросить лицензию"
+export function deleteProLicense(): void {
+  const en = isEN();
+  if (!confirm(en ? 'Are you sure? The app will switch to FREE version.' : 'Вы уверены? Приложение переключится на БЕСПЛАТНУЮ версию.')) return;
+  
+  localStorage.removeItem(PRO_TOKEN_KEY);
+  (window as any).closeSheet?.();
+  setTimeout(() => location.reload(), 500);
+}
+
 // Экспорт в window
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     openProModal,
     submitProKey,
-    checkLocalProStatus
+    checkLocalProStatus,
+    renewProKey,      // <-- НОВОЕ
+    deleteProLicense  // <-- НОВОЕ
   });
 }
