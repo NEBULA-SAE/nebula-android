@@ -90,7 +90,10 @@ export function applyStaticTranslations(): void {
     'nav-home': 'dashboard', 'nav-pro': 'analytics', 'nav-scanner': 'scanner',
     'nav-fav': 'favorites', 'nav-oracle': 'oracle', 'nav-portfolio': 'portfolio',
     'nav-risk': 'nav_risk',
-    'radar-hub': 'nav_hub',
+    'radar-hub': 'nav_hub', 'radar-market': 'radar_market', 
+    'radar-fav': 'favorites', 'radar-risk': 'nav_risk', 
+    'radar-portfolio': 'portfolio', 'radar-orders': 'orders', 
+    'radar-learning': 'learning', 'dash-network-title': 'dash_network',
     'risk-page-title-text': 'risk',
     'lbl-rebound': 'rebound', 'lbl-drop': 'drop', 'lbl-trend': 'trend',
     'lbl-plan': 'plan', 'lbl-agent': 'agent', 'lbl-xray': 'xray', 'lbl-walls': 'walls',
@@ -106,19 +109,42 @@ export function applyStaticTranslations(): void {
     'terms-title': 'terms_title', 'about-title': 'about_title',
     'lbl-ai-mode-insight': 'ai_mode_insight', 'lbl-ai-mode-agent': 'ai_mode_agent',
     'lbl-ai-deposit': 'ai_deposit', 'lbl-ai-run': 'ai_run',
-    'demo-exit-btn': 'demo_leave',
-    'demo-reset-btn': 'demo_reset',
-    'lbl-demo-free': 'demo_free',
-    'lbl-demo-invested': 'demo_invested',
-    'lbl-demo-pnl': 'demo_pnl',
-    'lbl-demo-oracle-plan': 'demo_oracle_plan',
+    'demo-exit-btn': 'demo_leave', 'demo-reset-btn': 'demo_reset',
+    'lbl-demo-free': 'demo_free', 'lbl-demo-invested': 'demo_invested',
+    'lbl-demo-pnl': 'demo_pnl', 'lbl-demo-oracle-plan': 'demo_oracle_plan',
     'lbl-demo-virtual-trades': 'demo_virtual_trades',
-    'demo-empty-orders': 'demo_no_active',
-    'demo-empty-oracle': 'demo_enter_coin',
-    'oracle-analogs-empty': 'oracle_analogs_empty'
+    'demo-empty-orders': 'demo_no_active', 'demo-empty-oracle': 'demo_enter_coin',
+    'oracle-analogs-empty': 'oracle_analogs_empty',
+    'lbl-oracle-analogs': 'oracle_analogs_title',
+    'diag-title': 'diag_title',
+    'lbl-confluence': 'conf_title_short',
+
+    // ABOUT IDS
+    'about-what': 'about_what',
+    'about-what-desc': 'about_what_desc',
+    'about-who': 'about_who',
+    'about-who-desc': 'about_who_desc',
+    'about-can': 'about_can',
+    'about-platforms': 'about_platforms',
+    'about-plat-web': 'about_plat_web',
+    'about-plat-win': 'about_plat_win',
+    'about-plat-and': 'about_plat_and',
+    'about-security': 'about_security',
+    'about-security-desc': 'about_security_desc',
+    'about-tech': 'about_tech',
+    'about-version': 'about_version',
+    'about-build': 'about_build',
+    'about-feedback': 'about_feedback',
+    'about-feedback-desc': 'about_feedback_desc',
+    'about-warn': 'about_warn'
   };
 
-  const htmlIds = ['about-who-desc', 'about-security-desc', 'about-warn'];
+  // Список, который содержит HTML (innerHTML)
+  const htmlIds = [
+    'about-who-desc', 'about-security-desc', 'about-warn',
+    'about-plat-web', 'about-plat-win', 'about-plat-and'
+  ];
+
   Object.keys(map).forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -129,6 +155,10 @@ export function applyStaticTranslations(): void {
       }
     }
   });
+
+  // Отдельно переводим список фич (он большой)
+  const featuresList = document.getElementById('about-features-list');
+  if (featuresList) featuresList.innerHTML = tm('about_features_html');
 
   const inp = document.getElementById('ticker') as HTMLInputElement | null;
   if (inp) inp.placeholder = isEN() ? 'Ticker' : 'Тикер';

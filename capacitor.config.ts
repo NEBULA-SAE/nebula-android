@@ -10,7 +10,16 @@ const config: CapacitorConfig = {
   },
   server: {
     androidScheme: 'https',
-    cleartext: true, // <--- РАЗРЕШАЕМ HTTP ЗАПРОСЫ НА ANDROID
+    cleartext: true,
+    allowNavigation: [
+      'p2p.binance.com',
+      'www.binance.com',
+      'p2p.bybit.com',
+      'www.bybit.com',
+      'p2p.mexc.com',
+      'www.mexc.com',
+      'xgram.io'
+    ]
   },
   plugins: {
     CapacitorHttp: {

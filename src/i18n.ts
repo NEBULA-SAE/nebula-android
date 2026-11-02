@@ -420,9 +420,30 @@ const I18N_RU: Dict = {
   about_security_desc: 'API-ключи MEXC и Groq-ключ хранятся <strong>только локально</strong> на вашем устройстве. Шифрование — <b>AES-256-GCM + PBKDF2</b> (150 000 итераций). Мастер-пароль не сохраняется ни на сервере, ни в облаке и не покидает устройство. Даже автор программы не имеет к нему доступа.',
   about_tech: 'Технологии',
   about_version: 'Версия и сборка',
+  about_build: 'Сборка: Tauri (Windows) + Capacitor (Android) + Web',
   about_feedback: 'Обратная связь',
   about_feedback_desc: 'Нашли баг, есть идея или хотите предложить улучшение — пишите автору. Каждое сообщение читается лично, а не ботом.',
   about_warn: '⚠️ NEBULA — это <strong>инструмент анализа</strong>, а не финансовый советник. Все торговые решения вы принимаете самостоятельно и под свою ответственность. Рынок волатилен, прогнозы не гарантированы. <strong>Не торгуйте на средства, потерю которых не можете себе позволить.</strong>',
+  about_plat_web: '🌐 <b>Web</b> — работает в любом современном браузере;',
+  about_plat_win: '💻 <b>Windows</b> — нативное приложение через Tauri 2 (Rust + WebView2);',
+  about_plat_and: '📱 <b>Android</b> — APK через Capacitor 8 (без Google Play).',
+  
+  about_features_html: `
+    <li><b>Анализ с 5 бирж</b> — Gate.io, Binance, Bybit, OKX, MEXC одновременно;</li>
+    <li><b>Whale-радар</b> — Z-score объёмов, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
+    <li><b>Risk Command Center</b> — 5 индикаторов риска в едином светофоре;</li>
+    <li><b>Уведомления</b> — Price / Whale / Funding алерты с push;</li>
+    <li><b>AI-наставник</b> — объясняет простым языком, что происходит с монетой (Groq API);</li>
+    <li><b>AI-Агент</b> — принимает торговые команды на естественном языке («Купи DASH на 10% депо»);</li>
+    <li><b>Сканер дна</b> — по топ-200 монетам находит точки входа по алгоритму;</li>
+    <li><b>Технический анализ</b> — MACD, Bollinger, ADX, Stoch RSI, дивергенции, S/R уровни, Volume Profile;</li>
+    <li><b>Торговый план</b> — автоматический расчёт TP/SL и калькулятор сетки;</li>
+    <li><b>Таймфреймы</b> — 1m / 15m / 1h / 1d / 7d / 1M / ALL + WebSocket real-time;</li>
+    <li><b>TWAP</b> — плавное исполнение крупных ордеров без проскальзывания;</li>
+    <li><b>Портфель</b> — синхронизация через API биржи + курс USDT/RUB;</li>
+    <li><b>Демо-режим</b> — виртуальная торговля на $10 000 без риска потери реальных средств;</li>
+    <li><b>Тактический радар</b> — быстрое радиальное меню на смартфоне (нажми и веди палец).</li>
+  `,
 
   // ─── DIAGNOSTICS ───
   diag_title: '🩺 Диагностика',
@@ -986,9 +1007,30 @@ const I18N_EN: Dict = {
   about_security_desc: 'MEXC API keys and Groq key are stored <strong>only locally</strong> on your device. Encryption — <b>AES-256-GCM + PBKDF2</b> (150,000 iterations). The master password is not saved on the server, in the cloud, and does not leave the device. Even the author of the program does not have access to it.',
   about_tech: 'Technologies',
   about_version: 'Version and build',
+  about_build: 'Build: Tauri (Windows) + Capacitor (Android) + Web',
   about_feedback: 'Feedback',
   about_feedback_desc: 'Found a bug, have an idea, or want to suggest an improvement — write to the author. Every message is read personally, not by a bot.',
   about_warn: '⚠️ NEBULA is an <strong>analysis tool</strong>, not a financial advisor. You make all trading decisions yourself and at your own risk. The market is volatile, forecasts are not guaranteed. <strong>Do not trade with funds you cannot afford to lose.</strong>',
+  about_plat_web: '🌐 <b>Web</b> — works in any modern browser;',
+  about_plat_win: '💻 <b>Windows</b> — native app via Tauri 2 (Rust + WebView2);',
+  about_plat_and: '📱 <b>Android</b> — APK via Capacitor 8 (without Google Play).',
+  
+  about_features_html: `
+    <li><b>Analysis from 5 exchanges</b> — Gate.io, Binance, Bybit, OKX, MEXC simultaneously;</li>
+    <li><b>Whale radar</b> — volume Z-score, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
+    <li><b>Risk Command Center</b> — 5 risk indicators in a single traffic light;</li>
+    <li><b>Notifications</b> — Price / Whale / Funding alerts with push;</li>
+    <li><b>AI mentor</b> — explains in plain language what is happening with the coin (Groq API);</li>
+    <li><b>AI Agent</b> — accepts trading commands in natural language ("Buy DASH for 10% depo");</li>
+    <li><b>Bottom scanner</b> — finds entry points across top-200 coins using an algorithm;</li>
+    <li><b>Technical analysis</b> — MACD, Bollinger, ADX, Stoch RSI, divergences, S/R levels, Volume Profile;</li>
+    <li><b>Trade plan</b> — automatic TP/SL calculation and grid calculator;</li>
+    <li><b>Timeframes</b> — 1m / 15m / 1h / 1d / 7d / 1M / ALL + WebSocket real-time;</li>
+    <li><b>TWAP</b> — smooth execution of large orders without slippage;</li>
+    <li><b>Portfolio</b> — synchronization via exchange API + USDT/RUB rate;</li>
+    <li><b>Demo mode</b> — virtual trading on $10,000 without risking real funds;</li>
+    <li><b>Tactical radar</b> — quick radial menu on smartphone (press and drag).</li>
+  `,
 
   // ─── DIAGNOSTICS ───
   diag_title: '🩺 Diagnostics',
@@ -1003,9 +1045,13 @@ const I18N_EN: Dict = {
   donate_copied: '✅ USDT address copied',
   donate_copy_err: 'Failed to copy',
 
+  // ─── RADAR ───
   radar_market: 'Market',
+
+  // ─── CONFLUENCE TITLE ───
   conf_title_short: 'Multi-TF',
 
+  // ─── AUTH ───
   auth_create_title: '🔐 Create password',
   auth_create_desc: 'Create a password. It will be used to encrypt API keys.',
   auth_login_title: '🔐 Login to NEBULA',
@@ -1027,23 +1073,29 @@ const I18N_EN: Dict = {
   auth_check_error: 'Verification error',
   auth_bio_failed_enter: 'Biometrics failed. Enter password.',
 
+  // ─── ALERTS ───
   alert_type: 'Type',
   alert_enter_ticker: 'Enter ticker',
   alert_enter_threshold: 'Enter threshold',
 
+  // ─── PULL REFRESH ───
   ptr_pull: 'Pull down',
   ptr_release: 'Release',
   ptr_refresh: 'Refreshing...',
 
+  // ─── INIT DIAG TOAST ───
   diag_toast_errors: 'Diagnostics: {n} errors. Open report via ⚙️ → Diagnostics.',
 
+  // ─── DEMO MISC ───
   demo_take: '✅ Take',
   demo_stop: '❌ Stop',
   demo_cancel_order: 'Cancel order',
 
+  // ─── WHALE PRO ───
   whale_pro_xray: 'Crowd x-ray and Order book walls are available in PRO.',
   whale_pro_btn: 'Open PRO',
 
+  // ─── ORACLE ENGINE ───
   oracle_step_tech: 'Technical analysis',
   oracle_step_div: 'Divergence',
   oracle_step_whales: 'Whales',
@@ -1098,6 +1150,7 @@ const I18N_EN: Dict = {
   oracle_onchain_active: 'Active trading',
   oracle_onchain_low: 'Low activity',
 
+  // ─── INDICATORS / REGIME ───
   regime_bull_btc: '🐂 Strong bull market. BTC dominates, money flows into large coins.',
   regime_bull_mild: '📈 Moderately bullish market. There is an appetite for risk.',
   regime_bear: '🔻 Strong bear market. Better to hold cash.',
@@ -1105,6 +1158,7 @@ const I18N_EN: Dict = {
   regime_altseason: '🚀 Altseason! Money flows into altcoins.',
   regime_neutral: '⚖️ Market is consolidating.',
 
+  // ─── MARKET ADVICE ───
   advice_btc_bottom: '🟢 BTC at the bottom of the 120-day range. Excellent accumulation zone.',
   advice_btc_overheat: '🔴 BTC is overheated. Correction likely.',
   advice_btc_uptrend: '📈 BTC in a healthy uptrend.',
@@ -1115,12 +1169,14 @@ const I18N_EN: Dict = {
   market_dexpaprika_down: 'DexPaprika unavailable',
   market_token_not_found: 'Token not found in DEX',
 
+  // ─── THEMES ───
   theme_not_found: 'Theme not found',
   theme_group_accents: 'Accents',
   theme_group_bg: 'Background',
   theme_group_text: 'Text',
   theme_group_gradient: 'Gradient',
 
+  // ─── INFO / WHITE PAPER ───
   wp_mission_text: 'Give retail traders access to institutional analytics. We combined machine learning, streaming data from 6 exchanges, and risk assessment algorithms in one terminal.',
   wp_release_date: 'November 01, 2026',
 };

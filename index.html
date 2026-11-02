@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -184,8 +184,13 @@
       <div class="top-right">
       <button class="chip amber hide-on-mobile" onclick="openMarketPulse()" title="Market"><svg class="ico-sm"><use href="#i-globe"/></svg></button>
       <button class="chip mint hide-on-mobile" onclick="openLearning()" title="Learning"><svg class="ico-sm"><use href="#i-brain"/></svg></button>
-          <button class="chip violet hide-on-mobile" onclick="openOrdersSheet()" title="Orders"><svg class="ico-sm"><use href="#i-bolt"/></svg></button>
+      <button class="chip violet hide-on-mobile" onclick="openOrdersSheet()" title="Orders"><svg class="ico-sm"><use href="#i-bolt"/></svg></button>
   
+        <!-- ОБЪЕДИНЕННАЯ КНОПКА ОБМЕНА -->
+      <button class="chip" onclick="openExchangeMenu()" title="Обмен криптовалюты" style="color: #fcd535; border-color: rgba(252,213,53,.35); background: rgba(252,213,53,.08);">
+        <svg class="ico-sm" style="width:15px;height:15px;"><use href="#i-bolt"/></svg>
+      </button>
+
         <!-- Кнопка DEMO (красивая фиолетовая) -->
       <button class="chip demo-chip-glow" onclick="enterDemoMode()" title="Демо-режим">
         <svg class="ico-sm" style="width:16px;height:16px;"><use href="#i-demo"/></svg>
@@ -678,9 +683,9 @@
     </div>
 
     <div class="about-hero">
-      <img src="ic_launcher-playstore.png" alt="NEBULA" onerror="this.style.display='none'">
+      <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.30</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.31</div>
     </div>
 
     <div class="terms-body">
@@ -693,28 +698,15 @@
       </div>
 
       <h4 id="about-can">Что умеет</h4>
-      <ul>
-        <li><b>Анализ с 5 бирж</b> — Gate.io, Binance, Bybit, OKX, MEXC одновременно;</li>
-        <li><b>Whale-радар</b> — Z-score объёмов, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
-        <li><b>Risk Command Center</b> — 5 индикаторов риска в едином светофоре;</li>
-        <li><b>Уведомления</b> — Price / Whale / Funding алерты с push;</li>
-        <li><b>AI-наставник</b> — объясняет простым языком, что происходит с монетой (Groq API);</li>
-        <li><b>AI-Агент</b> — принимает торговые команды на естественном языке («Купи DASH на 10% депо»);</li>
-        <li><b>Сканер дна</b> — по топ-200 монетам находит точки входа по алгоритму;</li>
-        <li><b>Технический анализ</b> — MACD, Bollinger, ADX, Stoch RSI, дивергенции, S/R уровни, Volume Profile;</li>
-        <li><b>Торговый план</b> — автоматический расчёт TP/SL и калькулятор сетки;</li>
-        <li><b>Таймфреймы</b> — 1m / 15m / 1h / 1d / 7d / 1M / ALL + WebSocket real-time;</li>
-        <li><b>TWAP</b> — плавное исполнение крупных ордеров без проскальзывания;</li>
-        <li><b>Портфель</b> — синхронизация через API биржи + курс USDT/RUB;</li>
-        <li><b>Демо-режим</b> — виртуальная торговля на $10 000 без риска потери реальных средств;</li>
-        <li><b>Тактический радар</b> — быстрое радиальное меню на смартфоне (нажми и веди палец).</li>
+      <ul id="about-features-list">
+        <!-- Список подставляется через JS -->
       </ul>
 
       <h4 id="about-platforms">Платформы</h4>
       <ul id="about-platforms-list">
-        <li>🌐 <b>Web</b> — работает в любом современном браузере;</li>
-        <li>💻 <b>Windows</b> — нативное приложение через Tauri 2 (Rust + WebView2);</li>
-        <li>📱 <b>Android</b> — APK через Capacitor 8 (без Google Play).</li>
+        <li id="about-plat-web">🌐 <b>Web</b> — работает в любом современном браузере;</li>
+        <li id="about-plat-win">💻 <b>Windows</b> — нативное приложение через Tauri 2 (Rust + WebView2);</li>
+        <li id="about-plat-and">📱 <b>Android</b> — APK через Capacitor 8 (без Google Play).</li>
       </ul>
 
       <h4 id="about-security">Безопасность</h4>
@@ -729,8 +721,8 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.30</b><br>
-        Сборка: Tauri (Windows) + Capacitor (Android) + Web<br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.31</b><br>
+        <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
 
