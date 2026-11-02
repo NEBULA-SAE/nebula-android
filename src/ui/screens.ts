@@ -58,14 +58,27 @@ export function setLanguage(lang: 'ru' | 'en'): void {
   if (state.currentTicker) {
     (window as any).mobileAnalyze?.();
   }
-  if (document.getElementById('screen-fav')?.classList.contains('active')) {
-    renderFavorites();
+
+  // Мгновенная перерисовка активных экранов
+  const activeScreen = document.querySelector('.screen.active')?.id;
+  if (activeScreen === 'screen-fav') renderFavorites();
+  if (activeScreen === 'screen-oracle') renderOracleDashboard();
+  if (activeScreen === 'screen-risk') import('./risk').then(m => m.renderRiskCenter()).catch(() => { /* silent */ });
+
+  // Мгновенная перерисовка открытых модалок
+  if (document.getElementById('sheet-overlay')?.classList.contains('open')) {
+    const title = document.getElementById('sheet-title')?.textContent;
+    if (title === '⚙️ Настройки' || title === '⚙️ Settings') {
+      (window as any).openSettings?.();
+    }
   }
-  if (document.getElementById('screen-oracle')?.classList.contains('active')) {
-    renderOracleDashboard();
+  if (document.getElementById('diag-overlay')?.classList.contains('open')) {
+    import('./diagnostics').then(m => m.runFullDiagnostics());
   }
-  if (document.getElementById('screen-risk')?.classList.contains('active')) {
-    import('./risk').then(m => m.renderRiskCenter()).catch(() => { /* silent */ });
+
+  // Мгновенная перерисовка Демо-режима
+  if (state.isDemoMode) {
+    renderDemoPlan();
   }
 
   toast(lang === 'en' ? 'Language: English' : 'Язык: Русский', 'success', 1500);
@@ -93,11 +106,28 @@ export function applyStaticTranslations(): void {
     'terms-title': 'terms_title', 'about-title': 'about_title',
     'lbl-ai-mode-insight': 'ai_mode_insight', 'lbl-ai-mode-agent': 'ai_mode_agent',
     'lbl-ai-deposit': 'ai_deposit', 'lbl-ai-run': 'ai_run',
+    'demo-exit-btn': 'demo_leave',
+    'demo-reset-btn': 'demo_reset',
+    'lbl-demo-free': 'demo_free',
+    'lbl-demo-invested': 'demo_invested',
+    'lbl-demo-pnl': 'demo_pnl',
+    'lbl-demo-oracle-plan': 'demo_oracle_plan',
+    'lbl-demo-virtual-trades': 'demo_virtual_trades',
+    'demo-empty-orders': 'demo_no_active',
+    'demo-empty-oracle': 'demo_enter_coin',
+    'oracle-analogs-empty': 'oracle_analogs_empty'
   };
 
+  const htmlIds = ['about-who-desc', 'about-security-desc', 'about-warn'];
   Object.keys(map).forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = tm(map[id]);
+    if (el) {
+      if (htmlIds.includes(id)) {
+        el.innerHTML = tm(map[id]);
+      } else {
+        el.textContent = tm(map[id]);
+      }
+    }
   });
 
   const inp = document.getElementById('ticker') as HTMLInputElement | null;
@@ -196,7 +226,7 @@ export function exitDemoMode() {
   import('../demo').then(m => m.stopDemoEngine());
 
   switchTab('home');
-  toast('Вы вышли из демо-режима', 'info');
+  toast(isEN() ? 'You have exited demo mode' : 'Вы вышли из демо-режима', 'info');
 }
 
 // Автокомплит для демо-поиска (защищён от дублей)
@@ -262,7 +292,7 @@ export function renderDemoPlan() {
   const prevAmount = (document.getElementById('demo-entry-amount') as HTMLInputElement | null)?.value || '';
 
   if (!state.lastMarketData || !state.lastMarketData.current_price) {
-    box.innerHTML = `<div class="empty-msg">Введи монету и нажми GO, чтобы Оракул составил план</div>`;
+    box.innerHTML = `<div class="empty-msg">${tm('demo_enter_coin')}</div>`;
     (window as any)._currentDemoPlan = null;
     return;
   }
@@ -282,33 +312,33 @@ export function renderDemoPlan() {
   const steps = is3Steps ? 3 : 2;
 
   let stratHtml = '<div class="demo-strategy-box">';
-  stratHtml += `<div class="demo-strat-step"><span class="lbl">Вход (Market)</span> <span class="val">${price.toFixed(4)}</span></div>`;
+  stratHtml += `<div class="demo-strat-step"><span class="lbl">${tm('demo_entry_market')}</span> <span class="val">${price.toFixed(4)}</span></div>`;
 
   if (steps === 2) {
-    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 1 (50%)</span> <span class="val tp">TP1: ${plan.tp1.toFixed(4)}</span></div>`;
-    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 2 (50%)</span> <span class="val tp">TP2: ${plan.tp2.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">${tm('demo_step')} 1 (50%)</span> <span class="val tp">TP1: ${plan.tp1.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">${tm('demo_step')} 2 (50%)</span> <span class="val tp">TP2: ${plan.tp2.toFixed(4)}</span></div>`;
   } else {
-    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 1 (34%)</span> <span class="val tp">TP1: ${plan.tp1.toFixed(4)}</span></div>`;
-    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 2 (33%)</span> <span class="val tp">TP2: ${plan.tp2.toFixed(4)}</span></div>`;
-    stratHtml += `<div class="demo-strat-step"><span class="lbl">Шаг 3 (33%)</span> <span class="val tp">TP3: ${plan.tp3.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">${tm('demo_step')} 1 (34%)</span> <span class="val tp">TP1: ${plan.tp1.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">${tm('demo_step')} 2 (33%)</span> <span class="val tp">TP2: ${plan.tp2.toFixed(4)}</span></div>`;
+    stratHtml += `<div class="demo-strat-step"><span class="lbl">${tm('demo_step')} 3 (33%)</span> <span class="val tp">TP3: ${plan.tp3.toFixed(4)}</span></div>`;
   }
-  stratHtml += `<div class="demo-strat-step"><span class="lbl">Стоп-лосс</span> <span class="val" style="color:var(--coral)">${plan.stop.toFixed(4)}</span></div>`;
+  stratHtml += `<div class="demo-strat-step"><span class="lbl">${tm('demo_stop_loss')}</span> <span class="val" style="color:var(--coral)">${plan.stop.toFixed(4)}</span></div>`;
   stratHtml += `</div>`;
 
-  const placeholder = `20% от баланса ($${Math.floor(state.demoBalance * 0.2)})`;
+  const placeholder = `20% ${tm('demo_of_balance')} ($${Math.floor(state.demoBalance * 0.2)})`;
 
   box.innerHTML = `
     <div class="demo-strat-selector">
       <button class="demo-strat-btn ${!is3Steps ? 'active' : ''}" id="demo-strat-2"
-        onclick="document.getElementById('demo-strat-3').classList.remove('active');document.getElementById('demo-strat-2').classList.add('active');renderDemoPlan();">2 шага</button>
+        onclick="document.getElementById('demo-strat-3').classList.remove('active');document.getElementById('demo-strat-2').classList.add('active');renderDemoPlan();">${tm('demo_strat_2')}</button>
       <button class="demo-strat-btn ${is3Steps ? 'active' : ''}" id="demo-strat-3"
-        onclick="document.getElementById('demo-strat-2').classList.remove('active');document.getElementById('demo-strat-3').classList.add('active');renderDemoPlan();">3 шага</button>
+        onclick="document.getElementById('demo-strat-2').classList.remove('active');document.getElementById('demo-strat-3').classList.add('active');renderDemoPlan();">${tm('demo_strat_3')}</button>
     </div>
 
     ${stratHtml}
 
     <div class="demo-amount-block">
-      <div class="demo-amount-lbl">Сумма входа (USDT)</div>
+      <div class="demo-amount-lbl">${tm('demo_entry_amount')}</div>
       <div class="demo-amount-row">
         <input type="number" id="demo-entry-amount" class="demo-amount-input"
                value="${prevAmount}" placeholder="${placeholder}"
@@ -321,7 +351,7 @@ export function renderDemoPlan() {
     </div>
 
     <button class="btn-primary btn-mint" onclick="executeDemoTrade()" style="margin-top:12px;">
-      🤖 Выполнить план Оракула
+      🤖 ${tm('demo_execute')}
     </button>
   `;
 }

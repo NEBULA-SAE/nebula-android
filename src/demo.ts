@@ -1,4 +1,5 @@
 import { state, toast, setText } from './utils';
+import { tm } from './i18n';
 import { getCurrentPrice } from './sources/mexc';
 import { oracleSaveAnalysis } from './oracle';
 
@@ -88,13 +89,13 @@ export async function executeDemoPlan(entryPrice: number, plan: any, steps: numb
 
   if (capital > state.demoBalance) {
     capital = state.demoBalance;
-    toast(`Максимум доступно: $${capital.toFixed(2)}`, 'warn');
+    toast(`${tm('demo_max_available')}: $${capital.toFixed(2)}`, 'warn');
   }
 
   capital = Math.floor(capital * 100) / 100;
 
   if (capital <= 0) {
-    toast('Недостаточно виртуальных средств', 'error');
+    toast(tm('demo_insufficient'), 'error');
     return;
   }
 
@@ -121,7 +122,7 @@ export async function executeDemoPlan(entryPrice: number, plan: any, steps: numb
     });
   });
 
-  toast(`Открыто ${steps} виртуальных ордера на $${capital.toFixed(2)}`, 'success');
+  toast(`${tm('demo_opened')} ${steps} ${tm('demo_orders')} $${capital.toFixed(2)}`, 'success');
 
   const prices: Record<string, number> = { [base]: entryPrice };
   renderDemoOrders(prices);
@@ -171,7 +172,7 @@ function checkDemoOrders(prices: Record<string, number>) {
       };
       const verdict = isWin ? 'buy' : 'avoid';
       oracleSaveAnalysis(order.symbol, fakeMarketData, verdict, 50, 50, false, 'demo');
-      toast(`Оракул запомнил: ${isWin ? '✅ Тейк' : '❌ Стоп'} (${pnlPct.toFixed(2)}%)`, isWin ? 'success' : 'info');
+      toast(`${tm('demo_memorized')}: ${isWin ? '✅ Тейк' : '❌ Стоп'} (${pnlPct.toFixed(2)}%)`, isWin ? 'success' : 'info');
     } catch (e) {
       console.warn('Oracle learn error', e);
     }
@@ -209,9 +210,9 @@ export async function cancelDemoOrder(id: string) {
     renderDemoSummary(prices);
     updateDemoBalanceUI(prices);
 
-    toast(`Ордер ${order.symbol} отменён. Возвращено: $${returnedUsdt.toFixed(2)}`, 'info');
+    toast(`${tm('demo_cancelled')} ${order.symbol}. ${tm('demo_returned')}: $${returnedUsdt.toFixed(2)}`, 'info');
   } catch (e) {
-    toast('Ошибка при отмене ордера', 'error');
+    toast(tm('error'), 'error');
   }
 }
 
@@ -222,7 +223,7 @@ function renderDemoOrders(prices: Record<string, number>) {
   if (!box) return;
 
   if (state.demoActiveOrders.length === 0) {
-    box.innerHTML = `<div class="empty-msg">Нет активных сделок</div>`;
+    box.innerHTML = `<div class="empty-msg">${tm('demo_no_active')}</div>`;
     return;
   }
 
@@ -234,11 +235,10 @@ function renderDemoOrders(prices: Record<string, number>) {
 
     return `
       <div class="demo-trade-row">
-        <div class="demo-trade-info">
-          <div class="demo-trade-title">${o.symbol} · Шаг ${o.step}</div>
+          <div class="demo-trade-title">${o.symbol} · ${tm('demo_step')} ${o.step}</div>
           <div class="demo-trade-sub">
-            Вход: ${o.entryPrice.toFixed(4)} | TP: ${o.targetPrice.toFixed(4)}<br>
-            Объём: $${o.amountUsdt.toFixed(2)} (${o.amountCoin.toFixed(4)} шт)
+            ${tm('demo_entry_market')}: ${o.entryPrice.toFixed(4)} | TP: ${o.targetPrice.toFixed(4)}<br>
+            ${tm('demo_volume')}: $${o.amountUsdt.toFixed(2)} (${o.amountCoin.toFixed(4)})
           </div>
         </div>
         <div class="demo-trade-right">
@@ -326,5 +326,5 @@ export function resetDemo() {
   renderDemoOrders({});
   renderDemoSummary({});
   
-  toast('Демо-режим сброшен', 'info');
+  toast(tm('demo_reset_done'), 'info');
 }

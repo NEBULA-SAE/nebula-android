@@ -5,6 +5,7 @@
 
 import { esc } from '../utils';
 import { P, IS_DEV } from '../config';
+import { isEN } from '../i18n';
 
 // ─── Что проверяем (фронт) ───
 
@@ -13,8 +14,6 @@ const REQUIRED_FUNCTIONS: Record<string, string[]> = {
   'Utils':   ['fmt', 'fmtP', 'setText', 'setHTML', 'esc', 'relTime', 'toast'],
   'Chart':   ['initChart', 'clearLines', 'drawNowLine', 'setCandlesAndFit'],
   'Whale':   ['calculateVolumeAnomalies', 'mergeWhaleMetrics', 'renderWhaleData'],
-  // ⚠️ ИСПРАВЛЕНО: убрали `setTimeframe` — функция удалена из проекта,
-  //    UI-переключателя таймфреймов в index.html тоже нет.
   'Oracle':  ['mobileAnalyze', 'renderPro', 'askAIMentor', 'openQuiz', 'setTimeframe'],
   'Trading': ['openOrdersSheet', 'startMonitoring', 'stopMonitoring', 'mobileSyncPortfolio',
               'mobileAiCommand', 'mobileTwapStart'],
@@ -63,7 +62,7 @@ async function ping(
       const v = validate(j);
       if (v === true) return { ok: true, ms, detail: 'OK' };
       if (typeof v === 'string') return { ok: false, ms, detail: v };
-      return { ok: false, ms, detail: 'невалидный ответ' };
+      return { ok: false, ms, detail: isEN() ? 'invalid response' : 'невалидный ответ' };
     } catch {
       return { ok: true, ms, detail: 'OK' };
     }
@@ -77,57 +76,62 @@ async function ping(
 // ─── Фронт ───
 
 function checkFrontendLibraries(): DiagCheck[] {
+  const en = isEN();
   const LW = (window as any).LightweightCharts;
   return [
-    { group: 'Библиотеки', name: 'lightweight-charts', status: LW?.createChart ? 'ok' : 'error', detail: LW?.createChart ? 'загружен' : 'не загружен' },
-    { group: 'Библиотеки', name: 'Web Worker', status: typeof Worker !== 'undefined' ? 'ok' : 'warn', detail: typeof Worker !== 'undefined' ? 'доступен' : 'не поддерживается' },
-    { group: 'Библиотеки', name: 'Web Crypto', status: (typeof crypto !== 'undefined' && crypto.subtle) ? 'ok' : 'error', detail: (typeof crypto !== 'undefined' && crypto.subtle) ? 'AES-GCM доступен' : 'недоступен' },
-    { group: 'Библиотеки', name: 'IndexedDB', status: typeof indexedDB !== 'undefined' ? 'ok' : 'warn', detail: typeof indexedDB !== 'undefined' ? 'доступна' : 'недоступна' },
+    { group: en ? 'Libraries' : 'Библиотеки', name: 'lightweight-charts', status: LW?.createChart ? 'ok' : 'error', detail: LW?.createChart ? (en ? 'loaded' : 'загружен') : (en ? 'not loaded' : 'не загружен') },
+    { group: en ? 'Libraries' : 'Библиотеки', name: 'Web Worker', status: typeof Worker !== 'undefined' ? 'ok' : 'warn', detail: typeof Worker !== 'undefined' ? (en ? 'available' : 'доступен') : (en ? 'not supported' : 'не поддерживается') },
+    { group: en ? 'Libraries' : 'Библиотеки', name: 'Web Crypto', status: (typeof crypto !== 'undefined' && crypto.subtle) ? 'ok' : 'error', detail: (typeof crypto !== 'undefined' && crypto.subtle) ? 'AES-GCM OK' : 'Fail' },
+    { group: en ? 'Libraries' : 'Библиотеки', name: 'IndexedDB', status: typeof indexedDB !== 'undefined' ? 'ok' : 'warn', detail: typeof indexedDB !== 'undefined' ? (en ? 'available' : 'доступна') : (en ? 'unavailable' : 'недоступна') },
   ];
 }
 
 function checkFrontendFunctions(): DiagCheck[] {
+  const en = isEN();
   const checks: DiagCheck[] = [];
   const w = window as any;
   for (const [group, fns] of Object.entries(REQUIRED_FUNCTIONS)) {
     const missing = fns.filter(fn => typeof w[fn] !== 'function');
     checks.push({
-      group: 'Функции', name: group,
+      group: en ? 'Functions' : 'Функции', name: group,
       status: missing.length === 0 ? 'ok' : 'error',
       detail: missing.length === 0
-        ? `${fns.length} функций OK`
-        : `Нет (${missing.length}): ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '…' : ''}`,
+        ? `${fns.length} OK`
+        : `${en ? 'Missing' : 'Нет'} (${missing.length}): ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '…' : ''}`,
     });
   }
   return checks;
 }
 
 function checkFrontendDOM(): DiagCheck[] {
+  const en = isEN();
   const missing = REQUIRED_DOM.filter(id => !document.getElementById(id));
   return [{
-    group: 'DOM', name: 'Базовые элементы',
+    group: 'DOM', name: en ? 'Base elements' : 'Базовые элементы',
     status: missing.length === 0 ? 'ok' : 'warn',
     detail: missing.length === 0
-      ? `Все ${REQUIRED_DOM.length} элементов`
-      : `Нет (${missing.length}): ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '…' : ''}`,
+      ? `${en ? 'All' : 'Все'} ${REQUIRED_DOM.length} ${en ? 'elements' : 'элементов'}`
+      : `${en ? 'Missing' : 'Нет'} (${missing.length}): ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '…' : ''}`,
   }];
 }
 
 function checkStorage(): DiagCheck[] {
+  const en = isEN();
   try {
     localStorage.setItem('__diag_test', '1');
     const v = localStorage.getItem('__diag_test');
     localStorage.removeItem('__diag_test');
-    return [{ group: 'Хранилище', name: 'localStorage', status: v === '1' ? 'ok' : 'error', detail: v === '1' ? 'round-trip OK' : 'не сохраняет' }];
+    return [{ group: en ? 'Storage' : 'Хранилище', name: 'localStorage', status: v === '1' ? 'ok' : 'error', detail: v === '1' ? 'round-trip OK' : (en ? 'does not save' : 'не сохраняет') }];
   } catch (e: any) {
-    return [{ group: 'Хранилище', name: 'localStorage', status: 'error', detail: String(e?.message || e) }];
+    return [{ group: en ? 'Storage' : 'Хранилище', name: 'localStorage', status: 'error', detail: String(e?.message || e) }];
   }
 }
 
 async function checkWorkerAlive(): Promise<DiagCheck[]> {
+  const en = isEN();
   const wCallFn = (window as any).wCall;
   if (typeof wCallFn !== 'function') {
-    return [{ group: 'Web Worker', name: 'Ответ воркера', status: 'error', detail: 'wCall недоступна' }];
+    return [{ group: en ? 'Web Worker' : 'Web Worker', name: en ? 'Worker response' : 'Ответ воркера', status: 'error', detail: 'wCall unavailable' }];
   }
   const t0 = performance.now();
   try {
@@ -136,47 +140,49 @@ async function checkWorkerAlive(): Promise<DiagCheck[]> {
       new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 3s')), 3000)),
     ]);
     const ms = Math.round(performance.now() - t0);
-    return [{ group: 'Web Worker', name: 'Ответ воркера', status: 'ok', detail: `RSI=${Math.round(Number(result))}`, ms }];
+    return [{ group: en ? 'Web Worker' : 'Web Worker', name: en ? 'Worker response' : 'Ответ воркера', status: 'ok', detail: `RSI=${Math.round(Number(result))}`, ms }];
   } catch (e: any) {
-    return [{ group: 'Web Worker', name: 'Ответ воркера', status: 'error', detail: String(e?.message || e) }];
+    return [{ group: en ? 'Web Worker' : 'Web Worker', name: en ? 'Worker response' : 'Ответ воркера', status: 'error', detail: String(e?.message || e) }];
   }
 }
 
 async function checkCryptoRoundtrip(): Promise<DiagCheck[]> {
+  const en = isEN();
   const encFn = (window as any).__nebulaEncryptTest;
   if (typeof encFn !== 'function') {
     const ok = typeof crypto !== 'undefined' && crypto.subtle;
-    return [{ group: 'Крипто', name: 'Web Crypto API', status: ok ? 'ok' : 'error', detail: ok ? 'готов' : 'недоступен' }];
+    return [{ group: en ? 'Crypto' : 'Крипто', name: 'Web Crypto API', status: ok ? 'ok' : 'error', detail: ok ? (en ? 'ready' : 'готов') : (en ? 'unavailable' : 'недоступен') }];
   }
   try {
     const t0 = performance.now();
     const ok = await encFn();
     const ms = Math.round(performance.now() - t0);
-    return [{ group: 'Крипто', name: 'AES-GCM round-trip', status: ok ? 'ok' : 'error', detail: ok ? 'encrypt/decrypt OK' : 'fail', ms }];
+    return [{ group: en ? 'Crypto' : 'Крипто', name: 'AES-GCM round-trip', status: ok ? 'ok' : 'error', detail: ok ? 'encrypt/decrypt OK' : 'fail', ms }];
   } catch (e: any) {
-    return [{ group: 'Крипто', name: 'AES-GCM round-trip', status: 'error', detail: String(e?.message || e) }];
+    return [{ group: en ? 'Crypto' : 'Крипто', name: 'AES-GCM round-trip', status: 'error', detail: String(e?.message || e) }];
   }
 }
 
 // ─── Прокси ───
 
 async function checkProxies(): Promise<DiagCheck[]> {
+  const en = isEN();
   const probes: [string, string, (j: any) => boolean | string][] = [
     ['/proxy/mexc',        `${P('mexc', 'https://api.mexc.com')}/api/v3/ping`, () => true],
     ['/proxy/okx',         `${P('okx', 'https://www.okx.com')}/api/v5/public/time`, (j) => j?.code === '0' || `code=${j?.code}`],
-    ['/proxy/coinpaprika', `${P('coinpaprika', 'https://api.coinpaprika.com')}/v1/global`, (j) => !!j?.market_cap_usd || 'нет market_cap_usd'],
-    ['/proxy/cbr',         `${P('cbr', 'https://www.cbr-xml-daily.ru')}/daily_json.js`, (j) => !!j?.Valute?.USD?.Value || 'нет USD'],
+    ['/proxy/coinpaprika', `${P('coinpaprika', 'https://api.coinpaprika.com')}/v1/global`, (j) => !!j?.market_cap_usd || 'no market_cap_usd'],
+    ['/proxy/cbr',         `${P('cbr', 'https://www.cbr-xml-daily.ru')}/daily_json.js`, (j) => !!j?.Valute?.USD?.Value || 'no USD'],
     ['/proxy/gateio',      `${P('gateio', 'https://api.gateio.ws')}/api/v4/spot/tickers?currency_pair=BTC_USDT`,
-                           (j) => (Array.isArray(j) && j.length > 0) || 'нет данных'],
+                           (j) => (Array.isArray(j) && j.length > 0) || 'no data'],
     ['/proxy/dashcentral', `${P('dashcentral', 'https://www.dashcentral.org')}/api/v1/public`,
-                           (j) => !!j?.general?.consensus_masternodes || 'нет general.consensus_masternodes'],
+                           (j) => !!j?.general?.consensus_masternodes || 'no masternodes'],
   ];
   const results = await Promise.all(probes.map(async ([name, url, validate]) => {
     const r = await ping(url, validate, 5000);
     return { name, r };
   }));
   return results.map(({ name, r }) => ({
-    group: 'Прокси', name,
+    group: en ? 'Proxy' : 'Прокси', name,
     status: r.ok ? 'ok' : 'error',
     detail: r.detail, ms: r.ms,
   })) as DiagCheck[];
@@ -185,20 +191,21 @@ async function checkProxies(): Promise<DiagCheck[]> {
 // ─── Биржи ───
 
 async function checkExchanges(): Promise<DiagCheck[]> {
+  const en = isEN();
   const probes: [string, string, (j: any) => boolean | string][] = [
-    ['gateio',  `${P('gateio', 'https://api.gateio.ws')}/api/v4/spot/currency_pairs/BTC_USDT`, (j) => !!j?.id || 'нет id'],
+    ['gateio',  `${P('gateio', 'https://api.gateio.ws')}/api/v4/spot/currency_pairs/BTC_USDT`, (j) => !!j?.id || 'no id'],
     ['binance', 'https://api.binance.com/api/v3/ping', () => true],
     ['okx',     `${P('okx', 'https://www.okx.com')}/api/v5/public/time`, (j) => j?.code === '0' || `code=${j?.code}`],
     ['bybit',   `${P('bybit', 'https://api.bybit.com')}/v5/market/time`, (j) => j?.retCode === 0 || `code=${j?.retCode}`],
-    ['mexc',    `${P('mexc', 'https://api.mexc.com')}/api/v3/time`, (j) => !!j?.serverTime || 'нет serverTime'],
-    ['binance-futures', `${P('binance_futures', 'https://fapi.binance.com')}/fapi/v1/time`, (j) => !!j?.serverTime || 'нет serverTime'],
+    ['mexc',    `${P('mexc', 'https://api.mexc.com')}/api/v3/time`, (j) => !!j?.serverTime || 'no serverTime'],
+    ['binance-futures', `${P('binance_futures', 'https://fapi.binance.com')}/fapi/v1/time`, (j) => !!j?.serverTime || 'no serverTime'],
   ];
   const results = await Promise.all(probes.map(async ([name, url, validate]) => {
     const r = await ping(url, validate, 5000);
     return { name, r };
   }));
   return results.map(({ name, r }) => ({
-    group: 'Биржи (свечи/стакан)',
+    group: en ? 'Exchanges (candles/orderbook)' : 'Биржи (свечи/стакан)',
     name,
     status: r.ok ? 'ok' : 'error',
     detail: r.detail, ms: r.ms,
@@ -208,6 +215,7 @@ async function checkExchanges(): Promise<DiagCheck[]> {
 // ─── Whale futures ───
 
 async function checkWhaleFutures(): Promise<DiagCheck[]> {
+  const en = isEN();
   const ticker = 'DASH';
   const probes: [string, string, (j: any) => boolean | string][] = [
     ['Bybit OI', `${P('bybit', 'https://api.bybit.com')}/v5/market/open-interest?category=linear&symbol=${ticker}USDT&intervalTime=1h&limit=2`,
@@ -234,6 +242,7 @@ async function checkWhaleFutures(): Promise<DiagCheck[]> {
 // ─── Funding ───
 
 async function checkFunding(): Promise<DiagCheck[]> {
+  const en = isEN();
   const ticker = 'DASH';
   const probes: [string, string, (j: any) => boolean | string][] = [
     ['Bybit funding', `${P('bybit', 'https://api.bybit.com')}/v5/market/tickers?category=linear&symbol=${ticker}USDT`,
@@ -256,19 +265,20 @@ async function checkFunding(): Promise<DiagCheck[]> {
 // ─── Market data ───
 
 async function checkMarketData(): Promise<DiagCheck[]> {
+  const en = isEN();
   const probes: [string, string, (j: any) => boolean | string][] = [
     ['Coinpaprika global',
       `${P('coinpaprika', 'https://api.coinpaprika.com')}/v1/global`,
-      (j) => !!j?.market_cap_usd || 'нет market_cap_usd'],
+      (j) => !!j?.market_cap_usd || 'no market_cap_usd'],
     ['Coinpaprika BTC',
       `${P('coinpaprika', 'https://api.coinpaprika.com')}/v1/tickers/btc-bitcoin`,
-      (j) => !!j?.quotes?.USD?.price || 'нет BTC price'],
+      (j) => !!j?.quotes?.USD?.price || 'no BTC price'],
     ['Fear & Greed',
       `${P('fng', 'https://api.alternative.me')}/fng/?limit=1`,
-      (j) => !!j?.data?.[0]?.value || 'нет F&G'],
-    ['ЦБ РФ USD',
+      (j) => !!j?.data?.[0]?.value || 'no F&G'],
+    ['CBR USD',
       `${P('cbr', 'https://www.cbr-xml-daily.ru')}/daily_json.js`,
-      (j) => !!j?.Valute?.USD?.Value || 'нет USD'],
+      (j) => !!j?.Valute?.USD?.Value || 'no USD'],
   ];
   const results = await Promise.all(probes.map(async ([name, url, validate]) => {
     const r = await ping(url, validate, 5000);
@@ -285,15 +295,16 @@ async function checkMarketData(): Promise<DiagCheck[]> {
 // ─── DASH сеть ───
 
 async function checkDashNetwork(): Promise<DiagCheck[]> {
+  const en = isEN();
   const checks: DiagCheck[] = [];
 
   const probes: [string, string, (j: any) => boolean | string][] = [
     ['DashCentral',
       `${P('dashcentral', 'https://www.dashcentral.org')}/api/v1/public`,
-      (j) => !!j?.general?.consensus_masternodes || 'нет masternodes'],
+      (j) => !!j?.general?.consensus_masternodes || 'no masternodes'],
     ['Blockchair stats',
       `${P('blockchair', 'https://api.blockchair.com')}/dash/stats`,
-      (j) => !!j?.data?.difficulty || 'нет difficulty'],
+      (j) => !!j?.data?.difficulty || 'no difficulty'],
   ];
   const results = await Promise.all(probes.map(async ([name, url, validate]) => {
     const r = await ping(url, validate, 6000);
@@ -301,7 +312,7 @@ async function checkDashNetwork(): Promise<DiagCheck[]> {
   }));
   for (const { name, r } of results) {
     checks.push({
-      group: 'DASH сеть', name,
+      group: en ? 'DASH network' : 'DASH сеть', name,
       status: r.ok ? 'ok' : 'warn',
       detail: r.detail, ms: r.ms,
     });
@@ -314,7 +325,7 @@ async function checkDashNetwork(): Promise<DiagCheck[]> {
   const ALL_URL = 'https://dash-rpc.publicnode.com';
 
   let gbOk = false;
-  let gbDetail = 'оба endpoint недоступны';
+  let gbDetail = en ? 'both endpoints unavailable' : 'оба endpoint недоступны';
   let gbMs = 0;
 
   for (const [label, url] of [['GetBlock', GB_URL], ['Allnodes', ALL_URL]] as const) {
@@ -347,7 +358,7 @@ async function checkDashNetwork(): Promise<DiagCheck[]> {
   }
 
   checks.push({
-    group: 'DASH сеть',
+    group: en ? 'DASH network' : 'DASH сеть',
     name: 'GetBlock (masternodes)',
     status: gbOk ? 'ok' : 'warn',
     detail: gbDetail,
@@ -416,13 +427,14 @@ function groupChecks(checks: DiagCheck[]): Record<string, DiagCheck[]> {
 }
 
 function renderDiagnosticsReport(report: DiagnosticsReport): void {
+  const en = isEN();
   const body = document.getElementById('diag-body');
   if (!body) return;
 
   const statusText = {
-    ok:    { label: 'Всё работает' },
-    warn:  { label: 'Есть предупреждения' },
-    error: { label: 'Есть ошибки' },
+    ok:    { label: en ? 'All working' : 'Всё работает' },
+    warn:  { label: en ? 'Warnings' : 'Есть предупреждения' },
+    error: { label: en ? 'Errors' : 'Есть ошибки' },
   }[report.overall];
 
   const groups = groupChecks(report.checks);
@@ -436,7 +448,7 @@ function renderDiagnosticsReport(report: DiagnosticsReport): void {
         <span class="diag-cnt diag-ok">✅ ${report.summary.passed}</span>
         <span class="diag-cnt diag-warn">⚠️ ${report.summary.warned}</span>
         <span class="diag-cnt diag-err">❌ ${report.summary.failed}</span>
-        <span class="diag-ms">${report.duration_ms} мс</span>
+        <span class="diag-ms">${report.duration_ms} ms</span>
       </div>
     </div>
   `;
@@ -445,7 +457,7 @@ function renderDiagnosticsReport(report: DiagnosticsReport): void {
     html += `<div class="diag-group"><div class="diag-group-title">${esc(group)}</div>`;
     for (const c of items) {
       const icon = c.status === 'ok' ? '✅' : c.status === 'warn' ? '⚠️' : '❌';
-      const ms = c.ms ? `<span class="diag-ms-item">${c.ms}мс</span>` : '';
+      const ms = c.ms ? `<span class="diag-ms-item">${c.ms}ms</span>` : '';
       html += `
         <div class="diag-row diag-row-${c.status}">
           <span class="diag-icon">${icon}</span>
@@ -459,13 +471,14 @@ function renderDiagnosticsReport(report: DiagnosticsReport): void {
   }
 
   html += `<button class="btn-primary btn-mint" onclick="runFullDiagnostics()" style="margin-top:16px">
-    ↻ Запустить заново
+    ${en ? '↻ Restart' : '↻ Запустить заново'}
   </button>`;
 
   body.innerHTML = html;
 }
 
 export function showDiagnosticsModal(loading = false): void {
+  const en = isEN();
   const ov = document.getElementById('diag-overlay');
   if (ov) ov.classList.add('open');
 
@@ -474,9 +487,9 @@ export function showDiagnosticsModal(loading = false): void {
     if (body) {
       body.innerHTML = `
         <div class="diag-loading">
-          <div class="loader">Проверяю все компоненты…</div>
+          <div class="loader">${en ? 'Checking all components…' : 'Проверяю все компоненты…'}</div>
           <div style="text-align:center;color:var(--mut);font-size:11px;margin-top:8px;">
-            Биржи, прокси, API — параллельно, до 5 секунд
+            ${en ? 'Exchanges, proxies, API — in parallel, up to 5 sec' : 'Биржи, прокси, API — параллельно, до 5 секунд'}
           </div>
         </div>`;
     }

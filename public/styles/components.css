@@ -146,48 +146,32 @@ select.form-input { cursor:pointer; }
   gap: 10px;
 }
 
-.demo-badge-btn {
-  background: linear-gradient(135deg, rgba(167,139,250,.15), rgba(94,203,255,.15));
-  border: 1px solid var(--violet);
-  color: var(--violet);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 0.15s, background 0.15s;
-  animation: pulse-demo 2s infinite;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 0 10px rgba(167,139,250,.2);
+/* ═══ DEMO — КРАСИВАЯ КНОПКА (Мобилка) ═══ */
+.demo-chip-glow {
+  background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.5), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  animation: demo-pulse 2s infinite;
 }
 
-.demo-badge-btn:active {
+.demo-chip-glow:active {
   transform: scale(0.92);
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.8), inset 0 2px 4px rgba(0,0,0,0.3) !important;
 }
 
-.demo-badge-btn:hover {
-  background: rgba(167,139,250,.3);
-  color: #fff;
+@keyframes demo-pulse {
+  0% { box-shadow: 0 0 12px rgba(167, 139, 250, 0.5), inset 0 1px 0 rgba(255,255,255,0.2); }
+  50% { box-shadow: 0 0 20px rgba(167, 139, 250, 0.8), inset 0 1px 0 rgba(255,255,255,0.2); }
+  100% { box-shadow: 0 0 12px rgba(167, 139, 250, 0.5), inset 0 1px 0 rgba(255,255,255,0.2); }
 }
 
-@keyframes pulse-demo {
-  0% { box-shadow: 0 0 0 0 rgba(167,139,250, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(167,139,250, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(167,139,250, 0); }
-}
-
-/* Скрываем ПК-кнопку в сайдбаре на мобилках */
-.demo-nav-btn { 
-  display: none; 
-}
-
+/* Скрываем на ПК — там есть кнопка в сайдбаре */
 @media (min-width: 1024px) {
-  /* На ПК показываем кнопку в сайдбаре и скрываем мобильную */
-  .demo-nav-btn { display: flex !important; }
-  .demo-badge-btn { display: none; } 
+  .demo-chip-glow { display: none !important; }
 }
 
 /* ═══ AI · ТРИ СЦЕНАРИЯ ═══ */

@@ -48,6 +48,25 @@ function buildSettingsHTML(d: SettingsData): string {
 
   return `
     <div class="settings-section">
+      <div class="settings-section-title">${en ? '🌐 Language' : '🌐 Язык'}</div>
+      <div class="settings-row" style="cursor:default">
+        <div class="settings-row-icon">
+          <svg style="width:18px;height:18px;color:var(--cyan);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <use href="#i-language"/>
+          </svg>
+        </div>
+        <div class="settings-row-body">
+          <div class="settings-row-title">${en ? 'Interface language' : 'Язык интерфейса'}</div>
+          <div class="settings-row-hint">${en ? 'Choose your language' : 'Выберите язык'}</div>
+        </div>
+        <div class="lang-mini" style="margin-left: auto;">
+          <button id="lang-ru" onclick="setLanguage('ru')" class="${!en ? 'active' : ''}">RU</button>
+          <button id="lang-en" onclick="setLanguage('en')" class="${en ? 'active' : ''}">EN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">${en ? '🔐 Security' : '🔐 Безопасность'}</div>
       <button class="settings-row" onclick="toggleAppPassword()">
         <div class="settings-row-icon">🔐</div>

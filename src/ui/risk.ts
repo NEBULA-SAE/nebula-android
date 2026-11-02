@@ -195,13 +195,13 @@ export function renderRiskCenter(): void {
       <div style="text-align:center; padding: 40px 20px; background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 16px; margin-top: 20px;">
         <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
         <div style="font-family:'Space Grotesk'; font-size: 18px; font-weight: 800; color: var(--hi); margin-bottom: 8px;">
-          Центр Рисков (PRO)
+          ${tm('pro_lock_risk_title')}
         </div>
         <div style="font-size: 13px; color: var(--mut); line-height: 1.5; margin-bottom: 20px;">
-          Анализ 5 индикаторов риска (Концентрация, Уверенность Оракула, Киты, Funding, Fear&Greed) доступен только в PRO версии.
+          ${tm('pro_lock_risk_desc')}
         </div>
         <button class="btn-primary btn-mint" onclick="openProModal()" style="max-width: 250px; margin: 0 auto;">
-          💎 Открыть в PRO
+          ${tm('pro_lock_btn')}
         </button>
       </div>
     `;

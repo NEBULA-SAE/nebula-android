@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { toast } from '../utils';
+import { tm } from '../i18n';
 
 const TERMS_KEY = 'nebula_terms_accepted_v1';
 
@@ -20,7 +21,7 @@ export function acceptTerms(): void {
   const ov = document.getElementById('terms-overlay');
   if (ov) ov.classList.remove('open');
 
-  toast('Спасибо! Приятной работы 🚀', 'success', 2000);
+  toast(tm('donate_thanks'), 'success', 2000);
 }
 
 export function showAbout(): void {
@@ -38,7 +39,7 @@ export function hideAbout(): void {
 export function copyDonate(): void {
   const addr = DONATE_ADDRESSES.usdt;
   navigator.clipboard.writeText(addr).then(() => {
-    toast('✅ USDT-адрес скопирован', 'success', 2000);
+    toast(tm('donate_copied'), 'success', 2000);
   }).catch(() => {
     // fallback для WebView
     const ta = document.createElement('textarea');
@@ -47,9 +48,9 @@ export function copyDonate(): void {
     ta.select();
     try {
       document.execCommand('copy');
-      toast('✅ USDT-адрес скопирован', 'success', 2000);
+      toast(tm('donate_copied'), 'success', 2000);
     } catch {
-      toast('Не удалось скопировать', 'error');
+      toast(tm('donate_copy_err'), 'error');
     }
     document.body.removeChild(ta);
   });
@@ -64,11 +65,10 @@ export function openDonateModal(): void {
     <div style="text-align:center; padding: 8px 0;">
       <div style="font-size:42px; margin-bottom:10px;">💎</div>
       <div style="font-family:'Space Grotesk'; font-size:16px; font-weight:700; color:var(--mint); margin-bottom:12px;">
-        Поддержать NEBULA
+        ${tm('donate_support')}
       </div>
       <div style="font-size:12px; color:var(--mut); line-height:1.55; margin-bottom:16px;">
-        NEBULA — бесплатный проект одного разработчика.<br>
-        Если приложение полезно — можешь поддержать разработку.
+        ${tm('donate_desc')}
       </div>
 
       <div style="display:inline-block; padding:10px; background:rgba(0,0,0,.5); border:1px solid var(--border); border-radius:14px; margin-bottom:14px;">
@@ -88,16 +88,15 @@ export function openDonateModal(): void {
       </div>
 
       <button class="btn-primary btn-mint" onclick="copyDonate()" style="margin-bottom:8px;">
-        📋 Скопировать адрес
+        ${tm('donate_copy')}
       </button>
 
       <div style="font-size:10.5px; color:var(--coral); margin-top:12px; line-height:1.5;">
-        ⚠️ Отправляй только USDT в сети Tron (TRC-20).<br>
-        Другая сеть = потеря средств.
+        ${tm('donate_warn')}
       </div>
 
       <div style="font-size:10.5px; color:var(--mut); margin-top:14px;">
-        Спасибо за поддержку ❤️
+        ${tm('donate_thanks')}
       </div>
     </div>
   `;
@@ -106,7 +105,7 @@ export function openDonateModal(): void {
 
   setTimeout(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).openSheet?.('💎 Поддержать проект', html);
+    (window as any).openSheet?.(tm('donate_title'), html);
   }, 80);
 }
 

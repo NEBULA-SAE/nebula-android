@@ -375,19 +375,19 @@ export function renderPro(adv: AdvancedAnalytics): void {
   const en = isEN();
 
   // ДОБАВЛЯЕМ ПРОВЕРКУ PRO:
-    if (!state.isPro) {
+  if (!state.isPro) {
     target.style.display = 'block';
     target.innerHTML = `
       <div style="text-align:center; padding: 40px 20px; background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 16px; margin-top: 20px;">
         <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
         <div style="font-family:'Space Grotesk'; font-size: 18px; font-weight: 800; color: var(--hi); margin-bottom: 8px;">
-          Продвинутая аналитика (PRO)
+          ${tm('pro_lock_analytics_title')}
         </div>
         <div style="font-size: 13px; color: var(--mut); line-height: 1.5; margin-bottom: 20px;">
-          Детальный разбор MACD, Bollinger Bands, Volume Profile и дивергенций доступен только в PRO версии.
+          ${tm('pro_lock_analytics_desc')}
         </div>
         <button class="btn-primary btn-mint" onclick="openProModal()" style="max-width: 250px; margin: 0 auto;">
-          💎 Открыть в PRO
+          ${tm('pro_lock_btn')}
         </button>
       </div>
     `;
@@ -1110,14 +1110,15 @@ export function renderOracleAnalogies(marketData: any): void {
   const content = document.getElementById('oracle-analogs-content');
   if (!content) return;
   if (!marketData) {
-    content.innerHTML = `<div class="empty-msg" style="padding:20px 10px;">Нужно проанализировать монету на главном экране</div>`;
+    content.innerHTML = `<div class="empty-msg" style="padding:20px 10px;">${tm('oracle_analogs_empty')}</div>`;
     return;
   }
 
   const res = oracleGetAnalogies(marketData);
+  const en = isEN();
 
   if (res.status === 'empty') {
-    content.innerHTML = `<div class="empty-msg" style="padding:20px 10px;">${res.message}</div>`;
+    content.innerHTML = `<div class="empty-msg" style="padding:20px 10px;">${tm('oracle_analogs_empty')}</div>`;
     return;
   }
 
@@ -1136,28 +1137,30 @@ export function renderOracleAnalogies(marketData: any): void {
   content.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px;">
       <div>
-        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Найдено совпадений</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${tm('oracle_found_matches')}</div>
         <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--hi);">${res.matches}</div>
       </div>
       <div style="text-align:right;">
-        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Вероятность роста</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${tm('oracle_prob_growth')}</div>
         <div style="font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:${color};">${res.winRate}%</div>
       </div>
     </div>
     
     <div style="background:rgba(0,0,0,.3); border-radius:8px; padding:10px; border:1px solid var(--border); margin-bottom:12px;">
       <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--tx); margin-bottom:8px;">
-        💡 Оракул проанализировал историю и нашел ${res.matches} похожих ситуаций.
+        💡 ${en 
+          ? `Oracle analyzed history and found <b>${res.matches}</b> similar situations. `
+          : `Оракул проанализировал историю и нашел <b>${res.matches}</b> похожих ситуаций. `}
         ${isBullish 
-          ? 'В большинстве случаев цена росла.' 
-          : res.winRate <= 40 ? 'В большинстве случаев цена падала. Будьте осторожны.' : 'Результаты смешанные. Лучше подождать.'}
+          ? tm('oracle_analogs_bull') 
+          : res.winRate <= 40 ? tm('oracle_analogs_bear') : tm('oracle_analogs_mixed')}
       </div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mut);">
-        Средняя доходность: <b style="color:${res.avgReturn >= 0 ? 'var(--mint)' : 'var(--coral)'}">${res.avgReturn > 0 ? '+' : ''}${res.avgReturn}%</b>
+        ${tm('oracle_avg_return')}: <b style="color:${res.avgReturn >= 0 ? 'var(--mint)' : 'var(--coral)'}">${res.avgReturn > 0 ? '+' : ''}${res.avgReturn}%</b>
       </div>
     </div>
 
-    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Последние аналоги</div>
+    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">${tm('oracle_recent_analogs')}</div>
     ${listHtml}
   `;
 }
