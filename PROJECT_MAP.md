@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.33** | Branch: `main` | Commit: `95f9b76`
-> Generated: 2026-11-03 04:24
+> Version: **2.0.34** | Branch: `main` | Commit: `4b13def`
+> Generated: 2026-11-03 13:02
 
 ---
 
@@ -37,17 +37,33 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Stats
 
-- TypeScript files in `src/`: 54
-- Total LOC in `src/`: 17237
-- Bundle (`dist/`): 59 files, 651.8 KB
+- TypeScript files in `src/`: 55
+- Total LOC in `src/`: 17877
+- Bundle (`dist/`): 59 files, 673.2 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.33**
-- Last git tag: `v2.0.32`
+- `package.json` version: **2.0.34**
+- Last git tag: `v2.0.33`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `4b13def` - 2026-11-03 - chore(release): v2.0.33
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/components.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ui/chart-overlay.ts`
 
 ### `95f9b76` - 2026-11-03 - chore(release): v2.0.32
 
@@ -123,27 +139,13 @@ Files:
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 
-### `6f7a1b1` - 2026-11-01 - chore(release): v2.0.29
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/screens.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/pro.ts`
-
 ## Last release diff
 
-No changes since `v2.0.32`
+No changes since `v2.0.33`
 
 ## Recent tags
 
+- `v2.0.33`
 - `v2.0.32`
 - `v2.0.31`
 - `v2.0.30`
@@ -153,7 +155,6 @@ No changes since `v2.0.32`
 - `v2.0.26`
 - `v2.0.25`
 - `v2.0.24`
-- `v2.0.23`
 
 ## File tree (src/)
 
@@ -184,10 +185,10 @@ src/
 |   +--   511 diagnostics.ts
 |   +--   121 hub.ts
 |   +--   333 init.ts
-|   +--   132 learning.ts
+|   +--   244 learning.ts
 |   +--    76 market.ts
 |   +--   115 mining.ts
-|   +--  1191 oracle.ts
+|   +--  1194 oracle.ts
 |   +--   436 pull-refresh.ts
 |   +--   331 risk.ts
 |   +--   256 scanner.ts
@@ -208,12 +209,13 @@ src/
 +--   210 crypto.ts
 +--    52 db.ts
 +--   330 demo.ts
-+--  1287 i18n.ts
++--  1421 i18n.ts
 +--   411 indicators.ts
++--   249 learning-core.ts
 +--   265 main.ts
 +--   482 market.ts
-+--   824 oracle.ts
-+--   185 patterns.ts
++--   955 oracle.ts
++--   196 patterns.ts
 +--   242 pro.ts
 +--   282 themes.ts
 +--   694 trading.ts
@@ -339,6 +341,15 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - VolumeProfileResult (iface)
 - MarketRegimeResult (iface)
 
+### `src/learning-core.ts`
+- computeCalibration()
+- computeInsights()
+- computeDataSummary()
+- createDriftSnapshot()
+- Insight (iface)
+- CalibrationBucket (iface)
+- DriftSnapshot (iface)
+
 ### `src/market.ts`
 - getCurrentRate()
 - getOnchainData()
@@ -355,6 +366,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - loadRiskProfile()
 - computeRiskProfile()
 - initOracleDb()
+- getOracleMemorySnapshot()
 - saveMemory()
 - oracleSaveAnalysis()
 - oracleUpdateOutcomes()
@@ -529,8 +541,10 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - initApp()
 
 ### `src/ui/learning.ts`
+- switchLearnTab()
 - openLearning()
 - refreshLearning()
+- openLearningHelp()
 
 ### `src/ui/market.ts`
 - openMarketPulse()
@@ -737,9 +751,9 @@ openCryptoHub, openHubDetails
 
 openExchangeMenu, openMiningWhatToMine, openP2PMarket, openXgramSwap
 
-### `src/ui/learning.ts` (2)
+### `src/ui/learning.ts` (4)
 
-openLearning, refreshLearning
+openLearning, openLearningHelp, refreshLearning, switchLearnTab
 
 ### `src/ui/market.ts` (1)
 
@@ -910,16 +924,14 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Tech debt
 
-5 markers found (TODO / FIXME / HACK / XXX):
+2 markers found (TODO / FIXME / HACK / XXX):
 
 - `src/sources/kucoin.ts:282` - const rate = 95; // TODO: подтягивать из market.ts, как в mexc.ts
 - `src/sources/kucoin.ts:303` - // TODO: fetch price
-- `src/ui/learning.ts:5` - // TODO: oracle_get_stats пока не перенесён — заглушка.
-- `src/ui/learning.ts:32` - // TODO: заменить на реальный источник, когда перенесём oracle.py
-- `src/ui/learning.ts:117` - // TODO: заменить на реальные oracle_update_outcomes / oracle_learn_patterns
 
 ## Release history (last 15 commits)
 
+- 4b13def  2026-11-03  chore(release): v2.0.33
 - 95f9b76  2026-11-03  chore(release): v2.0.32
 - a2ca92b  2026-11-02  chore(release): v2.0.31
 - 5b7bfc0  2026-11-02  before i18n fix
@@ -934,7 +946,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - b05ea08  2026-10-31  chore(release): v2.0.22
 - fe48597  2026-10-31  chore(release): v2.0.21
 - 63944ba  2026-10-30  chore(release): v2.0.20
-- 405a221  2026-10-30  chore(release): v2.0.19
 
 ---
 

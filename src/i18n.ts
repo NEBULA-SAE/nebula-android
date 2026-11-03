@@ -92,8 +92,8 @@ const I18N_RU: Dict = {
   level: 'Уровень',
   no_recent: 'Пока нет анализов',
   no_recent_hint: 'Нажми «Проанализировать монету»',
-  win_rate: 'Win Rate', completed: 'Завершено',
-  patterns: 'Паттернов', profit_factor: 'Profit Factor',
+  win_rate: 'Процент побед', completed: 'Завершено',
+  patterns: 'Паттернов', profit_factor: 'Профит-фактор',
   pending: 'в ожидании', days: 'дней',
   market: 'Обзор рынка',
   mp_mcap: 'Капитализация', mp_btc_dom: 'BTC Доминация',
@@ -104,6 +104,51 @@ const I18N_RU: Dict = {
   learn_avg_loss: 'Средний LOSS',
   learn_best: 'Лучшие паттерны', learn_worst: 'Опасные паттерны',
   learn_not_enough: 'Нужно 10+ анализов',
+
+  // ─── LEARNING: TABS ───
+  learn_tab_overview: 'Обзор',
+  learn_tab_patterns: 'Паттерны',
+  learn_tab_insights: 'Инсайты',
+
+  // ─── LEARNING: OVERVIEW ───
+  learn_calibration_error: 'Ошибка калибровки',
+  learn_calibration_hint: 'Насколько заявленная уверенность отличается от реальной',
+  learn_drift_title: 'Прогресс за 8 недель',
+  learn_drift_win_rate: 'Win Rate',
+  learn_drift_pf: 'Profit Factor',
+  learn_sample_size: 'Выборка',
+
+  // ─── LEARNING: PATTERNS ───
+  learn_calibration_title: 'Калибровка уверенности',
+  learn_calibration_x_predicted: 'Заявлено',
+  learn_calibration_x_actual: 'Реально',
+  learn_calibration_n: 'Выборка',
+  learn_calibration_empty: 'Нужно 10+ завершённых анализов для калибровки.',
+  learn_pattern_detail_title: 'Разбор паттерна',
+  learn_pattern_desc: 'Описание',
+  learn_pattern_action_label: 'Что делать',
+  learn_pattern_sample: 'Выборка',
+  learn_pattern_avg_return: 'Средняя доходность',
+  learn_pattern_weight: 'Вес в скоринге',
+
+  // ─── LEARNING: INSIGHTS ───
+  learn_insights_empty: 'Пока нет инсайтов. Оракул соберёт их по мере обучения.',
+  learn_insight_new_pattern: 'Новый паттерн',
+  learn_insight_dead_pattern: 'Паттерн перестал работать',
+  learn_insight_calibration: 'Калибровка',
+  learn_insight_win_rate: 'Изменился win rate',
+  learn_insight_milestone: 'Новый рубеж',
+  learn_insight_data_gap: 'Пробел в данных',
+  learn_insight_read_more: 'Подробнее',
+  learn_insight_close: 'Закрыть',
+
+  // ─── LEARNING: DATA ───
+  learn_data_title: 'Что видит Оракул',
+  learn_data_symbols: 'Символы',
+  learn_data_freshness: 'Свежесть данных',
+  learn_data_last: 'Последний анализ',
+  learn_data_fresh: 'свежие',
+  learn_data_stale: 'устарели',
   quiz_title: 'Настройка профиля',
   quiz_intro: 'Ответь на 3 вопроса — подберу стратегию под тебя.',
   quiz_q1: 'Опыт в трейдинге', quiz_q1_a1: 'Новичок', quiz_q1_a2: 'Средний', quiz_q1_a3: 'Опытный',
@@ -619,6 +664,28 @@ const I18N_RU: Dict = {
   
   tools_close: 'Закрыть',
   fs_btn_title: 'На весь экран',
+    // ─── PATTERNS ───
+  pat_bull_btc: 'Бычий BTC', pat_altseason: 'Альтсезон', pat_bearish: 'Медвежий рынок',
+  pat_bull_mild: 'Умеренный рост', pat_bear_mild: 'Умеренное падение', pat_neutral: 'Консолидация',
+  pat_rsi_oversold: 'RSI перепродан', pat_rsi_low: 'RSI низкий', pat_rsi_mid: 'RSI средний',
+  pat_rsi_high: 'RSI высокий', pat_rsi_overbought: 'RSI перекуплен',
+  pat_whale_buying: 'киты покупают', pat_whale_selling: 'киты продают',
+  pat_whale_active_unknown: 'аномалия объёма', pat_no_whale: 'без китов',
+  pat_fund_neg: 'шорты доминируют', pat_fund_overlong: 'перегрев лонгов',
+  pat_fund_pos: 'лонги преобладают', pat_fund_neutral: 'нейтральный funding',
+  pat_ob_bull: 'стакан бычий', pat_ob_bear: 'стакан медвежий', pat_ob_neutral: 'стакан нейтральный',
+
+  // ─── LEARNING HELP ───
+  learn_help_title: 'Как читать эту статистику?',
+  learn_help_btn: '❓ Как это понимать?',
+  learn_help_pf: 'Профит-фактор (Profit Factor)',
+  learn_help_pf_desc: 'Показывает, сколько вы зарабатываете на каждый потерянный доллар. <b>1.5</b> — это значит, что на каждый $1 убытка приходится $1.5 прибыли. <b>Больше 1.0 — хорошо</b>. Если 0.8 — стратегия теряет деньги.',
+  learn_help_cal: 'Калибровка уверенности (Ошибка калибровки)',
+  learn_help_cal_desc: 'Оракул оценивает сигнал и говорит: "Я уверен на 80%". Калибровка проверяет, насколько он честен. Если ошибка <b>33%</b> — значит, когда он говорит "80%", реально он угадывает только в 47% случаев. <b>Чем меньше ошибка, тем точнее Оракул</b>. Ошибка > 20% — повод не доверять высоким сигналам.',
+  learn_help_pat: 'Паттерны',
+  learn_help_pat_desc: 'Оракул ищет повторяющиеся ситуации (например, "RSI упал, киты скупают"). Он запоминает их. Если Процент Побед паттерна <b>выше 60%</b> — это отличный сигнал. Если <b>ниже 40%</b> — Оракул видит, что ситуация перестала работать, и снижает свой кредит доверия к ней.',
+  learn_help_ins: 'Инсайты',
+  learn_help_ins_desc: 'Это "записки в дневнике" Оракула. Он сам анализирует свою историю и делает выводы: "Я выучил новый паттерн", "Этот перестал работать", "Я переоцениваю свои силы". Читай их, чтобы понимать, как меняется его "мозг".',
 };
 
 const I18N_EN: Dict = {
@@ -718,6 +785,51 @@ const I18N_EN: Dict = {
   learn_avg_loss: 'Avg LOSS',
   learn_best: 'Best patterns', learn_worst: 'Dangerous patterns',
   learn_not_enough: 'Need 10+ analyses',
+
+  // ─── LEARNING: TABS ───
+  learn_tab_overview: 'Overview',
+  learn_tab_patterns: 'Patterns',
+  learn_tab_insights: 'Insights',
+
+  // ─── LEARNING: OVERVIEW ───
+  learn_calibration_error: 'Calibration error',
+  learn_calibration_hint: 'How much claimed confidence differs from actual',
+  learn_drift_title: '8-week progress',
+  learn_drift_win_rate: 'Win Rate',
+  learn_drift_pf: 'Profit Factor',
+  learn_sample_size: 'Sample',
+
+  // ─── LEARNING: PATTERNS ───
+  learn_calibration_title: 'Confidence calibration',
+  learn_calibration_x_predicted: 'Claimed',
+  learn_calibration_x_actual: 'Actual',
+  learn_calibration_n: 'Sample',
+  learn_calibration_empty: 'Need 10+ completed analyses for calibration.',
+  learn_pattern_detail_title: 'Pattern breakdown',
+  learn_pattern_desc: 'Description',
+  learn_pattern_action_label: 'What to do',
+  learn_pattern_sample: 'Sample',
+  learn_pattern_avg_return: 'Avg return',
+  learn_pattern_weight: 'Scoring weight',
+
+  // ─── LEARNING: INSIGHTS ───
+  learn_insights_empty: 'No insights yet. Oracle will collect them as it learns.',
+  learn_insight_new_pattern: 'New pattern',
+  learn_insight_dead_pattern: 'Pattern stopped working',
+  learn_insight_calibration: 'Calibration',
+  learn_insight_win_rate: 'Win rate changed',
+  learn_insight_milestone: 'New milestone',
+  learn_insight_data_gap: 'Data gap',
+  learn_insight_read_more: 'Read more',
+  learn_insight_close: 'Close',
+
+  // ─── LEARNING: DATA ───
+  learn_data_title: 'What Oracle sees',
+  learn_data_symbols: 'Symbols',
+  learn_data_freshness: 'Data freshness',
+  learn_data_last: 'Last analysis',
+  learn_data_fresh: 'fresh',
+  learn_data_stale: 'stale',
   quiz_title: 'Profile setup',
   quiz_intro: 'Answer 3 questions — I will tune strategy for you.',
   quiz_q1: 'Trading experience', quiz_q1_a1: 'Beginner', quiz_q1_a2: 'Mid', quiz_q1_a3: 'Pro',
@@ -1233,6 +1345,28 @@ const I18N_EN: Dict = {
   
   tools_close: 'Close',
   fs_btn_title: 'Fullscreen',
+    // ─── PATTERNS ───
+  pat_bull_btc: 'Bullish BTC', pat_altseason: 'Altseason', pat_bearish: 'Bear market',
+  pat_bull_mild: 'Mild growth', pat_bear_mild: 'Mild decline', pat_neutral: 'Consolidation',
+  pat_rsi_oversold: 'RSI oversold', pat_rsi_low: 'RSI low', pat_rsi_mid: 'RSI mid',
+  pat_rsi_high: 'RSI high', pat_rsi_overbought: 'RSI overbought',
+  pat_whale_buying: 'whales buying', pat_whale_selling: 'whales selling',
+  pat_whale_active_unknown: 'volume anomaly', pat_no_whale: 'no whales',
+  pat_fund_neg: 'shorts dominate', pat_fund_overlong: 'longs overheated',
+  pat_fund_pos: 'longs dominate', pat_fund_neutral: 'neutral funding',
+  pat_ob_bull: 'orderbook bullish', pat_ob_bear: 'orderbook bearish', pat_ob_neutral: 'orderbook neutral',
+
+  // ─── LEARNING HELP ───
+  learn_help_title: 'How to read this stats?',
+  learn_help_btn: '❓ How to understand?',
+  learn_help_pf: 'Profit Factor',
+  learn_help_pf_desc: 'Shows how much you earn for every dollar lost. <b>1.5</b> means for every $1 loss, you make $1.5 profit. <b>Above 1.0 is good</b>. Below 0.8 means losing money.',
+  learn_help_cal: 'Confidence Calibration (Calibration Error)',
+  learn_help_cal_desc: 'Oracle rates a signal: "I am 80% confident." Calibration checks if it is honest. If error is <b>33%</b>, it means when it says 80%, it actually wins only 47% of the time. <b>Lower error is better</b>. Error > 20% means don\'t trust high confidence signals.',
+  learn_help_pat: 'Patterns',
+  learn_help_pat_desc: 'Oracle finds repeating situations (e.g., "RSI dropped, whales buying"). It remembers them. If Win Rate <b>above 60%</b>, it is a great signal. If <b>below 40%</b>, Oracle sees it stopped working and lowers its weight.',
+  learn_help_ins: 'Insights',
+  learn_help_ins_desc: 'This is Oracle\'s "diary". It analyzes its own history: "I learned a new pattern", "This one stopped working", "I overestimate my confidence". Read them to understand how its "brain" evolves.',
 };
 
 // ─── СОСТОЯНИЕ ───

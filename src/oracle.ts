@@ -5,7 +5,7 @@
 
 import { getAdvancedAnalytics } from './market';
 import { getMarketContext } from './market';
-import { humanizePattern } from './patterns';
+import { humanizePattern, matchPatterns, PATTERNS_DB } from './patterns';
 import type { Candle } from './sources/candles';
 import { db } from './db';
 
@@ -102,6 +102,10 @@ interface MemoryRecord {
   outcome_price: number | null;
   outcome_pct: number | null;
   outcome_checked_at: number | null;
+  // ─── v3 ───
+  pattern_ids?: string[];
+  top_reasons?: string[];
+  confidence_bucket?: number;
 }
 
 interface Memory {
@@ -109,8 +113,12 @@ interface Memory {
   stats: Record<string, any>;
   version: number;
   created: number;
+  // ─── v3 ───
+  insights?: any[];
+  daily_rollups?: any[];
+  drift_snapshots?: any[];
+  last_milestone?: number;
 }
-
 let _memCache: Memory | null = null;
 
 export async function initOracleDb(): Promise<void> {
@@ -132,13 +140,44 @@ export async function initOracleDb(): Promise<void> {
     } catch { /* silent */ }
   }
   
+  // ─── Migration to schema v3 ───
+  if (_memCache && ((_memCache.version || 2) < 3)) {
+    _memCache.insights = _memCache.insights || [];
+    _memCache.daily_rollups = _memCache.daily_rollups || [];
+    _memCache.drift_snapshots = _memCache.drift_snapshots || [];
+    _memCache.last_milestone = _memCache.last_milestone || 0;
+
+    for (const r of _memCache.analyses || []) {
+      r.pattern_ids = r.pattern_ids || [];
+      r.top_reasons = r.top_reasons || [];
+      r.confidence_bucket = r.confidence_bucket ?? Math.floor((r.confidence || 50) / 10);
+    }
+
+    _memCache.version = 3;
+    await db.set(MEMORY_KEY, _memCache);
+    console.log('[oracle] Memory migrated to schema v3');
+  }
+
   if (!_memCache) {
-    _memCache = { analyses: [], stats: {}, version: 2, created: Math.floor(Date.now() / 1000) };
+    _memCache = {
+      analyses: [],
+      stats: {},
+      version: 3,
+      created: Math.floor(Date.now() / 1000),
+      insights: [],
+      daily_rollups: [],
+      drift_snapshots: [],
+      last_milestone: 0,
+    };
   }
 }
 
 function loadMemory(): Memory {
   return _memCache || { analyses: [], stats: {}, version: 2, created: Math.floor(Date.now() / 1000) };
+}
+
+export function getOracleMemorySnapshot(): any {
+  return loadMemory();
 }
 
 export function saveMemory(mem: Memory): boolean {
@@ -159,10 +198,16 @@ export function oracleSaveAnalysis(
   score: number,
   confidence: number,
   isFavorite = false,
-  marketRegime = 'neutral'
+  marketRegime = 'neutral',
+  extra?: {
+    pattern_ids?: string[];
+    top_reasons?: string[];
+    confidence_bucket?: number;
+  }
 ): string {
   const mem = loadMemory();
   const recordId = genRecordId(ticker);
+  const conf = Number(confidence);
   mem.analyses.push({
     id: recordId,
     timestamp: Math.floor(Date.now() / 1000),
@@ -182,13 +227,17 @@ export function oracleSaveAnalysis(
     max_120: Number(marketData.max_120 ?? 0),
     verdict,
     score: Number(score),
-    confidence: Number(confidence),
+    confidence: conf,
     outcome: null,
     mfe_pct: null,
     mae_pct: null,
     outcome_price: null,
     outcome_pct: null,
     outcome_checked_at: null,
+    // v3
+    pattern_ids: extra?.pattern_ids || [],
+    top_reasons: extra?.top_reasons || [],
+    confidence_bucket: extra?.confidence_bucket ?? Math.floor(conf / 10),
   });
   if (mem.analyses.length > 10000) mem.analyses = mem.analyses.slice(-10000);
   mem.stats.total_analyses = (mem.stats.total_analyses ?? 0) + 1;
@@ -205,49 +254,96 @@ export async function oracleUpdateOutcomes(): Promise<{ updated: number; checked
   let updated = 0;
   let checked = 0;
 
+  // ─── FIX: Сбрасываем неверные исходы (hold -> flat, фейковые win -> pending) ───
+  let resetCount = 0;
+  for (const rec of mem.analyses) {
+    if (rec.verdict === 'hold' && rec.outcome === 'loss') {
+      rec.outcome = null;
+      rec.outcome_pct = null;
+      rec.mfe_pct = null;
+      rec.mae_pct = null;
+      resetCount++;
+    }
+    if ((rec.outcome === 'win' || rec.outcome === 'win_big') && (rec.outcome_pct == null || rec.outcome_pct <= 0)) {
+      rec.outcome = null;
+      rec.outcome_pct = null;
+      resetCount++;
+    }
+  }
+  if (resetCount > 0) {
+    saveMemory(mem);
+    console.log(`[oracle] Reset ${resetCount} invalid records`);
+  }
+
+  // Берем до 50 записей за раз для скорости
   const pending = mem.analyses.filter(r =>
     r.outcome === null && (now - r.timestamp) / 3600 >= 12
-  ).sort((a, b) => a.timestamp - b.timestamp).slice(0, 15);
+  ).sort((a, b) => a.timestamp - b.timestamp).slice(0, 50);
 
-  for (const rec of pending) {
-    checked++;
-    try {
-      const r = await fetch(
-        `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${rec.ticker}_USDT&interval=1h&limit=72`,
-        { signal: AbortSignal.timeout(6000) }
-      );
-      if (!r.ok) continue;
-      const data: any[] = await r.json();
-      const ip = rec.price_at_analysis;
-      if (ip <= 0) continue;
+  const chunkSize = 5;
+  for (let i = 0; i < pending.length; i += chunkSize) {
+    const chunk = pending.slice(i, i + chunkSize);
+    
+    await Promise.allSettled(chunk.map(async (rec) => {
+      checked++;
+      try {
+        const r = await fetch(
+          `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${rec.ticker}_USDT&interval=1h&limit=72`,
+          { signal: AbortSignal.timeout(6000) }
+        );
+        if (!r.ok) return;
+        const data: any[] = await r.json();
+        const ip = rec.price_at_analysis;
+        if (ip <= 0) return;
 
-      let maxH = ip, minL = ip;
-      const cp = parseFloat(data[data.length - 1][2]);
-      for (const d of data) {
-        if (parseInt(d[0], 10) >= rec.timestamp) {
-          const h = parseFloat(d[3]);
-          const l = parseFloat(d[4]);
-          if (h > maxH) maxH = h;
-          if (l < minL) minL = l;
+        // HOLD не торгуем
+        if (rec.verdict === 'hold') {
+          rec.outcome = 'flat';
+          rec.outcome_pct = 0;
+          rec.outcome_checked_at = Math.floor(now);
+          updated++;
+          return;
         }
-      }
 
-      const mfe = ((maxH - ip) / ip) * 100;
-      const mae = ((minL - ip) / ip) * 100;
-      rec.mfe_pct = Math.round(mfe * 100) / 100;
-      rec.mae_pct = Math.round(mae * 100) / 100;
-      rec.outcome_price = cp;
-      rec.outcome_pct = Math.round(((cp - ip) / ip) * 100 * 100) / 100;
-      rec.outcome_checked_at = Math.floor(now);
+        let maxH = ip, minL = ip;
+        const cp = parseFloat(data[data.length - 1][2]);
+        for (const d of data) {
+          if (parseInt(d[0], 10) >= rec.timestamp) {
+            const h = parseFloat(d[3]);
+            const l = parseFloat(d[4]);
+            if (h > maxH) maxH = h;
+            if (l < minL) minL = l;
+          }
+        }
 
-      if (mfe >= 10 && Math.abs(mae) < 5) rec.outcome = 'win_big';
-      else if (mfe >= 4 && Math.abs(mae) < 4) rec.outcome = 'win';
-      else if (mae <= -10) rec.outcome = 'loss_big';
-      else if (mae <= -5 && mfe < 3) rec.outcome = 'loss';
-      else rec.outcome = 'flat';
+        const mfe = ((maxH - ip) / ip) * 100;
+        const mae = ((minL - ip) / ip) * 100;
+        rec.mfe_pct = Math.round(mfe * 100) / 100;
+        rec.mae_pct = Math.round(mae * 100) / 100;
+        rec.outcome_price = cp;
+        rec.outcome_pct = Math.round(((cp - ip) / ip) * 100 * 100) / 100;
+        rec.outcome_checked_at = Math.floor(now);
 
-      updated++;
-    } catch { /* silent */ }
+        if (rec.verdict === 'buy' || rec.verdict === 'strong_buy') {
+          if (mfe >= 10 && Math.abs(mae) < 5) rec.outcome = 'win_big';
+          else if (mfe >= 4 && Math.abs(mae) < 4) rec.outcome = 'win';
+          else if (mae <= -10) rec.outcome = 'loss_big';
+          else if (mae <= -5 && mfe < 3) rec.outcome = 'loss';
+          else rec.outcome = 'flat';
+        } else if (rec.verdict === 'avoid') {
+          if (mae <= -10 && Math.abs(mfe) < 5) rec.outcome = 'win_big';
+          else if (mae <= -4 && Math.abs(mfe) < 4) rec.outcome = 'win';
+          else if (mfe >= 10) rec.outcome = 'loss_big';
+          else if (mfe >= 5 && mae > -3) rec.outcome = 'loss';
+          else rec.outcome = 'flat';
+        }
+
+        updated++;
+      } catch { /* silent */ }
+    }));
+    
+    // Пауза между пачками
+    await new Promise(r => setTimeout(r, 200));
   }
 
   if (updated > 0) saveMemory(mem);
@@ -323,13 +419,15 @@ export async function oracleLearnPatterns(): Promise<any> {
     const w = Math.max(-15, Math.min(15, (wr - 50) * 0.3 + amfe * 0.5 + amae * 0.5));
     learned[k] = {
       count: s.count,
+      wins: Math.round(s.wins),
+      losses: Math.round(s.losses),
       win_rate: Math.round(wr * 10) / 10,
       avg_outcome_pct: Math.round(avg * 100) / 100,
       avg_score_at_analysis: Math.round(asc * 10) / 10,
       avg_mfe: Math.round(amfe * 100) / 100,
       avg_mae: Math.round(amae * 100) / 100,
       weight: Math.round(w * 10) / 10,
-      human_name: humanizePattern(k),
+      human_name: k,
       is_reliable: s.count >= 5,
     };
   }
@@ -415,11 +513,14 @@ export function oracleGetStats(): any {
   const losses = completed.filter(a => a.outcome === 'loss' || a.outcome === 'loss_big');
   const flats = completed.filter(a => a.outcome === 'flat');
 
-  const aw = wins.length ? wins.reduce((s, a) => s + (a.outcome_pct ?? 0), 0) / wins.length : 0;
-  const al = losses.length ? losses.reduce((s, a) => s + (a.outcome_pct ?? 0), 0) / losses.length : 0;
+  // Берем модуль, так как для шортов (avoid) падение цены - это прибыль (отрицательный outcome_pct)
+  const aw = wins.length ? wins.reduce((s, a) => s + Math.abs(a.outcome_pct ?? 0), 0) / wins.length : 0;
+  const al = losses.length ? losses.reduce((s, a) => s + Math.abs(a.outcome_pct ?? 0), 0) / losses.length : 0;
   const tp = wins.reduce((s, a) => s + Math.max(0, a.outcome_pct ?? 0), 0);
-  const tl = Math.abs(losses.reduce((s, a) => s + Math.min(0, a.outcome_pct ?? 0), 0));
-  const pf = tl > 0 ? Math.round(tp / tl * 100) / 100 : 0;
+  const tl = Math.abs(losses.reduce((s, a) => s + Math.abs(Math.min(0, a.outcome_pct ?? 0)), 0));
+  let pf = 0;
+  if (tl > 0) pf = Math.round((tp / tl) * 100) / 100;
+  else if (tp > 0) pf = 99.9;
 
   let patterns: Record<string, any> = {};
   try {
@@ -447,12 +548,12 @@ export function oracleGetStats(): any {
     losses: losses.length,
     flats: flats.length,
     win_rate: completed.length ? Math.round(wins.length / completed.length * 1000) / 10 : 0,
-    avg_win_pct: Math.round(aw * 100) / 100,
-    avg_loss_pct: Math.round(al * 100) / 100,
+    avg_win_pct: Math.round(aw * 100) / 100, // Всегда положительный
+    avg_loss_pct: Math.round(-al * 100) / 100, // Всегда отрицательный для UI
     profit_factor: pf,
     patterns_count: Object.keys(patterns).length,
-    top_patterns: top.map(([k, v]: any) => ({ key: k, name: v.human_name || k, ...v })),
-    worst_patterns: worst.map(([k, v]: any) => ({ key: k, name: v.human_name || k, ...v })),
+    top_patterns: top.map(([k, v]: any) => ({ key: k, name: k, ...v })),
+    worst_patterns: worst.map(([k, v]: any) => ({ key: k, name: k, ...v })),
     memory_size_kb: ms,
     days_learning: dl,
     oracle_age_days: dl,
@@ -532,6 +633,8 @@ export interface OracleAnalyzeResult {
   final_reasoning?: string;
   learned_correction?: number;
   learned_pattern?: string;
+  pattern_bonus?: number;
+  matched_patterns?: { id: string; name: string }[];
   market_context?: any;
   advanced?: any;
   dynamic_plan?: { entry: number; take_profit: number; stop_loss: number };
@@ -718,7 +821,27 @@ export async function oracleAnalyze(
     const emfe = learned.avg_mfe ?? 10;
     const emae = learned.avg_mae ?? -5;
 
-    const total = tech + ws + obs + fs + oc + lc + man + Math.round(aggr * 15);
+        // ─── Expert patterns bonus (Wyckoff, капитуляция, LSR, дивергенции) ───
+    let patternBonus = 0;
+    let matchedPatterns: { id: string; name: string }[] = [];
+    try {
+      const wf = (marketData as any).whale_futures || {};
+      const pats = matchPatterns(marketData, hasAdv ? adv : {}, wf);
+      matchedPatterns = pats.map(p => ({ id: p.id, name: p.name }));
+      for (const p of pats) {
+        const def = PATTERNS_DB.find(x => x.id === p.id);
+        if (def?.bias === 'bullish') patternBonus += 6;
+        else if (def?.bias === 'bearish') patternBonus -= 6;
+      }
+      patternBonus = Math.max(-18, Math.min(18, patternBonus));
+      if (pats.length > 0) {
+        const names = pats.map(p => p.name).join(', ');
+        if (patternBonus > 0) reasons.push(`Сработал паттерн: ${names}`);
+        else if (patternBonus < 0) warnings.push(`Медвежий паттерн: ${names}`);
+      }
+    } catch { /* silent */ }
+
+    const total = tech + ws + obs + fs + oc + lc + man + Math.round(aggr * 15) + patternBonus;
     const conf = Math.min(95, Math.max(20, 50 + total));
 
     let verdict: string;
@@ -776,7 +899,13 @@ export async function oracleAnalyze(
     }
     const baseProb = Math.max(10, 100 - bullProb - bearProb);
 
-    try { oracleSaveAnalysis(ticker, marketData, verdict, total, conf, false, regime); } catch { /* silent */ }
+    try {
+      oracleSaveAnalysis(ticker, marketData, verdict, total, conf, false, regime, {
+        pattern_ids: matchedPatterns.map(p => p.id),
+        top_reasons: reasons.slice(0, 3),
+        confidence_bucket: Math.floor(conf / 10),
+      });
+    } catch { /* silent */ }
 
     return {
       status: 'success',
@@ -791,6 +920,8 @@ export async function oracleAnalyze(
       final_reasoning: fr,
       learned_correction: lc,
       learned_pattern: learned.human_name,
+      pattern_bonus: patternBonus,
+      matched_patterns: matchedPatterns,
       market_context: {
         regime,
         desc: mctx.regime_desc || '',

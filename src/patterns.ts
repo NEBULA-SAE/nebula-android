@@ -3,6 +3,8 @@
 // Точный порт из python/patterns.py
 // ═══════════════════════════════════════════════════════════════
 
+import { tm } from './i18n';
+
 export interface PatternRule {
   rsi_max?: number;
   rsi_min?: number;
@@ -26,6 +28,7 @@ export interface PatternDef {
   desc: string;
   rules: PatternRule;
   action: string;
+  bias: 'bullish' | 'bearish' | 'neutral';
 }
 
 export interface PatternMatch {
@@ -43,6 +46,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Розница паникует и продаёт, но Open Interest растёт при положительном funding — крупный игрок набирает в шорт-ловушку.',
     rules: { rsi_max: 32, drop_pct_min: 25, oi_trend: ['rising'], funding_min: 0.005 },
     action: 'Лонг на отскоке от поддержки. Стоп под локальный минимум. Цель +8–15%.',
+    bias: 'bullish',
   },
   {
     id: 'wyckoff_spring',
@@ -50,6 +54,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Цена пробивает поддержку, но быстро возвращается — крупный игрок собрал стопы и набирает позицию.',
     rules: { rsi_max: 40, bb_oversold: true, bids_pct_min: 55 },
     action: 'Лонг после возврата выше пробитого уровня. Стоп под минимумом ложного пробоя.',
+    bias: 'bullish',
   },
   {
     id: 'long_squeeze',
@@ -57,6 +62,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Перегрев лонгов, funding высокий, OI падает — начинается каскад ликвидаций.',
     rules: { rsi_min: 65, funding_min: 0.03, oi_trend: ['falling'] },
     action: 'Шорт или ожидание в стороне. Лонги в этой зоне — русская рулетка.',
+    bias: 'bearish',
   },
   {
     id: 'bearish_divergence_top',
@@ -64,6 +70,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Цена делает новый максимум, RSI — нет. Скрытый сигнал разворота.',
     rules: { divergence: 'bearish', rsi_min: 55, rebound_pct_min: 60 },
     action: 'Фиксировать прибыль. Шорт только после подтверждения (пробой поддержки).',
+    bias: 'bearish',
   },
   {
     id: 'bullish_divergence_bottom',
@@ -71,6 +78,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Цена делает новый минимум, RSI — нет. Скрытый сигнал разворота вверх.',
     rules: { divergence: 'bullish', rsi_max: 40 },
     action: 'Искать лонг с подтверждением на объёме. Стоп под локальный минимум.',
+    bias: 'bullish',
   },
   {
     id: 'whale_distribution',
@@ -78,6 +86,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Цена падает, OBV падает, стакан слабый снизу — крупный игрок сбрасывает позицию.',
     rules: { whale_active: true, whale_trend_contains: ['ПАД', 'FALLING'], bids_pct_max: 45 },
     action: 'Не покупать. Ждать смены структуры рынка.',
+    bias: 'bearish',
   },
   {
     id: 'lsr_top_long_crowd_short',
@@ -85,6 +94,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Топ-трейдеры набирают лонг, толпа шортит. Классический конфлюенс для отскока.',
     rules: { lsr_top_gt_global_by: 0.15, rsi_max: 45 },
     action: 'Лонг с усиленным бустом Whale Score. Цель — зона POC.',
+    bias: 'bullish',
   },
   {
     id: 'bollinger_squeeze',
@@ -92,6 +102,7 @@ export const PATTERNS_DB: PatternDef[] = [
     desc: 'Сжатие полос Боллинджера — волатильность на минимуме, скоро резкий выброс.',
     rules: { bb_bandwidth_max: 4.0 },
     action: 'Ждать пробоя в любую сторону, торговать по направлению пробоя.',
+    bias: 'neutral',
   },
 ];
 
@@ -169,17 +180,17 @@ export function matchPatterns(
 // ─── Humanize pattern key (для UI обучения) ───
 
 const HUMANIZE_MAP: Record<string, string> = {
-  bull_btc: 'Бычий BTC', altseason: 'Альтсезон', bearish: 'Медвежий рынок',
-  bull_mild: 'Умеренный рост', bear_mild: 'Умеренное падение', neutral: 'Консолидация',
-  rsi_oversold: 'RSI перепродан', rsi_low: 'RSI низкий', rsi_mid: 'RSI средний',
-  rsi_high: 'RSI высокий', rsi_overbought: 'RSI перекуплен',
-  whale_buying: 'киты покупают', whale_selling: 'киты продают',
-  whale_active_unknown: 'аномалия объёма', no_whale: 'без китов',
-  fund_neg: 'шорты доминируют', fund_overlong: 'перегрев лонгов',
-  fund_pos: 'лонги преобладают', fund_neutral: 'нейтральный funding',
-  ob_bull: 'стакан бычий', ob_bear: 'стакан медвежий', ob_neutral: 'стакан нейтральный',
+  bull_btc: 'pat_bull_btc', altseason: 'pat_altseason', bearish: 'pat_bearish',
+  bull_mild: 'pat_bull_mild', bear_mild: 'pat_bear_mild', neutral: 'pat_neutral',
+  rsi_oversold: 'pat_rsi_oversold', rsi_low: 'pat_rsi_low', rsi_mid: 'pat_rsi_mid',
+  rsi_high: 'pat_rsi_high', rsi_overbought: 'pat_rsi_overbought',
+  whale_buying: 'pat_whale_buying', whale_selling: 'pat_whale_selling',
+  whale_active_unknown: 'pat_whale_active_unknown', no_whale: 'pat_no_whale',
+  fund_neg: 'pat_fund_neg', fund_overlong: 'pat_fund_overlong',
+  fund_pos: 'pat_fund_pos', fund_neutral: 'pat_fund_neutral',
+  ob_bull: 'pat_ob_bull', ob_bear: 'pat_ob_bear', ob_neutral: 'pat_ob_neutral',
 };
 
 export function humanizePattern(k: string): string {
-  return k.split('|').map(p => HUMANIZE_MAP[p] || p).join(' · ');
+  return k.split('|').map(p => tm(HUMANIZE_MAP[p] || p)).join(' · ');
 }

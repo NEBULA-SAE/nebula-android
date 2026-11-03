@@ -1,7 +1,7 @@
 # NEBULA Oracle Terminal — AI Context & Operations Manual
 
 > **Ручной handoff-файл** для передачи контекста ИИ-ассистенту в новом чате.
-> **Версия файла:** соответствует релизу **v2.0.30+** (Ноябрь 2026)
+> **Версия файла:** соответствует релизу **v2.1.0+** (Ноябрь 2026)
 > **Актуальная версия кода:** см. `package.json`
 
 ---
@@ -10,11 +10,11 @@
 
 **NEBULA Oracle Terminal** — персональный торговый терминал для криптовалютного рынка. Один TypeScript-код работает на трёх платформах: **Web** (браузер), **Android** (Capacitor 8), **Windows** (Tauri 2). 
 
-**Ключевая фишка:** алгоритм **Oracle** — скоринг от -100 до +100, агрегирующий технические индикаторы, поведение китов, стакан, funding rate и историю. Выдаёт вердикт (strong_buy / buy / hold / avoid), рекомендует позицию и генерирует 3 сценария через AI (Groq).
+**Ключевая фишка:** алгоритм **Oracle** — скоринг от -100 до +100, агрегирующий технические индикаторы, поведение китов, стакан, funding rate, экспертные паттерны и историю. Выдаёт вердикт (strong_buy / buy / hold / avoid), рекомендует позицию и генерирует 3 сценария через AI (Groq).
+
+**НОВОЕ (v2.1.0) — Умный Оракул (Smart Learning):** Оракул стал самообучающимся. Он накапливает историю в IndexedDB (схема v3), считает калибровку уверенности (насколько заявленная уверенность совпадает с реальным Win Rate), генерирует человекочитаемые «Инсайты» (выучил новый паттерн, старый перестал работать), а также применяет экспертные паттерны (Wyckoff, капитуляция, LSR-дивергенция) напрямую в скоринге.
 
 **Монетизация:** Система подписок PRO (HWID). Закрытые фичи: ИИ без лимитов, Продвинутая аналитика, Риски, Радар китов. 
-
-**Новое в этой версии:** Полная локализация (RU/EN), интеграция сторонних Web3-сервисов (P2P Binance, Xgram Swap, WhatToMine) через встроенный браузер, а также полноэкранный режим для графика (с поворотом экрана на мобильных).
 
 ---
 
@@ -28,10 +28,10 @@
 | Windows | Tauri 2.x |
 | AI | Groq API (`openai/gpt-oss-120b`) + SSE Streaming |
 | Криптография | Web Crypto API (AES-256-GCM + PBKDF2) |
-| Хранилище | **IndexedDB** (память Оракула) + localStorage (настройки, токен PRO) |
-| **Внешние окна** | `@capacitor/browser` (iOS/Android) + `@tauri-apps/plugin-opener` (Windows) |
-| **Ориентация** | `@capacitor/screen-orientation` (поворот экрана при fullscreen графике) |
-| **License Server** | Node.js + SQLite (VPS: `http://85.192.42.177:3000`) |
+| Хранилище | **IndexedDB** (память Оракула v3) + localStorage (настройки, токен PRO) |
+| Внешние окна | `@capacitor/browser` (iOS/Android) + `@tauri-apps/plugin-opener` (Windows) |
+| Ориентация | `@capacitor/screen-orientation` (поворот экрана при fullscreen графике) |
+| License Server | Node.js + SQLite (VPS: `http://85.192.42.177:3000`) |
 
 **Идентификатор приложения:** `com.nebula.oracle`
 
@@ -43,40 +43,48 @@
 1. **PRO License System (`src/pro.ts`)**: Проверяет лицензию, генерирует HWID, отправляет запросы на VPS.
 2. **Promise-Кэш (Network Deduplication):** В `candles.ts` и `orderbook.ts`. Один запрос на всех.
 3. **Data Threading:** В `ui/oracle.ts` свечи загружаются раз и передаются в `market.ts`, `oracle.ts`, `confluence.ts`.
-4. **IndexedDB:** Память Оракула (`nebulaMemory`) в `src/db.ts`.
-5. **I18N (Мультиязычность):** Полный словарь в `src/i18n.ts`. Функция `applyStaticTranslations()` в `ui/screens.ts` моментально перерисовывает весь интерфейс (включая открытые модалки) при смене языка.
+4. **IndexedDB (`src/db.ts` + `src/oracle.ts`):** Память Оракула (`nebulaMemory`). Схема v3. Автоматическая миграция со старых версий при инициализации (`initOracleDb`).
+5. **I18N (Мультиязычность):** Полный словарь в `src/i18n.ts`. Все названия паттернов (ключи вида `rsi_mid|whale_buying`) переводятся на лету через `humanizePattern()` в `patterns.ts`.
 6. **Webview Handler (`src/platform/browser.ts`):** Безопасный мост для открытия сторонних сервисов (P2P, Свопы, WhatToMine). Блокирует фишинговые домены через `allowedHosts`.
 7. **Fullscreen Chart:** В `chart-overlay.ts` реализован вырыв карточки графика в `body` с принудительным ресайзом через `ResizeObserver` и `ScreenOrientation.lock('landscape')`.
+8. **Learning Core (`src/learning-core.ts`):** Чистые функции для аналитики обучения (калибровка, инсайты, дрифт). Изолирован от UI и БД.
 
 ---
 
 ## 4. Бизнес-логика — сердце проекта
 
-### 4.1 Oracle scoring (Ядро)
+### 4.1 Oracle Scoring (Ядро)
 Файл: `src/oracle.ts` → `oracleAnalyze()`
-Формула: `score = tech + whale + obs + funding + onchain + learned + man + market_context`
+Формула: `score = tech + whale + obs + funding + onchain + learned + man + market_context + pattern_bonus`
+* **pattern_bonus**: новый параметр (+6 за каждый бычий паттерн из `patterns.ts`, -6 за медвежий, макс ±18).
 
-### 4.2 AI Mentor (Groq) с печатной машинкой
+### 4.2 Smart Learning (Обучение и Память) — НОВОЕ
+* **Сбор исходов (`oracleUpdateOutcomes`):** Асинхронный, батчами по 5 (макс 50 за раз). 
+  * `hold` больше не считается убытком — он помечается как `flat`.
+  * `avoid` (шорт) оценивается наоборот: если цена упала — это `win`, если выросла — `loss`.
+  * Есть защита от «фейковых» старых побед (сбрасываются в pending).
+* **Калибровка:** Считается, насколько уверенность Оракула соответствует реальности (например, при заявленных 80% он угадывает только в 47%).
+* **Инсайты (`computeInsights`):** Оракул сам пишет себе «дневник»: "Выучил новый паттерн (Win Rate 100% на 24 сделках)", "Паттерн X перестал работать", "Ошибка калибровки 33%".
+* **Drift:** Недельные снимки метрик (Win Rate, Profit Factor) для отслеживания прогресса.
+
+### 4.3 AI Mentor (Groq) с печатной машинкой
 Файл: `src/ai.ts` → `getAiMentor()`, `src/ui/oracle.ts` → `askAIMentor()`.
 **Лимиты:** Free — 3 запроса в день. PRO — безлимит.
 
-### 4.3 Whale Radar + PRO блокировки
+### 4.4 Whale Radar + PRO блокировки
 Файл: `src/ui/whale.ts`. Собирает метрики (OI, LSR, Taker). 
 **Free:** Volume (Z-score) и OBV. **PRO:** OI, LSR, Taker, X-Ray, Walls.
 
-### 4.4 Multi-TF Confluence
+### 4.5 Multi-TF Confluence
 Файл: `src/sources/confluence.ts`. Анализирует 1h, 1d, 1w.
 
-### 4.5 Web3 Интеграция (P2P & Инструменты)
+### 4.6 Web3 Интеграция (P2P & Инструменты)
 - **Файл:** `src/platform/browser.ts`.
-- **Сервисы:** 
-  - Binance P2P (покупка за фиат).
-  - Xgram (анонимный своп крипты на крипту).
-  - WhatToMine (профессиональный калькулятор майнинга).
-- **UI:** Одна кнопка «Обмен» в шапке (`openExchangeMenu`), которая открывает модальное окно с выбором. 
-- **Безопасность:** В `capacitor.config.ts` (allowNavigation) и `browser.ts` (allowedHosts) прописаны белые списки доменов. На Windows открывается в системном браузере, на мобилках — в нативном оверлее (как в Telegram).
+- **Сервисы:** Binance P2P, Xgram (анонимный своп), WhatToMine (калькулятор майнинга).
+- **UI:** Одна кнопка «Обмен» в шапке (`openExchangeMenu`).
+- **Безопасность:** В `capacitor.config.ts` и `browser.ts` (allowedHosts) белые списки доменов.
 
-### 4.6 PRO License System (Монетизация)
+### 4.7 PRO License System (Монетизация)
 - **Сервер:** Node.js + SQLite (VPS).
 - **Генерация:** `admin-gen.html`.
 - **Клиент:** `src/pro.ts` (`nebulaProToken`).
@@ -87,15 +95,14 @@
 ## 5. UI и Заставка
 Файл: `index.html`
 **7 экранов:** home, pro, scanner, fav, oracle, risk, portfolio.
-**Splash Screen:** 8 секунд. Canvas-анимация.
-**Шапка (NEBULA PRO):** 
-- Логотип `NEBULA` + кнопка `[PRO]`.
-- **Кнопки справа:** Рынок, Обучение, Ордера (только ПК), **Обмен (P2P/Swap/Майнинг)**, **Демо (фиолетовая, пульсирующая)**, Настройки.
-- **Язык (RU/EN)** перенесен внутрь Настроек.
-- **График:** Кнопка «На весь экран» (в правом верхнем углу карточки графика). При нажатии карточка вырывается в `body`, заполняет 100vw/100vh, экран телефона поворачивается в Landscape.
-**Блокировка PRO в UI:**
-- `Risk Center`, `Аналитика`, `Ордера` — закрыты замочками.
-- Окно `About` содержит полный перевод на английский (включая списки фич и платформы).
+**Экран «Обучение» (UI: `src/ui/learning.ts`):**
+- Доступен из шапки (чип 🧠) или из радара.
+- **3 таба:**
+  1. **Обзор:** Win Rate, Profit Factor (с фиксом математики для шортов), Ошибка калибровки, Выборка, Дрифт.
+  2. **Паттерны:** График калибровки (заявлено vs реально), Лучшие/Худшие паттерны (с переводом названий).
+  3. **Инсайты:** Лента событий (milestone, новый паттерн, мертвый паттерн).
+- **Кнопка «❓»:** Открывает объяснялку (Help) простым языком ("Что такое Profit Factor", "Как читать Калибровку").
+**Дашборд «Оракул» (`src/ui/oracle.ts`):** Содержит кнопку «🧠 Подробнее», которая открывает экран «Обучение».
 
 ---
 
@@ -141,6 +148,7 @@
 ## 11. История версий (последние)
 | Версия | Ключевое |
 |---|---|
+| v2.1.0+ | **Умный Оракул (Smart Learning):** Схема памяти v3, калибровка уверенности, инсайты, дрифт, UI на 3 таба, подключение экспертных паттернов (Wyckoff) в скоринг, фикс математики WIN/LOSS и Profit Factor, кнопка Help. |
 | v2.0.30+ | Интеграция Web3 (P2P, Xgram, WhatToMine), встроенный браузер, полная локализация RU/EN, новые кнопки в шапке, полноэкранный график. |
 | v2.0.27+ | Система PRO (сервер, HWID, UI-заглушки), золотая надпись NEBULA PRO, фикс Android HTTP. |
 | v2.0.22+ | Crypto Hub, фикс Landscape Mode, кнопка «Назад» в деталях хаба. |
@@ -189,7 +197,8 @@
 ### 🔍 Отладка
 | Действие | Инструкция |
 |---|---|
-| **База Оракула** | F12 -> Application -> IndexedDB -> NebulaDB -> oracleMemory. |
+| **База Оракула (Память)** | F12 -> Application -> IndexedDB -> NebulaDB -> oracleMemory. |
+| **Выученные паттерны** | F12 -> Application -> Local Storage -> `nebulaLearnedPatterns`. |
 | **Токен PRO** | F12 -> Application -> Local Storage -> `nebulaProToken`. |
 | **HWID** | `localStorage.getItem('nebulaDeviceHwid')` |
 | **Список плагинов Android** | `npx cap ls android` |

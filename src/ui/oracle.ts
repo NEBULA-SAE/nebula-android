@@ -835,9 +835,12 @@ export async function renderOracleDashboard(): Promise<void> {
             <div class="oracle-stat-lbl">${tm('patterns')}</div>
             <div class="oracle-stat-val cyan">${st.patterns_count}</div>
           </div>
-          <div class="oracle-stat-cell">
-            <div class="oracle-stat-lbl">${tm('profit_factor')}</div>
-            <div class="oracle-stat-val amber">${st.profit_factor.toFixed(2)}</div>
+          <div class="oracle-stat-cell" style="grid-column: span 2; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="oracle-stat-lbl">${tm('profit_factor')}</div>
+              <div class="oracle-stat-val amber">${st.profit_factor.toFixed(2)}</div>
+            </div>
+            <button class="btn-primary btn-violet" onclick="openLearning()" style="width:auto; padding:8px 12px; font-size:10px; margin:0;">🧠 ${tm('learn_tab_overview')}</button>
           </div>
           <div class="oracle-stat-cell">
             <div class="oracle-stat-lbl">Win</div>
