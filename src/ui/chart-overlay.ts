@@ -11,7 +11,11 @@ import { state } from '../utils';
 import { tm } from '../i18n';
 import type { Candle } from '../sources/candles';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
-import { platform } from '../platform'; // Импортируем детектор платформы
+import { platform } from '../platform';
+
+// Запоминаем, откуда вырвали график, чтобы вернуть обратно
+let _originalParent: HTMLElement | null = null;
+let _originalNextSibling: ChildNode | null = null;
 
 export interface OverlayData {
   candles: Candle[];
@@ -423,26 +427,62 @@ function showOverlayHelp(): void {
 export async function toggleChartFullscreen(): Promise<void> {
   const container = document.getElementById('chart-container');
   if (!container) return;
+  
+  const card = container.closest('.chart-card') as HTMLElement;
+  if (!card) return;
 
-  const isFs = container.classList.toggle('is-fullscreen');
+  const isFs = !card.classList.contains('is-fullscreen');
 
-  // Крутим экран ТОЛЬКО на мобильных платформах
-  if (platform !== 'web' && platform !== 'tauri') {
-    try {
-      if (isFs) {
-        await ScreenOrientation.lock({ orientation: 'landscape' });
-      } else {
-        await ScreenOrientation.unlock();
+  if (isFs) {
+    _originalParent = card.parentElement;
+    _originalNextSibling = card.nextSibling;
+
+    // Переносим в body, чтобы вырвать из .screens
+    document.body.appendChild(card);
+    card.classList.add('is-fullscreen');
+    document.body.classList.add('chart-fullscreen-active');
+
+    // Прячем скролл у всех возможных родителей
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    const screensEl = document.querySelector('.screens') as HTMLElement;
+    if (screensEl) screensEl.style.overflow = 'hidden';
+
+    if (platform === 'web' || platform === 'tauri') {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
       }
-    } catch (e) {
-      console.warn('Orientation lock failed:', e);
+    }
+
+    if (platform !== 'web' && platform !== 'tauri') {
+      try { await ScreenOrientation.lock({ orientation: 'landscape' }); } catch {}
+    }
+  } else {
+    card.classList.remove('is-fullscreen');
+    document.body.classList.remove('chart-fullscreen-active');
+
+    if (_originalParent) {
+      _originalParent.insertBefore(card, _originalNextSibling);
+    }
+
+    // Возвращаем скролл
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    const screensEl = document.querySelector('.screens') as HTMLElement;
+    if (screensEl) screensEl.style.overflow = '';
+
+    if (document.exitFullscreen && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+
+    if (platform !== 'web' && platform !== 'tauri') {
+      try { await ScreenOrientation.unlock(); } catch {}
     }
   }
 
-  // Принудительно заставляем график перерисоваться под новый размер
-  // Делаем это несколько раз, так как на телефонах поворот занимает время
+  // Принудительный ресайз графика
   const forceResize = () => {
-    if (state.chart) {
+    if (state.chart && container) {
       const rect = container.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
         state.chart.resize(rect.width, rect.height);
@@ -451,8 +491,10 @@ export async function toggleChartFullscreen(): Promise<void> {
   };
 
   requestAnimationFrame(forceResize);
+  setTimeout(forceResize, 50);
   setTimeout(forceResize, 150);
-  setTimeout(forceResize, 400); // Для мобилок
+  setTimeout(forceResize, 300);
+  setTimeout(forceResize, 600);
 }
 
 if (typeof window !== 'undefined') {

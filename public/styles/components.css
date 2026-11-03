@@ -351,17 +351,46 @@ select.form-input { cursor:pointer; }
 .hub-badge.no { background: rgba(255,101,132,.15); color: var(--coral); border: 1px solid rgba(255,101,132,.3); }
 
 /* ═══ FULLSCREEN CHART ═══ */
-#chart-container.is-fullscreen {
+.chart-card.is-fullscreen {
   position: fixed !important;
-  inset: 0 !important; /* Заменяет top/left/width/height */
+  top: 0 !important;
+  left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 99999 !important;
+  height: 100dvh !important;
+  z-index: 999999 !important;
   background: #050811 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  transform: none !important;
   border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transform: none !important;
+  contain: none !important;
+  overflow: hidden !important;
+}
+
+/* Панели сверху (таймфреймы и статистика) — фиксированная высота */
+.chart-card.is-fullscreen #tf-bar,
+.chart-card.is-fullscreen .chart-stats {
+  flex: 0 0 auto !important;
+}
+
+/* Контейнер графика — растягиваем на всё оставшееся место */
+.chart-card.is-fullscreen #chart-container {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: calc(100vh - 80px) !important; /* Резерв под панели */
+  height: calc(100dvh - 80px) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  background: transparent !important;
+}
+
+/* Скрываем скролл на странице */
+body.chart-fullscreen-active {
+  overflow: hidden !important;
 }
 
 /* Кнопка развернуть */
@@ -387,10 +416,4 @@ select.form-input { cursor:pointer; }
   color: var(--cyan);
   border-color: var(--cyan);
   background: rgba(94, 203, 255, 0.1);
-}
-
-/* Позволяем графику вырываться из карточки в полноэкранном режиме */
-.chart-card:has(#chart-container.is-fullscreen) {
-  contain: none !important;
-  overflow: visible !important;
 }

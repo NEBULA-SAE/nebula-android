@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.32** | Branch: `main` | Commit: `a2ca92b`
-> Generated: 2026-11-03 04:02
+> Version: **2.0.33** | Branch: `main` | Commit: `95f9b76`
+> Generated: 2026-11-03 04:24
 
 ---
 
@@ -38,16 +38,41 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 54
-- Total LOC in `src/`: 17195
-- Bundle (`dist/`): 59 files, 650.2 KB
+- Total LOC in `src/`: 17237
+- Bundle (`dist/`): 59 files, 651.8 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.32**
-- Last git tag: `v2.0.31`
+- `package.json` version: **2.0.33**
+- Last git tag: `v2.0.32`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `95f9b76` - 2026-11-03 - chore(release): v2.0.32
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `android/app/capacitor.build.gradle`
+- `android/capacitor.settings.gradle`
+- `capacitor.config.ts`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/components.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/chart.ts`
+- `src/data/info.ts`
+- `src/i18n.ts`
+- `src/platform/browser.ts`
+- `src/ui/chart-overlay.ts`
+- `src/ui/init.ts`
+- `src/ui/mining.ts`
+- `src/ui/white-paper.ts`
 
 ### `a2ca92b` - 2026-11-02 - chore(release): v2.0.31
 
@@ -113,28 +138,13 @@ Files:
 - `src-tauri/tauri.conf.json`
 - `src/pro.ts`
 
-### `1d8acd6` - 2026-11-01 - chore(release): v2.0.28
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `capacitor.config.ts`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/pro.ts`
-
 ## Last release diff
 
-No changes since `v2.0.31`
+No changes since `v2.0.32`
 
 ## Recent tags
 
+- `v2.0.32`
 - `v2.0.31`
 - `v2.0.30`
 - `v2.0.29`
@@ -144,7 +154,6 @@ No changes since `v2.0.31`
 - `v2.0.25`
 - `v2.0.24`
 - `v2.0.23`
-- `v2.0.22`
 
 ## File tree (src/)
 
@@ -170,7 +179,7 @@ src/
 +-- styles/
 |   +--   136 main.css
 +-- ui/
-|   +--   468 chart-overlay.ts
+|   +--   510 chart-overlay.ts
 |   +--   236 dash.ts
 |   +--   511 diagnostics.ts
 |   +--   121 hub.ts
@@ -911,6 +920,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- 95f9b76  2026-11-03  chore(release): v2.0.32
 - a2ca92b  2026-11-02  chore(release): v2.0.31
 - 5b7bfc0  2026-11-02  before i18n fix
 - 5e5791c  2026-11-01  chore(release): v2.0.30
@@ -925,7 +935,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - fe48597  2026-10-31  chore(release): v2.0.21
 - 63944ba  2026-10-30  chore(release): v2.0.20
 - 405a221  2026-10-30  chore(release): v2.0.19
-- d11ad41  2026-10-30  chore(release): v2.0.18
 
 ---
 
