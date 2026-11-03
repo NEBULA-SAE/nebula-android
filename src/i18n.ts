@@ -592,6 +592,33 @@ const I18N_RU: Dict = {
   // ─── INFO / WHITE PAPER ───
   wp_mission_text: 'Дать розничному трейдеру доступ к институциональной аналитике. Мы объединили машинное обучение, потоковые данные с 6 бирж и алгоритмы оценки рисков в одном терминале.',
   wp_release_date: '01 Ноября 2026',
+    // ─── TOOLS / MINING ───
+  exchange_menu_title: '💱 Обмен и Инструменты',
+  exchange_menu_desc: 'Выбери инструмент, который откроется внутри терминала.',
+  xgram_desc: 'Анонимный обмен крипты. 590+ монет. Без KYC.',
+  xgram_btn: 'Открыть Xgram',
+  p2p_desc: 'Покупка/продажа за фиат. Защита эскроу.',
+  p2p_btn: 'Открыть Binance P2P',
+  
+  mining_title: '⛏️ Майнинг',
+  mining_calc_title: 'Калькулятор майнинга',
+  mining_coin: 'Монета',
+  mining_hash: 'Хешрейт (GH/s)',
+  mining_power: 'Потребление (Ватт)',
+  mining_elec: 'Цена электричества ($/кВт·ч)',
+  mining_btn_calc: 'Рассчитать доход',
+  mining_btn_loading: 'Загружаю данные...',
+  mining_err_hash: 'Введи хешрейт',
+  mining_err_api: 'Ошибка получения данных',
+  mining_res_daily_coins: 'В день монет:',
+  mining_res_revenue: 'Доход в день:',
+  mining_res_power: 'Электричество:',
+  mining_res_net: 'Чистая прибыль:',
+  mining_btn_open: 'Открыть калькулятор',
+  mining_desc: 'Посчитай чистую прибыль с учётом хешрейта и электричества.',
+  
+  tools_close: 'Закрыть',
+  fs_btn_title: 'На весь экран',
 };
 
 const I18N_EN: Dict = {
@@ -1179,6 +1206,33 @@ const I18N_EN: Dict = {
   // ─── INFO / WHITE PAPER ───
   wp_mission_text: 'Give retail traders access to institutional analytics. We combined machine learning, streaming data from 6 exchanges, and risk assessment algorithms in one terminal.',
   wp_release_date: 'November 01, 2026',
+    // ─── TOOLS / MINING ───
+  exchange_menu_title: '💱 Exchange & Tools',
+  exchange_menu_desc: 'Choose a tool to open inside the terminal.',
+  xgram_desc: 'Anonymous crypto swap. 590+ coins. No KYC.',
+  xgram_btn: 'Open Xgram',
+  p2p_desc: 'Buy/sell crypto with fiat. Escrow protected.',
+  p2p_btn: 'Open Binance P2P',
+  
+  mining_title: '⛏️ Mining',
+  mining_calc_title: 'Mining Profit Calculator',
+  mining_coin: 'Coin',
+  mining_hash: 'Hashrate (GH/s)',
+  mining_power: 'Power (Watts)',
+  mining_elec: 'Electricity Cost ($/kWh)',
+  mining_btn_calc: 'Calculate Profit',
+  mining_btn_loading: 'Loading data...',
+  mining_err_hash: 'Enter hashrate',
+  mining_err_api: 'Failed to fetch data',
+  mining_res_daily_coins: 'Daily Coins:',
+  mining_res_revenue: 'Daily Revenue:',
+  mining_res_power: 'Power Cost:',
+  mining_res_net: 'Net Profit:',
+  mining_btn_open: 'Open Calculator',
+  mining_desc: 'Calculate daily profit based on hashrate and electricity.',
+  
+  tools_close: 'Close',
+  fs_btn_title: 'Fullscreen',
 };
 
 // ─── СОСТОЯНИЕ ───

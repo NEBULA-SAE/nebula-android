@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.31** | Branch: `main` | Commit: `5b7bfc0`
-> Generated: 2026-11-02 17:21
+> Version: **2.0.32** | Branch: `main` | Commit: `a2ca92b`
+> Generated: 2026-11-03 04:02
 
 ---
 
@@ -37,17 +37,38 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Stats
 
-- TypeScript files in `src/`: 53
-- Total LOC in `src/`: 16948
-- Bundle (`dist/`): 58 files, 643.8 KB
+- TypeScript files in `src/`: 54
+- Total LOC in `src/`: 17195
+- Bundle (`dist/`): 59 files, 650.2 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.31**
-- Last git tag: `v2.0.30`
+- `package.json` version: **2.0.32**
+- Last git tag: `v2.0.31`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `a2ca92b` - 2026-11-02 - chore(release): v2.0.31
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `android/app/capacitor.build.gradle`
+- `android/capacitor.settings.gradle`
+- `capacitor.config.ts`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/i18n.ts`
+- `src/platform/browser.ts`
+- `src/ui/init.ts`
+- `src/ui/screens.ts`
 
 ### `5b7bfc0` - 2026-11-02 - before i18n fix
 
@@ -108,47 +129,13 @@ Files:
 - `src-tauri/tauri.conf.json`
 - `src/pro.ts`
 
-### `c30bae8` - 2026-11-01 - chore(release): v2.0.27
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `android/app/src/main/res/values/styles.xml`
-- `capacitor.config.ts`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/layout.css`
-- `public/styles/screens.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/pro.ts`
-- `src/trading.ts`
-- `src/ui/init.ts`
-- `src/ui/oracle.ts`
-- `src/ui/risk.ts`
-- `src/ui/whale.ts`
-- `src/utils.ts`
-
 ## Last release diff
 
-Files changed since `v2.0.30`: 10
-
-- `index.html`
-- `public/styles/components.css`
-- `src/demo.ts`
-- `src/i18n.ts`
-- `src/ui/diagnostics.ts`
-- `src/ui/oracle.ts`
-- `src/ui/risk.ts`
-- `src/ui/screens.ts`
-- `src/ui/settings.ts`
-- `src/ui/terms.ts`
+No changes since `v2.0.31`
 
 ## Recent tags
 
+- `v2.0.31`
 - `v2.0.30`
 - `v2.0.29`
 - `v2.0.28`
@@ -158,7 +145,6 @@ Files changed since `v2.0.30`: 10
 - `v2.0.24`
 - `v2.0.23`
 - `v2.0.22`
-- `v2.0.21`
 
 ## File tree (src/)
 
@@ -166,9 +152,9 @@ Files changed since `v2.0.30`: 10
 src/
 +-- data/
 |   +--   310 hub.ts
-|   +--    34 info.ts
+|   +--    42 info.ts
 +-- platform/
-|   +--    57 browser.ts
+|   +--    58 browser.ts
 |   +--   103 http.ts
 |   +--    29 index.ts
 +-- sources/
@@ -184,13 +170,14 @@ src/
 +-- styles/
 |   +--   136 main.css
 +-- ui/
-|   +--   428 chart-overlay.ts
+|   +--   468 chart-overlay.ts
 |   +--   236 dash.ts
 |   +--   511 diagnostics.ts
 |   +--   121 hub.ts
-|   +--   322 init.ts
+|   +--   333 init.ts
 |   +--   132 learning.ts
 |   +--    76 market.ts
+|   +--   115 mining.ts
 |   +--  1191 oracle.ts
 |   +--   436 pull-refresh.ts
 |   +--   331 risk.ts
@@ -203,16 +190,16 @@ src/
 |   +--   272 timeframes.ts
 |   +--   113 tooltip.ts
 |   +--   738 whale.ts
-|   +--    86 white-paper.ts
+|   +--    92 white-paper.ts
 +--   483 ai.ts
 +--   277 alerts.ts
 +--   280 auth.ts
-+--   351 chart.ts
++--   363 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
 +--    52 db.ts
 +--   330 demo.ts
-+--  1233 i18n.ts
++--  1287 i18n.ts
 +--   411 indicators.ts
 +--   265 main.ts
 +--   482 market.ts
@@ -512,6 +499,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - toggleOracleOverlay()
 - updateOverlayFromAnalysis()
 - updateFundingRate()
+- toggleChartFullscreen()
 - OverlayData (iface)
 
 ### `src/ui/dash.ts`
@@ -537,6 +525,9 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 
 ### `src/ui/market.ts`
 - openMarketPulse()
+
+### `src/ui/mining.ts`
+- openMiningCalculator()
 
 ### `src/ui/oracle.ts`
 - loadChartOnly()
@@ -717,9 +708,9 @@ applyTheme, createThemeFromColors, DEFAULT_COLORS, deleteCustomTheme, getActiveT
 
 mobileAiCommand, mobileCalcGrid, mobileDeleteKeys, mobileExecuteTrade, mobileLoadKeys, mobileSaveKeys, mobileSyncOrders, mobileSyncPortfolio, mobileTwapStart, openOrdersSheet, scheduleAutoSaveKeys, selectExTab, startMonitoring, stopMonitoring, switchAiMode, switchExecMode
 
-### `src/ui/chart-overlay.ts` (6)
+### `src/ui/chart-overlay.ts` (7)
 
-initOracleOverlay, isOverlayEnabled, showOverlayHelp, toggleOracleOverlay, updateFundingRate, updateOverlayFromAnalysis
+initOracleOverlay, isOverlayEnabled, showOverlayHelp, toggleChartFullscreen, toggleOracleOverlay, updateFundingRate, updateOverlayFromAnalysis
 
 ### `src/ui/dash.ts` (1)
 
@@ -733,9 +724,9 @@ closeDiagnostics, openDiagnostics, runFullDiagnostics, showDiagnosticsModal
 
 openCryptoHub, openHubDetails
 
-### `src/ui/init.ts` (3)
+### `src/ui/init.ts` (4)
 
-openExchangeMenu, openP2PMarket, openXgramSwap
+openExchangeMenu, openMiningWhatToMine, openP2PMarket, openXgramSwap
 
 ### `src/ui/learning.ts` (2)
 
@@ -744,6 +735,10 @@ openLearning, refreshLearning
 ### `src/ui/market.ts` (1)
 
 openMarketPulse
+
+### `src/ui/mining.ts` (1)
+
+calculateMining
 
 ### `src/ui/oracle.ts` (20)
 
@@ -818,6 +813,7 @@ wCall
 - `api.groq.com` (in `ai.ts`)
 - `api.kucoin.com` (in `candles.ts`)
 - `api.mexc.com` (in `candles.ts`)
+- `api.minerstat.com` (in `mining.ts`)
 - `api.qrserver.com` (in `terms.ts`)
 - `bingx.com` (in `hub.ts`)
 - `cointelegraph.com` (in `hub.ts`)
@@ -831,6 +827,7 @@ wCall
 - `raw.githubusercontent.com` (in `themes.ts`)
 - `shared.eu-central-1.getblock.io` (in `diagnostics.ts`)
 - `t.me` (in `pro.ts`)
+- `whattomine.com` (in `init.ts`)
 - `whitebird.io` (in `hub.ts`)
 - `WS stream.binance.com` (in `trading.ts`)
 - `WS x-push-spot.kucoin.com` (in `stream.ts`)
@@ -914,6 +911,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- a2ca92b  2026-11-02  chore(release): v2.0.31
 - 5b7bfc0  2026-11-02  before i18n fix
 - 5e5791c  2026-11-01  chore(release): v2.0.30
 - 6f7a1b1  2026-11-01  chore(release): v2.0.29
@@ -928,7 +926,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 63944ba  2026-10-30  chore(release): v2.0.20
 - 405a221  2026-10-30  chore(release): v2.0.19
 - d11ad41  2026-10-30  chore(release): v2.0.18
-- c93e08a  2026-10-30  chore(release): v2.0.17
 
 ---
 

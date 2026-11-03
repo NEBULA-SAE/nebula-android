@@ -10,6 +10,8 @@
 import { state } from '../utils';
 import { tm } from '../i18n';
 import type { Candle } from '../sources/candles';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
+import { platform } from '../platform'; // Импортируем детектор платформы
 
 export interface OverlayData {
   candles: Candle[];
@@ -43,6 +45,8 @@ export function isOverlayEnabled(): boolean {
 
 export function initOracleOverlay(): void {
   injectButton();
+  const fsBtn = document.querySelector('.chart-fs-btn');
+  if (fsBtn) fsBtn.setAttribute('title', tm('fs_btn_title'));
   console.log('[overlay] ready');
 }
 
@@ -416,6 +420,41 @@ function showOverlayHelp(): void {
   }
 }
 
+export async function toggleChartFullscreen(): Promise<void> {
+  const container = document.getElementById('chart-container');
+  if (!container) return;
+
+  const isFs = container.classList.toggle('is-fullscreen');
+
+  // Крутим экран ТОЛЬКО на мобильных платформах
+  if (platform !== 'web' && platform !== 'tauri') {
+    try {
+      if (isFs) {
+        await ScreenOrientation.lock({ orientation: 'landscape' });
+      } else {
+        await ScreenOrientation.unlock();
+      }
+    } catch (e) {
+      console.warn('Orientation lock failed:', e);
+    }
+  }
+
+  // Принудительно заставляем график перерисоваться под новый размер
+  // Делаем это несколько раз, так как на телефонах поворот занимает время
+  const forceResize = () => {
+    if (state.chart) {
+      const rect = container.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        state.chart.resize(rect.width, rect.height);
+      }
+    }
+  };
+
+  requestAnimationFrame(forceResize);
+  setTimeout(forceResize, 150);
+  setTimeout(forceResize, 400); // Для мобилок
+}
+
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     initOracleOverlay,
@@ -423,6 +462,7 @@ if (typeof window !== 'undefined') {
     isOverlayEnabled,
     updateOverlayFromAnalysis,
     updateFundingRate,
-    showOverlayHelp, // <-- добавили сюда
+    showOverlayHelp,
+    toggleChartFullscreen,
   });
 }

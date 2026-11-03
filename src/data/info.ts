@@ -1,34 +1,42 @@
-// ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · WHITE PAPER DATA
-// ═══════════════════════════════════════════════════════════════
-
 export const WHITE_PAPER = {
   appName: 'NEBULA ORACLE TERMINAL',
-  releaseDate: '01 Ноября 2026',
   version: 'v2.0.20',
-  mission: 'Дать розничному трейдеру доступ к институциональной аналитике. Мы объединили машинное обучение, потоковые данные с 6 бирж и алгоритмы оценки рисков в одном терминале.',
   
+  // Переводы для дат и миссии
+  releaseDate: '01 Ноября 2026',
+  releaseDateEn: 'November 01, 2026',
+  mission: 'Дать розничному трейдеру доступ к институциональной аналитике. Мы объединили машинное обучение, потоковые данные с 6 бирж и алгоритмы оценки рисков в одном терминале.',
+  missionEn: 'Give retail traders access to institutional analytics. We combined machine learning, streaming data from 6 exchanges, and risk assessment algorithms in one terminal.',
+
   creators: [
-    { role: 'Founder & Lead Developer', name: 'Semen' },
-    { role: 'AI Co-Pilot & Architect', name: 'Nebula AI' }
+    { 
+      name: 'Semen',
+      roleRu: 'Основатель и Главный разработчик', 
+      roleEn: 'Founder & Lead Developer'
+    },
+    { 
+      name: 'Nebula AI',
+      roleRu: 'AI Со-пилот и Архитектор', 
+      roleEn: 'AI Co-Pilot & Architect'
+    }
   ],
 
-  // Сюда добавляй партнеров. Если картинки нет — нарисует кружок с буквами.
   partners: [
     {
       name: 'VELOX',
-      role: 'DePIN Partner',
+      roleRu: 'DePIN Партнер',
+      roleEn: 'DePIN Partner',
       logoUrl: '/logos/velox.png', 
       link: ''
     },
     {
       name: 'VELOKSIK',
-      role: 'Ultra Secure VPN',
+      roleRu: 'Ультра-безопасный VPN',
+      roleEn: 'Ultra Secure VPN',
       logoUrl: '/logos/veloksik.png',
       link: ''
     }
   ],
 
-  // Инвесторы (пока пусто, заполним позже)
   investors: []
 };

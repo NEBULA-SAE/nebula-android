@@ -349,3 +349,48 @@ select.form-input { cursor:pointer; }
 }
 
 .hub-badge.no { background: rgba(255,101,132,.15); color: var(--coral); border: 1px solid rgba(255,101,132,.3); }
+
+/* ═══ FULLSCREEN CHART ═══ */
+#chart-container.is-fullscreen {
+  position: fixed !important;
+  inset: 0 !important; /* Заменяет top/left/width/height */
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  background: #050811 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
+  border-radius: 0 !important;
+}
+
+/* Кнопка развернуть */
+.chart-fs-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(140, 170, 220, 0.25);
+  color: #6b7a94;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chart-fs-btn:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(94, 203, 255, 0.1);
+}
+
+/* Позволяем графику вырываться из карточки в полноэкранном режиме */
+.chart-card:has(#chart-container.is-fullscreen) {
+  contain: none !important;
+  overflow: visible !important;
+}

@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { toast, isEN, state } from '../utils';
-import { setLang } from '../i18n';
+import { setLang, tm } from '../i18n';
 import './white-paper';
 import './hub';
 import { checkLocalProStatus } from '../pro';
@@ -252,18 +252,19 @@ export function initApp(): void {
     openExternalService('https://p2p.binance.com/ru');
   };
 
+    (window as any).openMiningWhatToMine = () => {
+    openExternalService('https://whattomine.com/');
+  };
+
   (window as any).openExchangeMenu = () => {
-    const en = isEN();
     const html = `
       <div style="text-align:center; padding: 8px 0;">
         <div style="font-size:42px; margin-bottom:10px;">💱</div>
         <div style="font-family:'Space Grotesk'; font-size:16px; font-weight:700; color:var(--mint); margin-bottom:12px;">
-          ${en ? 'Choose Exchange Method' : 'Выбери способ обмена'}
+          ${tm('exchange_menu_title')}
         </div>
         <div style="font-size:12px; color:var(--mut); line-height:1.55; margin-bottom:20px;">
-          ${en 
-            ? 'We support two reliable ways to exchange crypto directly inside the terminal.' 
-            : 'Мы поддерживаем два надёжных способа обмена криптовалюты прямо внутри терминала.'}
+          ${tm('exchange_menu_desc')}
         </div>
 
         <!-- Xgram -->
@@ -273,12 +274,10 @@ export function initApp(): void {
             <div style="font-family:'Space Grotesk'; font-size:14px; font-weight:700; color:#a78bfa;">Xgram (Swap)</div>
           </div>
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
-            ${en 
-              ? 'Anonymous crypto-to-crypto exchange. 590+ coins. No registration or KYC required. 10-15 min average.' 
-              : 'Анонимный обмен криптовалюты. Более 590 монет. Без регистрации и KYC. Среднее время 10-15 минут.'}
+            ${tm('xgram_desc')}
           </div>
           <button class="btn-primary" onclick="closeSheet();openXgramSwap()" style="background:linear-gradient(135deg, #8b5cf6, #a78bfa); font-size:11px; padding:10px;">
-            ${en ? 'Open Xgram Swap' : 'Открыть Xgram Своп'}
+            ${tm('xgram_btn')}
           </button>
         </div>
 
@@ -289,21 +288,33 @@ export function initApp(): void {
             <div style="font-family:'Space Grotesk'; font-size:14px; font-weight:700; color:#fcd535;">Binance P2P</div>
           </div>
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
-            ${en 
-              ? 'Buy/sell crypto with fiat (RUB, USD, etc.) directly from other users. Escrow protection.' 
-              : 'Покупка/продажа криптовалюты за фиат (RUB, USD и др.) напрямую у других пользователей. Защита эскроу.'}
+            ${tm('p2p_desc')}
           </div>
           <button class="btn-primary" onclick="closeSheet();openP2PMarket()" style="background:linear-gradient(135deg, #f0b90b, #fcd535); color:#000; font-size:11px; padding:10px;">
-            ${en ? 'Open Binance P2P' : 'Открыть Binance P2P'}
+            ${tm('p2p_btn')}
+          </button>
+        </div>
+
+        <!-- Mining Calculator (WhatToMine) -->
+        <div style="text-align:left; background:rgba(69,224,168,.08); border:1px solid rgba(69,224,168,.3); border-radius:12px; padding:14px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+            <div style="font-size:20px;">⛏️</div>
+            <div style="font-family:'Space Grotesk'; font-size:14px; font-weight:700; color:#45e0a8;">${tm('mining_calc_title')}</div>
+          </div>
+          <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
+            ${tm('mining_desc')}
+          </div>
+          <button class="btn-primary btn-mint" onclick="closeSheet();openMiningWhatToMine()" style="font-size:11px; padding:10px;">
+            ${tm('mining_btn_open')}
           </button>
         </div>
 
         <button class="btn-primary btn-mint" onclick="closeSheet()" style="margin-top:8px;">
-          ${en ? 'Close' : 'Закрыть'}
+          ${tm('tools_close')}
         </button>
       </div>
     `;
-    (window as any).openSheet?.(en ? '💱 Exchange' : '💱 Обмен', html);
+    (window as any).openSheet?.(tm('exchange_menu_title'), html);
   };
 
   console.log('[init] NEBULA v2 готов ✓');

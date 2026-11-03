@@ -18,7 +18,8 @@ const config: CapacitorConfig = {
       'www.bybit.com',
       'p2p.mexc.com',
       'www.mexc.com',
-      'xgram.io'
+      'xgram.io',
+      'pro.startmining.io'
     ]
   },
   plugins: {

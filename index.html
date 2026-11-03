@@ -294,7 +294,12 @@
       <div class="btc-advice" id="btc-advice">...</div>
     </div>
 
-    <div class="card chart-card">
+    <div class="card chart-card" style="position: relative;">
+  <button class="chart-fs-btn" onclick="toggleChartFullscreen()" title="На весь экран">
+    <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+  </button>
   <div id="tf-bar" class="tf-bar"></div>
   <div class="chart-stats" id="chart-stats">
         <span>— : <b>—</b></span>
@@ -685,7 +690,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.31</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.32</div>
     </div>
 
     <div class="terms-body">
@@ -721,7 +726,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.31</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.32</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>

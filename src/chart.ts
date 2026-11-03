@@ -157,6 +157,18 @@ function createChartNow(LW: any, c: HTMLElement, w: number, h: number): void {
     borderVisible: false,
   });
 
+  // ═══ ДОБАВЛЯЕМ RESIZE OBSERVER ═══
+  // Это заставит график перерисовываться, когда контейнер меняет размер (для полного экрана)
+  const resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      if (state.chart && width > 0 && height > 0) {
+        state.chart.resize(width, height);
+      }
+    }
+  });
+  resizeObserver.observe(c);
+
   // Если анализ уже успел прийти до создания series — применяем
   if (_pendingCandles && _pendingCandles.length) {
     const pending = _pendingCandles;

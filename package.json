@@ -1,6 +1,6 @@
 {
   "name": "nebula-oracle-v2",
-  "version": "2.0.31",
+  "version": "2.0.32",
   "description": "NEBULA Oracle Terminal · Capacitor + Tauri + TypeScript",
   "type": "module",
   "scripts": {
@@ -20,6 +20,7 @@
     "@capacitor/browser": "^8.0.5",
     "@capacitor/cli": "^8.5.2",
     "@capacitor/core": "^8.5.2",
+    "@capacitor/screen-orientation": "^8.0.2",
     "@capgo/capacitor-native-biometric": "^8.9.1",
     "@tauri-apps/plugin-autostart": "2.7.0",
     "@tauri-apps/plugin-global-shortcut": "2.4.1",

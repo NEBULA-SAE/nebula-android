@@ -15,6 +15,7 @@ export async function openExternalService(url: string): Promise<void> {
     'p2p.mexc.com',
     'www.mexc.com',
     'xgram.io',
+    'whattomine.com', // <--- ДОБАВЛЯЕМ ДЛЯ КАЛЬКУЛЯТОРА
   ];
 
   try {
