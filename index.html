@@ -215,7 +215,15 @@
 <main class="screens">
 
   <section class="screen active" id="screen-home">
-    <div id="demo-panel" style="display:none;">
+    <!-- ВКЛАДКИ -->
+    <div class="home-tabs-wrap">
+      <div class="home-tab active" id="htab-main" onclick="switchHomeTab('main')">📈 График</div>
+      <div class="home-tab" id="htab-fav" onclick="switchHomeTab('fav')">⭐ Избранное</div>
+    </div>
+
+    <!-- КОНТЕЙНЕР ГЛАВНОГО ЭКРАНА -->
+    <div id="home-main-content">
+      <div id="demo-panel" style="display:none;">
       <div class="demo-header">
               <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="demo-exit-btn" id="demo-exit-btn" onclick="exitDemoMode()">⬅️ Покинуть</button>
@@ -422,6 +430,68 @@
         NEBULA © 2026 · Powered by VELOX
       </div>
     </div>
+    </div> <!-- КОНЕЦ home-main-content -->
+
+    <!-- ВКЛАДКА "ИЗБРАННОЕ" (внутри главного экрана) -->
+    <div id="home-fav-content" style="display:none;">
+      <div class="fav-market-header" id="fav-market-header">
+        <!-- Market Cap -->
+        <div class="fmh-cell">
+          <div class="fmh-lbl" id="lbl-fmh-mcap">Market Cap</div>
+          <div class="fmh-val" id="fmh-mcap">—</div>
+          <div class="fmh-sub" id="fmh-mcap-change">—</div>
+          <div class="fmh-bar-bg"><div class="fmh-bar-fill" id="fmh-mcap-bar" style="width: 50%"></div></div>
+        </div>
+        
+        <!-- CMC20 -->
+        <div class="fmh-cell">
+          <div class="fmh-lbl" id="lbl-fmh-cmc20">CMC20</div>
+          <div class="fmh-val" id="fmh-cmc20">—</div>
+          <div class="fmh-sub" id="fmh-cmc20-change">—</div>
+          <div class="fmh-bar-bg"><div class="fmh-bar-fill" id="fmh-cmc20-bar" style="width: 50%"></div></div>
+        </div>
+
+        <!-- Altcoin Index -->
+        <div class="fmh-cell" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+          <div>
+            <div class="fmh-lbl" id="lbl-fmh-alt">Altcoin Index</div>
+            <div class="fmh-val" id="fmh-alt">—</div>
+            <div class="fmh-sub" id="fmh-alt-text">—</div>
+          </div>
+          <div class="fmh-gauge">
+            <svg viewBox="0 0 60 60">
+              <circle class="fmh-gauge-bg" cx="30" cy="30" r="24"></circle>
+              <circle class="fmh-gauge-fill" id="fmh-alt-ring" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Fear & Greed -->
+        <div class="fmh-cell" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+          <div>
+            <div class="fmh-lbl" id="lbl-fmh-fng">Fear & Greed</div>
+            <div class="fmh-val" id="fmh-fng">—</div>
+            <div class="fmh-sub" id="fmh-fng-text">—</div>
+          </div>
+          <div class="fmh-gauge">
+            <svg viewBox="0 0 60 60">
+              <circle class="fmh-gauge-bg" cx="30" cy="30" r="24"></circle>
+              <circle class="fmh-gauge-fill" id="fmh-fng-ring" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border:none; background:transparent; box-shadow:none; margin-top:12px;">
+        <div class="card-head" style="background:transparent; padding:0 0 10px 0; border-bottom:none;">
+          <div class="card-head-icon"><svg><use href="#i-star-fill"/></svg><span id="lbl-fav">Favorites</span></div>
+          <span id="fav-count" style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;">0</span>
+        </div>
+        <div class="fav-table" id="fav-list">
+          <div class="loader">Загрузка...</div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="screen" id="screen-pro">
@@ -436,15 +506,7 @@
     <div id="scan-list"><div class="loader">...</div></div>
   </section>
 
-  <section class="screen" id="screen-fav">
-    <div class="card">
-      <div class="card-head">
-        <div class="card-head-icon"><svg><use href="#i-star-fill"/></svg><span id="lbl-fav">Favorites</span></div>
-        <span id="fav-count" style="color:var(--amber);font-family:'JetBrains Mono',monospace;">0</span>
-      </div>
-      <div class="card-body" id="fav-list"><div class="empty-msg">—</div></div>
-    </div>
-  </section>
+  <section class="screen" id="screen-fav"></section>
 
   <section class="screen" id="screen-oracle">
           <div class="oracle-hero">
@@ -588,10 +650,6 @@
     <span class="lbl" id="nav-risk">Риски</span>
   </button>
 
-  <button class="nav-btn hide-on-mobile" data-tab="fav" onclick="switchTab('fav')">
-    <svg><use href="#i-star"/></svg>
-    <span class="lbl" id="nav-fav">Избранное</span>
-  </button>
   <button class="nav-btn hide-on-mobile" data-tab="portfolio" onclick="switchTab('portfolio')">
     <svg><use href="#i-wallet"/></svg>
     <span class="lbl" id="nav-portfolio">Баланс</span>
@@ -690,7 +748,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.34</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.35</div>
     </div>
 
     <div class="terms-body">
@@ -726,7 +784,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.34</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.35</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>

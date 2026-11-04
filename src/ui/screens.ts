@@ -14,6 +14,31 @@ import { cancelDemoOrder, resetDemo } from '../demo';
 
 // ═══ ВКЛАДКИ ═══
 
+// ═══ ВКЛАДКИ ГЛАВНОГО ЭКРАНА (СВАЙП) ═══
+export function switchHomeTab(tab: 'main' | 'fav'): void {
+  const mainContent = document.getElementById('home-main-content');
+  const favContent = document.getElementById('home-fav-content');
+  const htabMain = document.getElementById('htab-main');
+  const htabFav = document.getElementById('htab-fav');
+
+  if (!mainContent || !favContent || !htabMain || !htabFav) return;
+
+  if (tab === 'main') {
+    mainContent.style.display = 'block';
+    favContent.style.display = 'none';
+    htabMain.classList.add('active');
+    htabFav.classList.remove('active');
+  } else {
+    mainContent.style.display = 'none';
+    favContent.style.display = 'block';
+    htabMain.classList.remove('active');
+    htabFav.classList.add('active');
+    // Запускаем загрузку данных при переключении
+    import('./scanner').then(m => m.renderFavorites());
+  }
+}
+
+// ═══ ВКЛАДКИ ═══
 export function switchTab(tab: string): void {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const sc = document.getElementById('screen-' + tab);
@@ -26,7 +51,11 @@ export function switchTab(tab: string): void {
   if (tab === 'scanner' && !state.scannerRunning) {
     (window as any).runScanner?.();
   }
-  if (tab === 'fav') renderFavorites();
+  if (tab === 'fav') {
+    switchTab('home');
+    switchHomeTab('fav');
+    return;
+  }
   if (tab === 'portfolio') mobileSyncPortfolio(true);
   if (tab === 'oracle') renderOracleDashboard();
   if (tab === 'risk') {
@@ -61,7 +90,9 @@ export function setLanguage(lang: 'ru' | 'en'): void {
 
   // Мгновенная перерисовка активных экранов
   const activeScreen = document.querySelector('.screen.active')?.id;
-  if (activeScreen === 'screen-fav') renderFavorites();
+  if (activeScreen === 'screen-home' && document.getElementById('home-fav-content')?.style.display === 'block') {
+    renderFavorites();
+  }
   if (activeScreen === 'screen-oracle') renderOracleDashboard();
   if (activeScreen === 'screen-risk') import('./risk').then(m => m.renderRiskCenter()).catch(() => { /* silent */ });
 
@@ -530,6 +561,7 @@ export function initRadarMenu() {
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     switchTab,
+    switchHomeTab,
     setLanguage,
     applyStaticTranslations,
     loadBTC,
