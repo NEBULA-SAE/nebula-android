@@ -403,9 +403,6 @@
   #pro-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   #scan-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   #scan-list > .coin-item { margin-bottom: 0; }
-  #fav-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  #fav-list > .fav-item { margin-bottom: 0; }
-  #fav-list > .empty-msg { grid-column: 1 / -1; }
   .port-stats { grid-template-columns: 1fr 1fr 1fr 1fr; }
   .mp-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
   .learn-grid { grid-template-columns: 1fr 1fr 1fr; }
@@ -1666,4 +1663,22 @@ body.in-demo-mode #screen-home {
 .brand-mini, .brand-mini-pc {
   pointer-events: auto !important;
   cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЖЕСТКИЙ ФИКС ДЛЯ ИЗБРАННОГО (ЧТОБЫ ШАПКА БЫЛА СВЕРХУ)
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  #fav-list {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 2px !important;
+  }
+  
+  .fav-list-header, 
+  .fav-row {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }

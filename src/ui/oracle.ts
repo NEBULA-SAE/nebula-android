@@ -140,7 +140,8 @@ export async function mobileAnalyze(): Promise<void> {
     const drop = ((max120 - price) / max120) * 100;
 
     let status: 'green' | 'yellow' | 'red' = 'yellow';
-    if (rsiVal > 65 || rebound > 60) status = 'red';
+    // Оракул сам решит, покупать или нет, а этот баннер просто отражает техническую картину
+    if (rsiVal > 75 || rebound > 90) status = 'red'; // Только жесткий перегрев
     else if (rsiVal < 45 && rebound < 30 && drop > 40) status = 'green';
 
     // ─── ИНДИКАТОР ЗАГРУЗКИ: начальная загрузка ───
@@ -179,11 +180,12 @@ export async function mobileAnalyze(): Promise<void> {
       `<span class="cur">${tm('cur')}: <b>${fmt(price)}</b></span>` +
       `<span>${tm('max')}: <b>${fmt(max120)}</b></span>`);
 
-    // Временно заполняем verdict данными свечей
+    // Временно заполняем verdict данными свечей (пока Оракул думает)
     if (vd) {
-      vd.className = 'verdict ' + status;
+      const tempStatus = status === 'red' ? 'red' : 'yellow'; // Не красим в зеленый до ответа Оракула
+      vd.className = 'verdict ' + tempStatus;
       setText('verdict-title', `${raw}`);
-      setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${status === 'green' ? tm('acc_text') : status === 'red' ? tm('sell_text') : tm('flat_text')}`);
+      setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tempStatus === 'red' ? tm('sell_text') : tm('flat_text')}`);
     }
 
     const planCard = document.getElementById('plan-card');
@@ -278,8 +280,20 @@ export async function mobileAnalyze(): Promise<void> {
     if (myGen !== _analyzeGen) return;
 
     if (oracleResult.status === 'success') {
-          const vd2 = document.getElementById('verdict');
+      const vd2 = document.getElementById('verdict');
       if (vd2 && oracleResult.verdict_text) {
+        // ⚡️ МАГИЯ ТУТ: Баннер красится по вердикту Оракула, а не по тупой математике
+        if (oracleResult.verdict === 'strong_buy' || oracleResult.verdict === 'buy') {
+          vd2.className = 'verdict green';
+          setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tm('oracle_recommends_buy')}`);
+        } else if (oracleResult.verdict === 'avoid') {
+          vd2.className = 'verdict red';
+          setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tm('agent_forbid_text')}`);
+        } else {
+          vd2.className = 'verdict yellow';
+          setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tm('flat_text')}`);
+        }
+
         const oldOracle = vd2.querySelector('.oracle-line');
         if (oldOracle) oldOracle.remove();
         const oracleDiv = document.createElement('div');

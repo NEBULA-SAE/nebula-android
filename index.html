@@ -217,8 +217,8 @@
   <section class="screen active" id="screen-home">
     <!-- ВКЛАДКИ -->
     <div class="home-tabs-wrap">
-      <div class="home-tab active" id="htab-main" onclick="switchHomeTab('main')">📈 График</div>
-      <div class="home-tab" id="htab-fav" onclick="switchHomeTab('fav')">⭐ Избранное</div>
+      <div class="home-tab active" id="htab-main" onclick="switchHomeTab('main')"><span id="lbl-tab-chart">📈 График</span></div>
+      <div class="home-tab" id="htab-fav" onclick="switchHomeTab('fav')"><span id="lbl-tab-favorites">⭐ Избранное</span></div>
     </div>
 
     <!-- КОНТЕЙНЕР ГЛАВНОГО ЭКРАНА -->
@@ -437,7 +437,7 @@
       <div class="fav-market-header" id="fav-market-header">
         <!-- Market Cap -->
         <div class="fmh-cell">
-          <div class="fmh-lbl" id="lbl-fmh-mcap">Market Cap</div>
+          <div class="fmh-lbl" id="lbl-fmh-mcap">Капитализация</div>
           <div class="fmh-val" id="fmh-mcap">—</div>
           <div class="fmh-sub" id="fmh-mcap-change">—</div>
           <div class="fmh-bar-bg"><div class="fmh-bar-fill" id="fmh-mcap-bar" style="width: 50%"></div></div>
@@ -452,42 +452,42 @@
         </div>
 
         <!-- Altcoin Index -->
-        <div class="fmh-cell" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-          <div>
-            <div class="fmh-lbl" id="lbl-fmh-alt">Altcoin Index</div>
-            <div class="fmh-val" id="fmh-alt">—</div>
-            <div class="fmh-sub" id="fmh-alt-text">—</div>
-          </div>
-          <div class="fmh-gauge">
-            <svg viewBox="0 0 60 60">
-              <circle class="fmh-gauge-bg" cx="30" cy="30" r="24"></circle>
-              <circle class="fmh-gauge-fill" id="fmh-alt-ring" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>
+        <div class="fmh-cell fmh-gauge-card">
+          <div class="fmh-lbl" id="lbl-fmh-alt" style="margin-bottom:8px;">Индекс альткоинов</div>
+          <div class="fmh-gauge-wrap">
+            <svg viewBox="0 0 100 100">
+              <circle class="fmh-gauge-bg" cx="50" cy="50" r="42"></circle>
+              <circle class="fmh-gauge-fill" id="fmh-alt-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89"></circle>
             </svg>
+            <div class="fmh-gauge-text">
+              <div class="fmh-gauge-val" id="fmh-alt">—</div>
+              <div class="fmh-gauge-sub" id="fmh-alt-text">—</div>
+            </div>
           </div>
         </div>
 
         <!-- Fear & Greed -->
-        <div class="fmh-cell" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
-          <div>
-            <div class="fmh-lbl" id="lbl-fmh-fng">Fear & Greed</div>
-            <div class="fmh-val" id="fmh-fng">—</div>
-            <div class="fmh-sub" id="fmh-fng-text">—</div>
-          </div>
-          <div class="fmh-gauge">
-            <svg viewBox="0 0 60 60">
-              <circle class="fmh-gauge-bg" cx="30" cy="30" r="24"></circle>
-              <circle class="fmh-gauge-fill" id="fmh-fng-ring" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>
+        <div class="fmh-cell fmh-gauge-card">
+          <div class="fmh-lbl" id="lbl-fmh-fng" style="margin-bottom:8px;">Страх и жадность</div>
+          <div class="fmh-gauge-wrap">
+            <svg viewBox="0 0 100 100">
+              <circle class="fmh-gauge-bg" cx="50" cy="50" r="42"></circle>
+              <circle class="fmh-gauge-fill" id="fmh-fng-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89"></circle>
             </svg>
+            <div class="fmh-gauge-text">
+              <div class="fmh-gauge-val" id="fmh-fng">—</div>
+              <div class="fmh-gauge-sub" id="fmh-fng-text">—</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="card" style="border:none; background:transparent; box-shadow:none; margin-top:12px;">
         <div class="card-head" style="background:transparent; padding:0 0 10px 0; border-bottom:none;">
-          <div class="card-head-icon"><svg><use href="#i-star-fill"/></svg><span id="lbl-fav">Favorites</span></div>
+          <div class="card-head-icon"><svg><use href="#i-star-fill"/></svg><span id="lbl-fav">Избранные монеты</span></div>
           <span id="fav-count" style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;">0</span>
         </div>
-        <div class="fav-table" id="fav-list">
+        <div class="fav-table" id="fav-list" style="display: flex !important; flex-direction: column !important; width: 100% !important; gap: 2px !important;">
           <div class="loader">Загрузка...</div>
         </div>
       </div>
@@ -682,12 +682,6 @@
       <span class="radar-label" id="radar-market">Рынок</span>
     </div>
 
-    <!-- 60 deg -->
-    <div class="radar-item" data-action="tab" data-value="fav">
-      <div class="radar-icon-wrap" style="color:var(--amber);"><svg><use href="#i-star"/></svg></div>
-      <span class="radar-label" id="radar-fav">Избранное</span>
-    </div>
-
     <!-- 120 deg -->
     <div class="radar-item" data-action="tab" data-value="risk">
       <div class="radar-icon-wrap" style="color:var(--coral);"><svg><use href="#i-shield"/></svg></div>
@@ -748,7 +742,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.35</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.36</div>
     </div>
 
     <div class="terms-body">
@@ -784,7 +778,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.35</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.36</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>

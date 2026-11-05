@@ -572,6 +572,7 @@ const I18N_RU: Dict = {
   oracle_memory_lbl: 'Память',
   oracle_context_lbl: 'Контекст',
   oracle_enter_pos: 'Войти на {n}% депозита.',
+  oracle_recommends_buy: 'Оракул подтверждает вход. Сигнал трендовый.',
   oracle_hold_mixed: 'Сигнал смешанный.',
   oracle_risk_high: 'Риск превышает потенциал.',
   oracle_learn_insufficient: 'Нужно минимум 10 завершённых. Есть: {n}',
@@ -686,6 +687,21 @@ const I18N_RU: Dict = {
   learn_help_pat_desc: 'Оракул ищет повторяющиеся ситуации (например, "RSI упал, киты скупают"). Он запоминает их. Если Процент Побед паттерна <b>выше 60%</b> — это отличный сигнал. Если <b>ниже 40%</b> — Оракул видит, что ситуация перестала работать, и снижает свой кредит доверия к ней.',
   learn_help_ins: 'Инсайты',
   learn_help_ins_desc: 'Это "записки в дневнике" Оракула. Он сам анализирует свою историю и делает выводы: "Я выучил новый паттерн", "Этот перестал работать", "Я переоцениваю свои силы". Читай их, чтобы понимать, как меняется его "мозг".',
+    // ─── FAVORITES TAB ───
+  fav_tab_chart: '📈 График',
+  fav_tab_favorites: '⭐ Избранное',
+  fav_market_cap: 'Капитализация',
+  fav_cmc20: 'CMC20',
+  fav_altcoin_index: 'Индекс альткоинов',
+  fav_fear_greed: 'Страх и жадность',
+  fav_altseason: 'Альтсезон',
+  fav_btc_season: 'Сезон BTC',
+  fav_neutral: 'Нейтрально',
+  fav_loading_data: 'Загрузка данных...',
+  fav_moneta: 'Монета',
+  fav_cena: 'Цена',
+  fav_grafik_24h: 'График 24ч',
+  fav_24h: '24ч %',
 };
 
 const I18N_EN: Dict = {
@@ -1253,6 +1269,7 @@ const I18N_EN: Dict = {
   oracle_memory_lbl: 'Memory',
   oracle_context_lbl: 'Context',
   oracle_enter_pos: 'Enter with {n}% of deposit.',
+  oracle_recommends_buy: 'Oracle confirms entry. Trend signal.',
   oracle_hold_mixed: 'Signal is mixed.',
   oracle_risk_high: 'Risk exceeds potential.',
   oracle_learn_insufficient: 'Need at least 10 completed. Have: {n}',
@@ -1367,6 +1384,21 @@ const I18N_EN: Dict = {
   learn_help_pat_desc: 'Oracle finds repeating situations (e.g., "RSI dropped, whales buying"). It remembers them. If Win Rate <b>above 60%</b>, it is a great signal. If <b>below 40%</b>, Oracle sees it stopped working and lowers its weight.',
   learn_help_ins: 'Insights',
   learn_help_ins_desc: 'This is Oracle\'s "diary". It analyzes its own history: "I learned a new pattern", "This one stopped working", "I overestimate my confidence". Read them to understand how its "brain" evolves.',
+    // ─── FAVORITES TAB ───
+  fav_tab_chart: '📈 Chart',
+  fav_tab_favorites: '⭐ Favorites',
+  fav_market_cap: 'Market Cap',
+  fav_cmc20: 'CMC20',
+  fav_altcoin_index: 'Altcoin Index',
+  fav_fear_greed: 'Fear & Greed',
+  fav_altseason: 'Altseason',
+  fav_btc_season: 'BTC Season',
+  fav_neutral: 'Neutral',
+  fav_loading_data: 'Loading data...',
+  fav_moneta: 'Coin',
+  fav_cena: 'Price',
+  fav_grafik_24h: '24h Chart',
+  fav_24h: '24h %',
 };
 
 // ─── СОСТОЯНИЕ ───

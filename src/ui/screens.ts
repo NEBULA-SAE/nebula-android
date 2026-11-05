@@ -1,6 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · SCREENS
-// Порт из js/ui.js — вкладки, язык, BTC, sheet
 // ═══════════════════════════════════════════════════════════════
 
 import { state, setText, setHTML, toast } from '../utils';
@@ -11,8 +10,6 @@ import { renderFavorites } from './scanner';
 import { mobileSyncPortfolio } from '../trading';
 import { renderOracleDashboard } from './oracle';
 import { cancelDemoOrder, resetDemo } from '../demo';
-
-// ═══ ВКЛАДКИ ═══
 
 // ═══ ВКЛАДКИ ГЛАВНОГО ЭКРАНА (СВАЙП) ═══
 export function switchHomeTab(tab: 'main' | 'fav'): void {
@@ -33,7 +30,6 @@ export function switchHomeTab(tab: 'main' | 'fav'): void {
     favContent.style.display = 'block';
     htabMain.classList.remove('active');
     htabFav.classList.add('active');
-    // Запускаем загрузку данных при переключении
     import('./scanner').then(m => m.renderFavorites());
   }
 }
@@ -73,7 +69,6 @@ export function switchTab(tab: string): void {
 }
 
 // ═══ ЯЗЫК ═══
-
 export function setLanguage(lang: 'ru' | 'en'): void {
   i18nSetLang(lang);
   document.documentElement.lang = lang;
@@ -88,7 +83,6 @@ export function setLanguage(lang: 'ru' | 'en'): void {
     (window as any).mobileAnalyze?.();
   }
 
-  // Мгновенная перерисовка активных экранов
   const activeScreen = document.querySelector('.screen.active')?.id;
   if (activeScreen === 'screen-home' && document.getElementById('home-fav-content')?.style.display === 'block') {
     renderFavorites();
@@ -96,7 +90,6 @@ export function setLanguage(lang: 'ru' | 'en'): void {
   if (activeScreen === 'screen-oracle') renderOracleDashboard();
   if (activeScreen === 'screen-risk') import('./risk').then(m => m.renderRiskCenter()).catch(() => { /* silent */ });
 
-  // Мгновенная перерисовка открытых модалок
   if (document.getElementById('sheet-overlay')?.classList.contains('open')) {
     const title = document.getElementById('sheet-title')?.textContent;
     if (title === '⚙️ Настройки' || title === '⚙️ Settings') {
@@ -107,7 +100,6 @@ export function setLanguage(lang: 'ru' | 'en'): void {
     import('./diagnostics').then(m => m.runFullDiagnostics());
   }
 
-  // Мгновенная перерисовка Демо-режима
   if (state.isDemoMode) {
     renderDemoPlan();
   }
@@ -117,6 +109,10 @@ export function setLanguage(lang: 'ru' | 'en'): void {
 
 export function applyStaticTranslations(): void {
   const map: Record<string, string> = {
+    // ─── ВКЛАДКИ ГЛАВНОГО ЭКРАНА (График / Избранное) ───
+    'lbl-tab-chart': 'fav_tab_chart',
+    'lbl-tab-favorites': 'fav_tab_favorites',
+
     'nav-hub': 'nav_hub',
     'nav-home': 'dashboard', 'nav-pro': 'analytics', 'nav-scanner': 'scanner',
     'nav-fav': 'favorites', 'nav-oracle': 'oracle', 'nav-portfolio': 'portfolio',
@@ -126,6 +122,8 @@ export function applyStaticTranslations(): void {
     'radar-portfolio': 'portfolio', 'radar-orders': 'orders', 
     'radar-learning': 'learning', 'dash-network-title': 'dash_network',
     'risk-page-title-text': 'risk',
+    
+    // ... (остальной код функции оставляешь без изменений)
     'lbl-rebound': 'rebound', 'lbl-drop': 'drop', 'lbl-trend': 'trend',
     'lbl-plan': 'plan', 'lbl-agent': 'agent', 'lbl-xray': 'xray', 'lbl-walls': 'walls',
     'lbl-whale': 'whale', 'lbl-monitor': 'monitor', 'lbl-scan-acc': 'acc',
@@ -133,6 +131,13 @@ export function applyStaticTranslations(): void {
     'lbl-assets': 'assets', 'lbl-port-sync': 'sync', 'lbl-oracle-name': 'oracle_name',
     'lbl-oracle-status': 'oracle_status', 'lbl-oracle-profile': 'oracle_profile',
     'lbl-oracle-stats': 'oracle_stats', 'lbl-oracle-recent': 'oracle_recent',
+    
+    // ─── FAVORITES CARDS (НОВЫЕ ID) ───
+    'lbl-fmh-mcap': 'fav_market_cap',
+    'lbl-fmh-cmc20': 'fav_cmc20',
+    'lbl-fmh-alt': 'fav_altcoin_index',
+    'lbl-fmh-fng': 'fav_fear_greed',
+    
     'lbl-oracle-analyze': 'oracle_analyze', 'lbl-oracle-edit': 'oracle_edit',
     'lbl-oracle-refresh': 'oracle_refresh', 'lbl-oracle-edit-hint': 'oracle_edit_hint',
     'lbl-oracle-refresh-hint': 'oracle_refresh_hint', 'lbl-free-usdt': 'free_usdt',
@@ -170,7 +175,6 @@ export function applyStaticTranslations(): void {
     'about-warn': 'about_warn'
   };
 
-  // Список, который содержит HTML (innerHTML)
   const htmlIds = [
     'about-who-desc', 'about-security-desc', 'about-warn',
     'about-plat-web', 'about-plat-win', 'about-plat-and'
@@ -187,7 +191,6 @@ export function applyStaticTranslations(): void {
     }
   });
 
-  // Отдельно переводим список фич (он большой)
   const featuresList = document.getElementById('about-features-list');
   if (featuresList) featuresList.innerHTML = tm('about_features_html');
 
@@ -209,7 +212,6 @@ export function applyStaticTranslations(): void {
 }
 
 // ═══ BTC ═══
-
 export async function loadBTC(): Promise<void> {
   try {
     const d = await getBtcDailyAnalysis();
@@ -245,7 +247,6 @@ export async function loadBTC(): Promise<void> {
 }
 
 // ═══ SHEET ═══
-
 export function openSheet(title: string, bodyHtml: string): void {
   setText('sheet-title', title);
   setHTML('sheet-body', bodyHtml);
@@ -259,7 +260,6 @@ export function closeSheet(): void {
 }
 
 // ═══ DEMO MODE ═══
-
 export function enterDemoMode() {
   state.isDemoMode = true;
   document.body.classList.add('in-demo-mode');
@@ -290,9 +290,7 @@ export function exitDemoMode() {
   toast(isEN() ? 'You have exited demo mode' : 'Вы вышли из демо-режима', 'info');
 }
 
-// Автокомплит для демо-поиска (защищён от дублей)
 let _demoAutoInit = false;
-
 function initDemoAutocomplete() {
   if (_demoAutoInit) return;
 
@@ -333,8 +331,6 @@ function initDemoAutocomplete() {
   _demoAutoInit = true;
 }
 
-// ═══ Быстрый выбор % от баланса ═══
-
 export function setDemoAmount(pct: number): void {
   const inp = document.getElementById('demo-entry-amount') as HTMLInputElement | null;
   if (!inp) return;
@@ -343,8 +339,6 @@ export function setDemoAmount(pct: number): void {
   inp.focus();
   inp.select();
 }
-
-// ═══ РЕНДЕР ПЛАНА ОРАКУЛА (в демо) ═══
 
 export function renderDemoPlan() {
   const box = document.getElementById('demo-oracle-content');
@@ -417,8 +411,6 @@ export function renderDemoPlan() {
   `;
 }
 
-// ═══ РАДАРНОЕ МЕНЮ (ЦЕНТРАЛЬНЫЙ ПУЗЫРЬ + ЛАЗЕР) ═══
-
 export function initRadarMenu() {
   const trigger = document.getElementById('radar-trigger');
   const overlay = document.getElementById('radar-overlay');
@@ -428,29 +420,22 @@ export function initRadarMenu() {
   
   if (!trigger || !overlay || !laserLine || items.length === 0) return;
 
-  // ─── 1. РАССТАНОВКА СТРОГО ПО КРУГУ ───
-  // Удаляем старые кривые сохранения из памяти
   localStorage.removeItem('nebulaRadarPositions_v1');
 
   const total = items.length;
-  const radius = 140; // Радиус круга
+  const radius = 140;
 
   items.forEach((item, index) => {
-    // Считаем идеальный угол (360 / кол-во кнопок)
     const angle = (360 / total) * index;
-    
-    // Применяем координаты
     item.style.setProperty('--angle', `${angle}deg`);
     item.style.setProperty('--radius', `${radius}px`);
   });
 
-  // ─── 2. ЛОГИКА ОТКРЫТИЯ И ЛАЗЕРА ───
   let isDragging = false;
   let currentActiveIndex = -1;
   let centerX = 0;
   let centerY = 0;
 
-  // Нажали на кнопку NEBUL
   trigger.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     isDragging = true;
@@ -476,7 +461,6 @@ export function initRadarMenu() {
     if (navigator.vibrate) navigator.vibrate(20);
   });
 
-  // Ведем пальцем или мышкой
   document.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
 
@@ -502,7 +486,6 @@ export function initRadarMenu() {
       }
     });
 
-    // Магнитный эффект
     if (minDistance < 80) {
       if (currentActiveIndex !== closestIndex) {
         currentActiveIndex = closestIndex;
@@ -525,7 +508,6 @@ export function initRadarMenu() {
     }
   });
 
-  // Отпустили палец
   document.addEventListener('pointerup', () => {
     if (!isDragging) return;
     isDragging = false;
@@ -555,8 +537,6 @@ export function initRadarMenu() {
 
   trigger.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
 }
-
-// ═══ Экспорт в window ═══
 
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {

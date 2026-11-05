@@ -689,12 +689,21 @@ export async function oracleAnalyze(
     if (rsi < 35) tech += 30;
     else if (rsi < 45) tech += 20;
     else if (rsi < 55) tech += 10;
-    else if (rsi > 70) tech -= 30;
-    else if (rsi > 60) tech -= 15;
+    else if (rsi > 70) tech -= 20; // Смягчили штраф
+    else if (rsi > 60) tech -= 10;
 
     if (rebound < 15) tech += 20;
     else if (rebound < 30) tech += 10;
-    else if (rebound > 70) tech -= 25;
+    // МАГИЯ ТУТ: Если отскок большой, но есть киты и объем — это не перегрев, а пробой!
+    else if (rebound > 50) {
+      if (whaleActive && whaleTrend.toUpperCase().includes('РАСТ')) {
+        tech += 15; // Даем бонус за тренд, а не штраф
+        reasons.push('Сильный отскок подтвержден китами (Трендовый вход)');
+      } else {
+        tech -= 25; // Если китов нет, тогда это действительно перегрев
+        warnings.push('Отскок без объема. Вероятен откат');
+      }
+    }
 
     if (drop > 50) tech += 15;
     else if (drop > 35) tech += 8;
@@ -867,9 +876,16 @@ export async function oracleAnalyze(
       avoid: '🔴 ИЗБЕГАТЬ',
     }[verdict];
 
-    const se = price * (1 + (emae * 0.5) / 100);
+    let se = price * (1 + (emae * 0.5) / 100);
     const stp = price * (1 + (emfe * 0.7) / 100);
-    const sst = price * (1 + (emae * 1.5) / 100);
+    let sst = price * (1 + (emae * 1.5) / 100);
+
+    // Если это Трендовый вход (score > 25 и rebound > 50), мы НЕ ждем отката к минимуму.
+    // Мы покупаем на текущей цене или на небольшом откате к EMA.
+    if (total >= 25 && rebound > 50 && whaleActive) {
+      se = price * 0.985; // Вход на небольшом откате (-1.5% от текущей)
+      sst = price * 0.93; // Стоп шире, чтобы не выбило на волатильности
+    }
 
       let fr = `Скор: ${total}/100. `;
     if (lc !== 0) fr += `Память: ${lc >= 0 ? '+' : ''}${lc.toFixed(1)}. `;

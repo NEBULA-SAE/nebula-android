@@ -11,6 +11,7 @@ export interface PatternRule {
   drop_pct_min?: number;
   rebound_pct_min?: number;
   funding_min?: number;
+  funding_max?: number; // НОВОЕ
   bids_pct_min?: number;
   bids_pct_max?: number;
   oi_trend?: string[];
@@ -20,6 +21,8 @@ export interface PatternRule {
   bb_bandwidth_max?: number;
   divergence?: string;
   lsr_top_gt_global_by?: number;
+  macd_bull?: boolean; // НОВОЕ (для Золотого креста)
+  breakout_high?: boolean; // НОВОЕ (для пробоя)
 }
 
 export interface PatternDef {
@@ -104,6 +107,31 @@ export const PATTERNS_DB: PatternDef[] = [
     action: 'Ждать пробоя в любую сторону, торговать по направлению пробоя.',
     bias: 'neutral',
   },
+  // ─── НОВЫЕ ПАТТЕРНЫ НА ВХОД В ТРЕНД ───
+  {
+    id: 'golden_cross_momentum',
+    name: 'Золотой крест (EMA 20 > EMA 50)',
+    desc: 'Краткосрочная скользящая средняя пересекла долгосрочную вверх на фоне роста объема. Начало бычьего тренда.',
+    rules: { macd_bull: true, rsi_max: 65, oi_trend: ['rising'] },
+    action: 'Покупать на коррекции к EMA 20. Стоп под EMA 50. Цель — новый локальный максимум.',
+    bias: 'bullish',
+  },
+  {
+    id: 'breakout_volume_surge',
+    name: 'Пробой максимума на объеме',
+    desc: 'Цена пробила 120-дневный максимум с аномальным объемом. Крупный капитал толкает цену вверх.',
+    rules: { breakout_high: true, whale_active: true, rsi_max: 75 },
+    action: 'Вход по рынку или на ретесте пробитого уровня. Стоп под зоной пробоя.',
+    bias: 'bullish',
+  },
+  {
+    id: 'whale_accumulation_trend',
+    name: 'Накопление китов в тренде',
+    desc: 'Цена растет, но фандинг нейтральный (толпа не верит), при этом OBV китов и открытый интерес растут. Умные деньги набирают позицию.',
+    rules: { whale_active: true, oi_trend: ['rising'], funding_min: -0.01, funding_max: 0.02 },
+    action: 'Искать лонг на откатах. Цель — продолжение тренда.',
+    bias: 'bullish',
+  },
 ];
 
 export function matchPatterns(
@@ -147,6 +175,7 @@ export function matchPatterns(
     if (rules.drop_pct_min != null && !(dropPct >= rules.drop_pct_min)) ok = false;
     if (rules.rebound_pct_min != null && !(reboundPct >= rules.rebound_pct_min)) ok = false;
     if (rules.funding_min != null && !(funding >= rules.funding_min)) ok = false;
+    if (rules.funding_max != null && !(funding <= rules.funding_max)) ok = false;
     if (rules.bids_pct_min != null && !(bidsPct >= rules.bids_pct_min)) ok = false;
     if (rules.bids_pct_max != null && !(bidsPct <= rules.bids_pct_max)) ok = false;
     if (rules.oi_trend && !rules.oi_trend.includes(oiTrend)) ok = false;
@@ -161,6 +190,17 @@ export function matchPatterns(
     if (rules.divergence && divType !== rules.divergence) ok = false;
     if (rules.lsr_top_gt_global_by != null) {
       if (!(lsrTop && lsrGlobal && (lsrTop - lsrGlobal) >= rules.lsr_top_gt_global_by)) ok = false;
+    }
+    // НОВЫЕ ПРОВЕРКИ
+    if (rules.macd_bull != null) {
+      const isMacdBull = adv.macd?.crossover === 'bullish';
+      if (isMacdBull !== rules.macd_bull) ok = false;
+    }
+    if (rules.breakout_high != null) {
+      const max120 = Number(marketData.max_120 ?? 0);
+      const price = Number(marketData.current_price ?? 0);
+      const isBreakout = max120 > 0 && price >= max120 * 0.98;
+      if (isBreakout !== rules.breakout_high) ok = false;
     }
 
     if (ok) {

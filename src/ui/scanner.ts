@@ -7,6 +7,7 @@ import { state, tm, isEN, setText, toast, saveFavorites } from '../utils';
 import { wCall } from '../worker';
 import { getMarketContext } from '../market';
 import { fetchCandlesWithSource } from '../sources/candles';
+import { P } from '../config';
 
 // ═══ СКАНЕР ═══
 
@@ -225,9 +226,8 @@ export async function renderFavorites(): Promise<void> {
   try {
     const ctx = await getMarketContext();
     if (ctx.status === 'success') {
-      // ─── Market Cap ───
       const mcap = ctx.total_mcap || 0;
-      const mcapStr = mcap > 1e12 ? `$${(mcap / 1e12).toFixed(2)}T` : `$${(mcap / 1e9).toFixed(2)}B`;
+      const mcapStr = mcap > 0 ? (mcap > 1e12 ? `$${(mcap / 1e12).toFixed(2)}T` : `$${(mcap / 1e9).toFixed(2)}B`) : '—';
       setText('fmh-mcap', mcapStr);
       
       const mcapChg = ctx.mcap_change_24h || 0;
@@ -236,7 +236,6 @@ export async function renderFavorites(): Promise<void> {
         mcapChgEl.textContent = `${mcapChg >= 0 ? '+' : ''}${mcapChg.toFixed(2)}%`;
         mcapChgEl.style.color = mcapChg >= 0 ? 'var(--mint)' : 'var(--coral)';
       }
-      // Полоска Market Cap
       const mcapBar = document.getElementById('fmh-mcap-bar');
       if (mcapBar) {
         const pct = Math.min(100, Math.max(5, (Math.abs(mcapChg) / 5) * 100));
@@ -245,54 +244,47 @@ export async function renderFavorites(): Promise<void> {
         mcapBar.style.boxShadow = mcapChg >= 0 ? '0 0 8px rgba(69,224,168,.5)' : '0 0 8px rgba(255,101,132,.5)';
       }
 
-      // ─── CMC20 ───
       const btcPrice = ctx.btc?.price || 0;
       const cmc20Val = btcPrice * 1.25; 
-      setText('fmh-cmc20', `$${cmc20Val.toFixed(2)}`);
+      setText('fmh-cmc20', cmc20Val > 0 ? `$${cmc20Val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—');
       const cmc20ChgEl = document.getElementById('fmh-cmc20-change');
       if (cmc20ChgEl) {
         cmc20ChgEl.textContent = `${mcapChg >= 0 ? '+' : ''}${(mcapChg * 1.1).toFixed(2)}%`;
         cmc20ChgEl.style.color = mcapChg >= 0 ? 'var(--mint)' : 'var(--coral)';
       }
-      // Полоска CMC20
       const cmc20Bar = document.getElementById('fmh-cmc20-bar');
       if (cmc20Bar) {
         const pct = Math.min(100, Math.max(5, (Math.abs(mcapChg * 1.1) / 5) * 100));
         cmc20Bar.style.width = `${pct}%`;
         cmc20Bar.style.background = mcapChg >= 0 ? 'var(--mint)' : 'var(--coral)';
-        cmc20Bar.style.boxShadow = mcapChg >= 0 ? '0 0 8px rgba(69,224,168,.5)' : '0 0 8px rgba(255,101,132,.5)';
       }
 
-      // ─── Altcoin Index ───
       const btcDom = ctx.btc_dominance || 50;
       const altIndex = Math.round(100 - btcDom); 
-      setText('fmh-alt', `${altIndex}/100`);
+      setText('fmh-alt', `${altIndex}`);
       const altTextEl = document.getElementById('fmh-alt-text');
       if (altTextEl) {
-        altTextEl.textContent = altIndex > 60 ? 'Altseason' : altIndex < 40 ? 'BTC Season' : 'Neutral';
+        altTextEl.textContent = altIndex > 60 ? tm('fav_altseason') : altIndex < 40 ? tm('fav_btc_season') : tm('fav_neutral');
         altTextEl.style.color = altIndex > 60 ? 'var(--violet)' : altIndex < 40 ? 'var(--amber)' : 'var(--mut)';
       }
-      // Кольцо Altcoin
-      const altRing = document.getElementById('fmh-alt-ring');
+      const altRing = document.querySelector<SVGCircleElement>('#fmh-alt-ring');
       if (altRing) {
-        const circumference = 150.8;
+        const circumference = 263.89;
         const offset = circumference - (altIndex / 100) * circumference;
         altRing.style.strokeDashoffset = offset.toString();
-        altRing.style.stroke = altIndex > 60 ? 'var(--violet)' : altIndex < 40 ? 'var(--amber)' : 'var(--mut)';
+        altRing.style.stroke = altIndex > 60 ? 'var(--violet)' : altIndex < 40 ? 'var(--amber)' : 'var(--cyan)';
       }
 
-      // ─── Fear & Greed ───
       const fng = ctx.fear_greed || 50;
       const fngEl = document.getElementById('fmh-fng');
       if (fngEl) {
         fngEl.textContent = String(fng);
         fngEl.style.color = fng > 75 ? 'var(--coral)' : fng < 25 ? 'var(--mint)' : 'var(--amber)';
       }
-      setText('fmh-fng-text', ctx.fear_greed_text || 'Neutral');
-      // Кольцо FNG
-      const fngRing = document.getElementById('fmh-fng-ring');
+      setText('fmh-fng-text', ctx.fear_greed_text || tm('fav_neutral'));
+      const fngRing = document.querySelector<SVGCircleElement>('#fmh-fng-ring');
       if (fngRing) {
-        const circumference = 150.8;
+        const circumference = 263.89;
         const offset = circumference - (fng / 100) * circumference;
         fngRing.style.strokeDashoffset = offset.toString();
         fngRing.style.stroke = fng > 75 ? 'var(--coral)' : fng < 25 ? 'var(--mint)' : 'var(--amber)';
@@ -306,7 +298,19 @@ export async function renderFavorites(): Promise<void> {
     return;
   }
 
-  list.innerHTML = `<div class="loader">Обновление данных...</div>`;
+  const headerHtml = `
+    <div class="fav-list-header">
+      <span>#</span>
+      <span>${tm('fav_moneta')}</span>
+      <span>${tm('fav_cena')}</span>
+      <span>${tm('fav_market_cap')}</span>
+      <span>${tm('fav_grafik_24h')}</span>
+      <span>${tm('fav_24h')}</span>
+      <span></span>
+    </div>
+  `;
+
+  list.innerHTML = `${headerHtml}<div class="loader" style="padding:20px;">${tm('loading')}</div>`;
 
   try {
     const r = await fetch('https://api.gateio.ws/api/v4/spot/tickers');
@@ -320,6 +324,20 @@ export async function renderFavorites(): Promise<void> {
       }
     });
 
+    const mcapMap: Record<string, number> = {};
+    try {
+      const CP_PROXY = P('coinpaprika', 'https://api.coinpaprika.com');
+      const cpRes = await fetch(`${CP_PROXY}/v1/tickers?quotes=USD`);
+      if (cpRes.ok) {
+        const cpData = await cpRes.json();
+        cpData.forEach((coin: any) => {
+          if (coin.symbol) {
+            mcapMap[coin.symbol.toUpperCase()] = coin.quotes?.USD?.market_cap || 0;
+          }
+        });
+      }
+    } catch { /* silent */ }
+
     const rowsHtml = await Promise.all(state.favoriteCoins.map(async (t, idx) => {
       const tick = tickerMap[t];
       const price = tick ? parseFloat(tick.last) : 0;
@@ -327,6 +345,15 @@ export async function renderFavorites(): Promise<void> {
       
       const priceStr = price < 0.01 ? price.toFixed(5) : price < 1 ? price.toFixed(4) : price.toFixed(2);
       const colorCls = change >= 0 ? 'up' : 'down';
+
+      const mcapRaw = mcapMap[t] || 0;
+      let mcapStr = '—';
+      if (mcapRaw > 0) {
+        if (mcapRaw > 1e12) mcapStr = `$${(mcapRaw / 1e12).toFixed(2)}T`;
+        else if (mcapRaw > 1e9) mcapStr = `$${(mcapRaw / 1e9).toFixed(2)}B`;
+        else if (mcapRaw > 1e6) mcapStr = `$${(mcapRaw / 1e6).toFixed(2)}M`;
+        else mcapStr = `$${mcapRaw.toLocaleString()}`;
+      }
 
       let sparklineSvg = '';
       try {
@@ -354,31 +381,44 @@ export async function renderFavorites(): Promise<void> {
         <div class="fav-row" onclick="pickCoin('${t}')">
           <div class="fav-row-rank">${idx + 1}</div>
           <div class="fav-row-name">
-            <div class="fav-icon">${t.charAt(0)}</div>
+            <div class="fav-icon-wrapper">
+              <img class="fav-icon-img" 
+                   src="https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color/${t.toLowerCase()}.svg" 
+                   alt="${t}"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="fav-icon" style="display:none;">${t.charAt(0)}</div>
+            </div>
             <div class="fav-ticker">${t}</div>
           </div>
           <div class="fav-row-price">$${priceStr}</div>
-          ${sparklineSvg || '<div class="fav-sparkline"></div>'}
+          <div class="fav-row-mcap">${mcapStr}</div>
+          <div class="fav-row-spark">${sparklineSvg}</div>
           <div class="fav-row-change ${colorCls}">${change > 0 ? '+' : ''}${change.toFixed(2)}%</div>
-          <button class="fav-row-del" onclick="event.stopPropagation();removeFav('${t}')">
-            <svg style="width:14px;height:14px;"><use href="#i-x"/></svg>
-          </button>
+          <button class="fav-row-del" onclick="event.stopPropagation();removeFav('${t}')">✕</button>
         </div>
       `;
     }));
 
-    list.innerHTML = rowsHtml.join('');
+    list.setAttribute('style', 'display: flex !important; flex-direction: column !important; width: 100% !important; gap: 2px !important;');
+    list.innerHTML = `${headerHtml}${rowsHtml.join('')}`;
   } catch (e) {
-    list.innerHTML = state.favoriteCoins.map(t => `
+    const errorRows = state.favoriteCoins.map(t => `
       <div class="fav-row" onclick="pickCoin('${t}')">
         <div class="fav-row-rank"></div>
-        <div class="fav-row-name"><div class="fav-icon">${t.charAt(0)}</div><div class="fav-ticker">${t}</div></div>
+        <div class="fav-row-name">
+          <div class="fav-icon-wrapper">
+            <div class="fav-icon" style="display:flex;">${t.charAt(0)}</div>
+          </div>
+          <div class="fav-ticker">${t}</div>
+        </div>
         <div class="fav-row-price">—</div>
-        <div class="fav-sparkline"></div>
+        <div class="fav-row-mcap">—</div>
+        <div class="fav-row-spark"></div>
         <div class="fav-row-change">—</div>
-        <button class="fav-row-del" onclick="event.stopPropagation();removeFav('${t}')"><svg style="width:14px;height:14px;"><use href="#i-x"/></svg></button>
+        <button class="fav-row-del" onclick="event.stopPropagation();removeFav('${t}')">✕</button>
       </div>
-    `).join('');
+    `).join('');    
+    list.innerHTML = `${headerHtml}${errorRows}`;
   }
 }
 
