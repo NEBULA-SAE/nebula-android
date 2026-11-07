@@ -300,6 +300,10 @@
         <div class="btc-stat"><div class="btc-stat-lbl" id="lbl-trend">Тренд</div><div class="btc-stat-val" id="btc-trend">—</div></div>
       </div>
       <div class="btc-advice" id="btc-advice">...</div>
+      <button class="btc-outlook-btn" onclick="openBtcOutlook()">
+        <span class="btc-outlook-btn-lbl">📊 <span id="lbl-btc-outlook">История и прогноз</span></span>
+        <span class="btc-outlook-pro-badge">💎 PRO</span>
+      </button>
     </div>
 
     <div class="card chart-card" style="position: relative;">
@@ -742,7 +746,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.36</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.37</div>
     </div>
 
     <div class="terms-body">
@@ -778,7 +782,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.36</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.37</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
@@ -853,6 +857,14 @@
   </div>
 </div>
 
+<!-- ═══ BTC OUTLOOK ═══ -->
+<div class="btc-outlook-overlay" id="btc-outlook-overlay" onclick="if(event.target===this)closeBtcOutlook()">
+  <div class="btc-outlook-modal" id="btc-outlook-modal">
+    <div id="btc-outlook-content"><div class="btc-load">Загрузка...</div></div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="/styles/btc-outlook.css">
 <script type="module" src="/src/main.ts"></script>
 <style>
 

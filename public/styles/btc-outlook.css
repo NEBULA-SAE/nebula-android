@@ -1,0 +1,187 @@
+/* ═══ BTC OUTLOOK OVERLAY ═══ */
+.btc-outlook-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,.85); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; transition: opacity .3s ease;
+}
+.btc-outlook-overlay.open { display: flex; opacity: 1; }
+
+.btc-outlook-modal {
+  --glow-color: #5ecbff; --glow-intensity: 0;
+  position: relative; width: 100%; max-width: 540px;
+  max-height: 90vh; overflow-y: auto; overflow-x: hidden;
+  background: linear-gradient(180deg, #0a1226 0%, #050811 100%);
+  border: 1px solid rgba(94,203,255,.25); border-radius: 18px;
+  padding: 22px; color: var(--hi); font-family: 'Inter', sans-serif;
+  box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(94,203,255,.1);
+  transition: box-shadow .6s ease;
+}
+.btc-outlook-modal::before {
+  content: ''; position: absolute; inset: -6px; border-radius: inherit;
+  background: radial-gradient(ellipse at center,
+    color-mix(in srgb, var(--glow-color) 55%, transparent) 0%,
+    transparent 70%);
+  opacity: var(--glow-intensity); filter: blur(28px);
+  pointer-events: none; z-index: -1;
+  transition: opacity .6s ease, background .6s ease;
+}
+.btc-outlook-modal.btc-glow-strong::before { animation: btcPulse 2s ease-in-out infinite; }
+@keyframes btcPulse {
+  0%,100% { opacity: var(--glow-intensity); filter: blur(28px); }
+  50%     { opacity: calc(var(--glow-intensity) * 1.4); filter: blur(38px); }
+}
+
+/* BTC-карточка на главной тоже светится */
+.btc-card {
+  --glow-color: #5ecbff; --glow-intensity: 0;
+  position: relative;
+  transition: box-shadow .6s ease;
+}
+.btc-card::after {
+  content: ''; position: absolute; inset: -2px; border-radius: inherit;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--glow-color) 40%, transparent), transparent 70%);
+  opacity: var(--glow-intensity); filter: blur(18px); pointer-events: none;
+  transition: opacity .6s ease;
+}
+.btc-card.btc-glow-strong::after { animation: btcPulse 2.4s ease-in-out infinite; }
+
+/* HEAD */
+.btc-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+.btc-head-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mut); letter-spacing: 1px; margin-bottom: 6px; }
+.btc-head-price { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -.5px; }
+.btc-head-chg { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; margin-top: 2px; }
+.btc-close { background: transparent; border: 1px solid rgba(255,255,255,.15); color: var(--mut); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all .2s; }
+.btc-close:hover { color: var(--coral); border-color: var(--coral); }
+
+/* TABS */
+.btc-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 0; overflow-x: auto; }
+.btc-tab { background: transparent; border: none; color: var(--mut); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+.btc-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.btc-tab:hover { color: var(--hi); }
+
+.btc-tab-body { display: none; }
+.btc-tab-body.active { display: block; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* GRIDS */
+.btc-grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.btc-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+@media (max-width: 420px) { .btc-grid4 { grid-template-columns: repeat(2, 1fr); } }
+
+.btc-cell { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px 12px; }
+.btc-cell-l { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--mut); letter-spacing: .5px; margin-bottom: 4px; }
+.btc-cell-v { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; }
+
+/* BANNER */
+.btc-banner { padding: 12px 14px; border-radius: 10px; font-size: 12px; margin: 12px 0; }
+.btc-banner.mint { background: rgba(69,224,168,.12); border: 1px solid rgba(69,224,168,.35); color: var(--mint); }
+.btc-banner.amber { background: rgba(255,184,88,.1); border: 1px solid rgba(255,184,88,.3); color: var(--amber); }
+.btc-note { background: rgba(255,255,255,.03); border-left: 3px solid var(--cyan); padding: 12px 14px; border-radius: 0 10px 10px 0; font-size: 12px; line-height: 1.6; color: var(--mut); margin: 14px 0; }
+
+/* HEATBAR */
+.btc-heatbar-wrap { margin-top: 14px; }
+.btc-heatbar-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--mut); margin-bottom: 6px; letter-spacing: .5px; }
+.btc-heatbar { height: 8px; background: rgba(255,255,255,.05); border-radius: 4px; overflow: hidden; }
+.btc-heatbar-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--mint)); border-radius: 4px; transition: width .6s ease; }
+
+/* PROB BARS */
+.btc-prob-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; font-weight: 700; }
+.btc-prob-sample { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mut); }
+.btc-prob-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.btc-prob-row { display: grid; grid-template-columns: 70px 1fr 50px; gap: 10px; align-items: center; }
+.btc-prob-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mut); }
+.btc-prob-wrap { height: 20px; background: rgba(255,255,255,.04); border-radius: 6px; overflow: hidden; }
+.btc-prob-fill { height: 100%; border-radius: 6px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+.btc-prob-fill.short { background: linear-gradient(90deg, var(--coral), #ff9eb0); }
+.btc-prob-fill.mid { background: linear-gradient(90deg, var(--amber), #ffd27f); }
+.btc-prob-fill.long { background: linear-gradient(90deg, var(--cyan), #8dd6ff); }
+.btc-prob-fill.year { background: linear-gradient(90deg, var(--mint), #86f5c9); }
+.btc-prob-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; text-align: right; }
+
+.btc-prob-examples { background: rgba(255,255,255,.02); border-radius: 10px; padding: 12px; margin-top: 14px; }
+.btc-ex-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mut); margin-bottom: 8px; letter-spacing: .5px; }
+.btc-ex-row { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 4px 0; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,.03); }
+.btc-ex-row:last-child { border-bottom: none; }
+.btc-method { font-size: 10px; color: var(--dim); margin-top: 12px; line-height: 1.6; font-style: italic; }
+
+/* CALENDAR */
+.btc-cal-head { margin-bottom: 12px; }
+.btc-cal-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.btc-cal-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--mut); }
+.btc-cal-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.btc-cal-row { display: grid; grid-template-columns: 44px 1fr 70px 44px; gap: 8px; align-items: center; padding: 8px 10px; background: rgba(255,255,255,.02); border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; border: 1px solid transparent; }
+.btc-cal-row.ath { background: rgba(255,184,88,.08); border-color: rgba(255,184,88,.25); }
+.btc-cal-y { font-weight: 700; color: var(--mut); }
+.btc-cal-p { font-weight: 700; color: var(--hi); text-align: right; }
+.btc-cal-c { text-align: right; font-weight: 700; }
+.btc-cal-badge { font-size: 8px; font-weight: 800; color: var(--amber); border: 1px solid var(--amber); padding: 2px 5px; border-radius: 4px; text-align: center; letter-spacing: .5px; }
+.btc-cal-foot { font-size: 11px; color: var(--mut); line-height: 1.6; padding: 10px; background: rgba(94,203,255,.05); border-radius: 8px; }
+
+/* CYCLES */
+.btc-cycle-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.btc-cycle-row { display: flex; gap: 12px; align-items: center; padding: 10px 12px; background: rgba(255,255,255,.02); border-radius: 10px; }
+.btc-cycle-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--cyan); min-width: 28px; }
+.btc-cycle-body { flex: 1; }
+.btc-cycle-d { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--hi); }
+.btc-cycle-lbl { font-size: 9px; color: var(--mut); font-weight: 400; margin-left: 6px; }
+.btc-cycle-p { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--amber); margin: 2px 0; }
+.btc-cycle-m { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--dim); }
+
+/* FOOTER / LOAD / ERR */
+.btc-foot { font-size: 10px; color: var(--dim); margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.06); line-height: 1.6; text-align: center; }
+.btc-load, .btc-err, .btc-empty { text-align: center; padding: 40px 20px; color: var(--mut); font-size: 12px; }
+.btc-err { color: var(--coral); }
+
+/* Кнопка в BTC-карточке */
+.btc-outlook-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(94,203,255,.1);
+  border: 1px solid rgba(94,203,255,.3);
+  color: var(--cyan);
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: .5px;
+  transition: all .25s;
+}
+.btc-outlook-btn:hover {
+  background: rgba(94,203,255,.18);
+  border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(94,203,255,.25);
+}
+.btc-outlook-btn:active {
+  transform: scale(.98);
+}
+.btc-outlook-btn-lbl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btc-outlook-pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffd27f;
+  background: linear-gradient(90deg, rgba(255,210,127,.2), rgba(255,184,88,.15));
+  border: 1px solid rgba(255,210,127,.45);
+  padding: 3px 8px;
+  border-radius: 5px;
+  letter-spacing: .8px;
+  animation: proShimmer 3s ease-in-out infinite;
+  white-space: nowrap;
+}
+@keyframes proShimmer {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,210,127,0); }
+  50%     { box-shadow: 0 0 14px 0 rgba(255,210,127,.5); }
+}

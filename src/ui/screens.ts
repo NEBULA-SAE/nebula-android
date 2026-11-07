@@ -10,6 +10,7 @@ import { renderFavorites } from './scanner';
 import { mobileSyncPortfolio } from '../trading';
 import { renderOracleDashboard } from './oracle';
 import { cancelDemoOrder, resetDemo } from '../demo';
+import { openBtcOutlook, closeBtcOutlook, applyBtcGlow } from './btc-outlook';
 
 // ═══ ВКЛАДКИ ГЛАВНОГО ЭКРАНА (СВАЙП) ═══
 export function switchHomeTab(tab: 'main' | 'fav'): void {
@@ -136,7 +137,8 @@ export function applyStaticTranslations(): void {
     'lbl-fmh-mcap': 'fav_market_cap',
     'lbl-fmh-cmc20': 'fav_cmc20',
     'lbl-fmh-alt': 'fav_altcoin_index',
-    'lbl-fmh-fng': 'fav_fear_greed',
+       'lbl-fmh-fng': 'fav_fear_greed',
+    'lbl-btc-outlook': 'btc_outlook_btn',
     
     'lbl-oracle-analyze': 'oracle_analyze', 'lbl-oracle-edit': 'oracle_edit',
     'lbl-oracle-refresh': 'oracle_refresh', 'lbl-oracle-edit-hint': 'oracle_edit_hint',
@@ -243,6 +245,9 @@ export async function loadBTC(): Promise<void> {
     }
 
     setText('btc-advice', d.advice);
+
+    // Glow на BTC-карточке — работает для всех (тизер)
+    applyBtcGlow(d.change_24h);
   } catch { /* silent */ }
 }
 
@@ -554,6 +559,8 @@ if (typeof window !== 'undefined') {
     cancelDemoOrder,
     resetDemo,
     initRadarMenu,
+    openBtcOutlook,
+    closeBtcOutlook,
   });
 
   setTimeout(initRadarMenu, 500);
