@@ -1,9 +1,9 @@
 :root {
   --void: #000000;
-  --bg-card: rgba(10,16,28,.94);
-  --bg-card-hi: rgba(14,22,38,.96);
-  --border: rgba(140,170,220,.12);
-  --border-hi: rgba(94,203,255,.32);
+  --bg-card: rgba(13,20,33,.85); /* Чуть прозрачнее для эффекта глубины */
+  --bg-card-hi: rgba(17,26,43,.9);
+  --border: rgba(255,255,255,.06); /* Почти невидимая граница */
+  --border-hi: rgba(94,203,255,.25);
   --glass: rgba(255,255,255,.04);
   --hi: #eef3ff;
   --tx: #c4cdde;
@@ -20,9 +20,9 @@
   --btc: #f7931a;
   --grad-start: #5ecbff;
   --grad-end: #a78bfa;
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 18px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px; /* Более аккуратные, современные скругления */
   --r-xl: 24px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);

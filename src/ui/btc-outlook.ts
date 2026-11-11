@@ -3,9 +3,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { tm } from '../i18n';
-import { getBtcDailyAnalysis } from '../market';
+import { state } from '../utils';
 import { fetchCandlesWithSource } from '../sources/candles';
 import { toast } from '../utils';
+import { calcRsiSimple } from '../indicators';
 import {
   computeBreakoutStats, computeBreakoutProbability,
   computeCalendarComparison, analyzeCycles,
@@ -85,47 +86,83 @@ async function render(): Promise<void> {
   if (!box) return;
   box.innerHTML = `<div class="btc-load">${tm('loading')}</div>`;
 
+  const ticker = (state as any).currentTicker || 'BTC';
+
   try {
-    const [btc, weekly] = await Promise.all([
-      getBtcDailyAnalysis(),
-      fetchCandlesWithSource('BTC', 'max').then(r => r.data).catch(() => []),
+    const [daily, weekly] = await Promise.all([
+      fetchCandlesWithSource(ticker, '1d').then(r => r.data),
+      fetchCandlesWithSource(ticker, 'max').then(r => r.data).catch(() => []),
     ]);
 
-    if (btc.status !== 'success') {
-      box.innerHTML = `<div class="btc-err">${btc.message || 'Error'}</div>`;
+    if (!daily || daily.length < 2) {
+      box.innerHTML = `<div class="btc-err">Недостаточно данных для ${ticker}</div>`;
       return;
     }
 
-    const price = btc.price;
-    const ath = btc.ath || Math.max(...weekly.map(c => c.high), price);
-    const lastKnownAth = '2024-11-13';
+    const price = daily[daily.length - 1].close;
+    const prevPrice = daily[daily.length - 2].close;
+    const change = ((price - prevPrice) / prevPrice) * 100;
+    const rsi = calcRsiSimple(daily.map(c => c.close), 14);
 
-    const stats = computeBreakoutStats(price, ath, lastKnownAth);
+    // Загружаем описание и ссылки
+    let desc = 'Актив на криптовалютном рынке.';
+    let links: any = {};
+    try {
+      const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${ticker}`);
+      const searchJson = await searchRes.json();
+      if (searchJson.coins && searchJson.coins.length > 0) {
+        const matchedCoin = searchJson.coins.find((c: any) => c.symbol.toUpperCase() === ticker);
+        const coinId = matchedCoin ? matchedCoin.id : searchJson.coins[0].id;
+        const coinRes = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`);
+        const coinJson = await coinRes.json();
+        if (coinJson.description && coinJson.description.en) {
+          const rawDesc = coinJson.description.en;
+          desc = rawDesc.length > 250 ? rawDesc.substring(0, 250) + '...' : rawDesc;
+        }
+        if (coinJson.links) {
+          links = {
+            homepage: coinJson.links.homepage?.filter((l: string) => l) || [],
+            twitter: coinJson.links.twitter_screen_name ? `https://twitter.com/${coinJson.links.twitter_screen_name}` : '',
+            telegram: coinJson.links.telegram_channel_identifier ? `https://t.me/${coinJson.links.telegram_channel_identifier}` : ''
+          };
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    const stats = computeBreakoutStats(price, weekly);
     const prob = computeBreakoutProbability(weekly, stats.pct_to_ath);
     const cycles = analyzeCycles();
     const today = new Date();
     const cal = computeCalendarComparison(weekly, today.getMonth() + 1, today.getDate());
 
-    applyBtcGlow(btc.change_24h);
+    applyBtcGlow(change);
 
-    box.innerHTML = html(btc, stats, prob, cycles, cal);
+    box.innerHTML = html({ price, change_24h: change, rsi, advice: desc }, stats, prob, cycles, cal, ticker, links);
     wireTabs();
   } catch (e: any) {
     box.innerHTML = `<div class="btc-err">${e.message || 'Error'}</div>`;
   }
 }
 
-function html(btc: any, s: any, p: any, cycles: any[], cal: any[]): string {
-  const chg = btc.change_24h;
+function html(btc: any, s: any, p: any, cycles: any[], cal: any[], ticker: string = 'BTC', links: any = {}): string {
+  const chg = btc.change_24h || 0;
   const chgColor = chg >= 0 ? 'var(--mint)' : 'var(--coral)';
   const chgSign = chg >= 0 ? '+' : '';
   const atAth = s.pct_to_ath < 0.5;
 
+  const linkBtns = `
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+      ${links.homepage?.[0] ? `<a href="${links.homepage[0]}" target="_blank" style="background:rgba(255,255,255,.1); padding:6px 12px; border-radius:6px; font-size:11px; color:var(--hi); text-decoration:none;">🌐 Сайт</a>` : ''}
+      ${links.twitter ? `<a href="${links.twitter}" target="_blank" style="background:rgba(29,161,242,.2); padding:6px 12px; border-radius:6px; font-size:11px; color:#1DA1F2; text-decoration:none;">𝕏 Twitter</a>` : ''}
+      ${links.telegram ? `<a href="${links.telegram}" target="_blank" style="background:rgba(41,171,226,.2); padding:6px 12px; border-radius:6px; font-size:11px; color:#29A9E2; text-decoration:none;">✈️ Telegram</a>` : ''}
+    </div>
+  `;
+
   return `
   <div class="btc-head">
     <div class="btc-head-info">
-      <div class="btc-head-lbl">BTC OUTLOOK · ${new Date().toLocaleDateString('ru-RU')}</div>
-      <div class="btc-head-price">$${btc.price.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+      <div class="btc-head-lbl">${ticker} OUTLOOK · ${new Date().toLocaleDateString('ru-RU')}</div>
+      <div class="btc-head-price">$${btc.price.toLocaleString('en-US', { maximumFractionDigits: 4 })}</div>
       <div class="btc-head-chg" style="color:${chgColor}">${chgSign}${chg.toFixed(2)}%</div>
     </div>
     <button class="btc-close" onclick="closeBtcOutlook()">✕</button>
@@ -133,29 +170,35 @@ function html(btc: any, s: any, p: any, cycles: any[], cal: any[]): string {
 
   <div class="btc-tabs">
     <button class="btc-tab active" data-tab="snap">${tm('btc_tab_snap')}</button>
+    <button class="btc-tab" data-tab="about">О проекте</button>
     <button class="btc-tab" data-tab="break">${tm('btc_tab_break')}</button>
     <button class="btc-tab" data-tab="cal">${tm('btc_tab_cal')}</button>
-    <button class="btc-tab" data-tab="cyc">${tm('btc_tab_cyc')}</button>
   </div>
 
   <div class="btc-tab-body active" data-tab-body="snap">
-    ${renderSnap(btc, s, atAth)}
+    ${renderSnap(btc, s, atAth, ticker)}
   </div>
+  
+  <div class="btc-tab-body" data-tab-body="about">
+    <div class="btc-note" style="font-size:13px; line-height:1.6; color:var(--tx);">
+      ${btc.advice || 'Описание недоступно.'}
+    </div>
+    ${linkBtns}
+  </div>
+
   <div class="btc-tab-body" data-tab-body="break">
     ${renderBreak(p, s)}
   </div>
+  
   <div class="btc-tab-body" data-tab-body="cal">
-    ${renderCal(cal)}
-  </div>
-  <div class="btc-tab-body" data-tab-body="cyc">
-    ${renderCyc(cycles, s)}
+    ${renderCal(cal, ticker)}
   </div>
 
   <div class="btc-foot">${tm('btc_foot_warn')}</div>
   `;
 }
 
-function renderSnap(btc: any, s: any, atAth: boolean): string {
+function renderSnap(btc: any, s: any, atAth: boolean, ticker: string = 'BTC'): string {
   return `
     <div class="btc-grid4">
       <div class="btc-cell"><div class="btc-cell-l">${tm('btc_rsi')}</div><div class="btc-cell-v">${btc.rsi.toFixed(1)}</div></div>
@@ -167,8 +210,8 @@ function renderSnap(btc: any, s: any, atAth: boolean): string {
     <div class="btc-note">${btc.advice}</div>
 
     ${atAth
-      ? `<div class="btc-banner mint">🚀 ${tm('btc_at_ath')}</div>`
-      : `<div class="btc-banner amber">${tm('btc_below')} <b>${s.pct_to_ath.toFixed(1)}%</b></div>`}
+      ? `<div class="btc-banner mint">🚀 ${ticker} ${tm('btc_at_ath').replace('BTC', '')}</div>`
+      : `<div class="btc-banner amber">${ticker} ${tm('btc_below').replace('BTC', '')} <b>${s.pct_to_ath.toFixed(1)}%</b></div>`}
 
     <div class="btc-heatbar-wrap">
       <div class="btc-heatbar-lbl">${tm('btc_heat')}</div>
@@ -216,7 +259,7 @@ function renderBreak(p: any, s: any): string {
   `;
 }
 
-function renderCal(cal: any[]): string {
+function renderCal(cal: any[], ticker: string = 'BTC'): string {
   if (!cal.length) return `<div class="btc-empty">${tm('btc_no_data')}</div>`;
 
   const rows = cal.slice().reverse();
@@ -224,7 +267,7 @@ function renderCal(cal: any[]): string {
 
   return `
     <div class="btc-cal-head">
-      <div class="btc-cal-title">${tm('btc_cal_title')}</div>
+      <div class="btc-cal-title">${tm('btc_cal_title').replace('BTC', ticker)}</div>
       <div class="btc-cal-sub">${cal[0]?.date.slice(5) || ''} · ${rows.length} ${tm('btc_years')}</div>
     </div>
     <div class="btc-cal-list">
@@ -277,6 +320,60 @@ function wireTabs(): void {
   }));
 }
 
+export async function initCoinOutlookInline(ticker: string, candles: any[], extra?: any): Promise<void> {
+  const box = document.getElementById('btc-outlook-inline');
+  if (!box) return;
+
+  const isPro = await isProUser();
+  if (!isPro) {
+    box.innerHTML = `
+      <div class="btc-pro-lock" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding: 20px;">
+        <div style="font-size: 28px; margin-bottom: 8px;">💎</div>
+        <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--hi); margin-bottom: 4px;">${ticker} Outlook PRO</div>
+        <div style="font-size: 11px; color: var(--mut); margin-bottom: 16px; max-width: 200px;">Историческая аналитика доступна по подписке</div>
+        <button class="btn-primary btn-mint" onclick="openProModal()" style="width: auto; padding: 8px 20px; font-size: 11px;">Открыть PRO</button>
+      </div>
+    `;
+    return;
+  }
+
+  if (!candles || candles.length < 100) {
+     box.innerHTML = `<div class="btc-empty" style="text-align:center; padding: 20px;">Недостаточно данных для ${ticker}</div>`;
+     return;
+  }
+
+  try {
+    const price = candles[candles.length - 1].close;
+    const stats = computeBreakoutStats(price, candles);
+    const prob = computeBreakoutProbability(candles, stats.pct_to_ath);
+    const cal = computeCalendarComparison(candles, new Date().getMonth() + 1, new Date().getDate());
+
+    const finalPrice = extra?.price || price;
+    const finalRsi = extra?.rsi || 50;
+    const finalChange = extra?.change_24h || 0;
+
+    const liveDesc = extra?.desc || 'Актив на криптовалютном рынке.';
+    const liveLinks = extra?.links || {};
+
+    box.innerHTML = html({ 
+      price: finalPrice, 
+      change_24h: finalChange, 
+      rsi: finalRsi, 
+      advice: liveDesc 
+    }, stats, prob, [], cal, ticker, liveLinks);
+    
+    const tabs = box.querySelectorAll<HTMLElement>('.btc-tab');
+    const bodies = box.querySelectorAll<HTMLElement>('.btc-tab-body');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.toggle('active', x === t));
+      bodies.forEach(b => b.classList.toggle('active', b.dataset.tabBody === t.dataset.tab));
+    }));
+
+  } catch (e: any) {
+    box.innerHTML = `<div class="btc-err" style="text-align:center; padding:20px; color:var(--coral);">Ошибка: ${e.message}</div>`;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  Object.assign(window as any, { openBtcOutlook, closeBtcOutlook });
+  Object.assign(window as any, { openBtcOutlook, closeBtcOutlook, initCoinOutlookInline });
 }

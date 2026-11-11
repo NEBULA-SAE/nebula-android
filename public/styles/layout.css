@@ -1,8 +1,12 @@
 /* ═══ TOP BAR ═══ */
 .top-bar {
   position: fixed; top: 0; left: 0; right: 0;
-  padding: calc(var(--safe-top) + 8px) 12px 8px;
-  background: linear-gradient(180deg, rgba(3,5,9,1) 0%, rgba(3,5,9,.98) 70%, rgba(3,5,9,.92) 100%);
+  padding: calc(var(--safe-top) + 12px) 16px 12px;
+  /* Эффект матового стекла (Glassmorphism) */
+  backdrop-filter: blur(16px); 
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(3,5,9,0.6); 
+  border-bottom: 1px solid rgba(255,255,255,0.04);
   z-index: 100; display: flex; flex-direction: column; gap: 8px;
   height: calc(var(--safe-top) + var(--topbar-h));
 }
@@ -53,8 +57,9 @@
 .ticker-wrap { flex: 1; min-width: 0; position: relative; display: flex; align-items: center; height: 42px; }
 .ticker-wrap input {
   width: 100%; height: 42px; padding: 0 100px 0 14px;
-  border: 1px solid var(--border); border-radius: 12px;
-  background: rgba(0,0,0,.6); color: var(--hi);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+  background: rgba(0,0,0,.4); color: var(--hi);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); /* Эффект вдавленности */
   font-family: 'JetBrains Mono', monospace;
   font-size: 14px; font-weight: 600; letter-spacing: 1.2px;
   outline: none; transition: border-color .2s, box-shadow .2s;
@@ -108,7 +113,7 @@
 .screens { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; pointer-events: none; }
 .screen {
   position: absolute; inset: 0;
-  padding: var(--screen-pt) 12px var(--screen-pb) 12px;
+  padding: var(--screen-pt) 16px var(--screen-pb) 16px; /* Больше воздуха по бокам */
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   opacity: 0; transform: translateX(24px);
@@ -122,9 +127,11 @@
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   padding: 6px 4px calc(6px + var(--safe-bot));
-  background: linear-gradient(0deg, rgba(3,5,9,1) 45%, rgba(3,5,9,.98) 90%, rgba(3,5,9,.92) 100%);
+  backdrop-filter: blur(16px); 
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(3,5,9,0.8);
   z-index: 100; display: flex; align-items: center; justify-content: space-around;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255,255,255,0.04);
   height: calc(var(--safe-bot) + var(--navbar-h));
 }
 .nav-btn {
@@ -205,20 +212,31 @@
     left: var(--sidebar-w); right: 0;
     padding: calc(var(--safe-top) + 14px) 32px 14px;
     height: calc(var(--safe-top) + var(--topbar-h-desk));
-    display: flex; flex-direction: column; align-items: center;
+    display: flex; flex-direction: column; align-items: stretch; /* stretch вместо center */
   }
-  .top-bar > .top-row-1,
+  .top-bar > .top-row-1 {
+    width: 100%;
+    display: flex; justify-content: flex-end; /* Кнопки справа */
+  }
   .top-bar > .top-row-2 {
-    max-width: 1280px; width: 100%;
+    width: 100%;
+    display: flex; justify-content: center; /* Поле DASH по центру */
+    margin-top: 4px;
   }
+  .top-bar .ticker-wrap {
+    max-width: 600px; /* Ограничиваем ширину поиска на ПК, чтобы не был на весь экран */
+    width: 100%;
+  }
+  .top-bar .brand-mini { display: none !important; } /* Прячем дубль логотипа */
 
   /* ─── ЭКРАНЫ ─── */
   .screens { left: var(--sidebar-w); }
   .screen {
     padding-top: var(--screen-pt);
     padding-bottom: var(--screen-pb);
-    padding-left:  max(32px, calc((100% - 1280px) / 2));
-    padding-right: max(32px, calc((100% - 1280px) / 2));
+    /* Даем контенту растянуться до 1800px для Bento Grid */
+    padding-left:  max(32px, calc((100% - 1800px) / 2));
+    padding-right: max(32px, calc((100% - 1800px) / 2));
   }
 
     /* ─── SHEET → центрированная модалка ─── */

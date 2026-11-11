@@ -1,6 +1,6 @@
 /* ═══ BTC CARD ═══ */
-.btc-card { background: linear-gradient(135deg, rgba(247,147,26,.10), rgba(10,16,28,.94)); border-color: rgba(247,147,26,.32); position: relative; }
-.btc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--btc),transparent); }
+.btc-card { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: var(--r-lg); position: relative; box-shadow: 0 8px 24px -4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); }
+.btc-card::before { display: none; }
 .btc-top { display:flex; align-items:center; justify-content:space-between; padding:12px 14px 10px; gap:10px; }
 .btc-left { display:flex; align-items:center; gap:10px; min-width: 0; }
 .btc-logo { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--btc),#ffb84a); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:900; color:#000; font-size:15px; flex-shrink: 0; }
@@ -20,8 +20,8 @@
 
 /* ═══ CHART ═══ */
 .chart-card { padding:0; }
-#chart-container { width: 100%; height: min(240px, 32dvh); min-height: 180px; background: rgba(0,0,0,.35); }
-.chart-stats { display:flex; justify-content:space-between; padding:9px 14px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--mut); border-bottom:1px solid var(--border); }
+#chart-container { width: 100%; height: min(240px, 32dvh); min-height: 180px; background: transparent; }
+.chart-stats { display:flex; justify-content:space-between; padding:12px 18px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--mut); border-bottom:none; }
 .chart-stats b { color:var(--hi); }
 .chart-stats .cur b { color:var(--cyan); }
 @media (max-height: 640px) {
@@ -29,7 +29,7 @@
 }
 
 /* ═══ VERDICT ═══ */
-.verdict { padding:14px; border-radius: var(--r-md); background:linear-gradient(135deg, rgba(94,203,255,.10), rgba(10,16,28,.9)); border:1px solid var(--border-hi); margin-bottom:12px; position:relative; overflow:hidden; contain: layout style paint; }
+.verdict { padding:18px; border-radius: var(--r-lg); background:rgba(255,255,255,.02); backdrop-filter: blur(20px); border:1px solid var(--border); margin-bottom:20px; position:relative; overflow:hidden; contain: layout style paint; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
 .verdict::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--cyan); }
 .verdict.green { background:linear-gradient(135deg, rgba(69,224,168,.12), rgba(10,16,28,.9)); border-color:rgba(69,224,168,.4); }
 .verdict.green::before { background:var(--mint); }
@@ -388,24 +388,18 @@
 .dash-net-react b { color: var(--cyan); font-weight: 700; }
 
 /* ═══════════════════════════════════════════════════════
-   HOME SCREEN · Desktop grid (≥ 1024px)
+   Вкладка ПРО (Аналитика) и остальные экраны (≥ 1024px)
+   (Сетка для #screen-home удалена, чтобы не конфликтовать с components.css)
    ═══════════════════════════════════════════════════════ */
 @media (min-width: 1024px) {
-  #chart-container { width: 100% !important; height: 420px !important; min-height: 420px !important; max-height: 420px !important; display: block !important; }
-  .card, .chart-card { contain: none !important; }
-  #screen-home { display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; grid-auto-flow: row dense; }
-  #screen-home > * { margin-bottom: 0 !important; }
-  #screen-home > .btc-card, #screen-home > .chart-card, #screen-home > #verdict, #screen-home > #whale-card, #screen-home > #monitor-panel { grid-column: 1 / -1 !important; }
-  #screen-home > #plan-card, #screen-home > #agent-card, #screen-home > #xray-card, #screen-home > #walls-card { grid-column: span 1 !important; }
-  #screen-home > #plan-card[style*="display: none"], #screen-home > #agent-card[style*="display: none"] { display: none !important; }
-  #screen-pro { display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; }
+  #screen-pro { display: grid !important; grid-template-columns: 1fr 1fr; gap: 20px; align-content: start; }
   #screen-pro > * { margin-bottom: 0 !important; }
-  #pro-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  #scan-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #pro-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  #scan-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   #scan-list > .coin-item { margin-bottom: 0; }
-  .port-stats { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .mp-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .learn-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .port-stats { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .mp-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .learn-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -175,10 +175,11 @@
 <header class="top-bar">
   <div class="top-row-1">
    <div class="brand-mini-wrap">
-              <div class="brand-mini" id="main-brand" style="display: flex; align-items: center; gap: 6px;">
+      <div class="brand-mini" id="main-brand" onclick="openProModal()" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
         <span class="brand-dot"></span>
         <span id="brand-text">NEBULA</span>
-        <button id="brand-pro-btn" onclick="openProModal()">PRO</button>
+        <button id="brand-pro-btn" style="pointer-events: none;">PRO</button>
+        <span id="pro-expiry-text" style="display: none; font-size: 9px; color: var(--amber); font-family: 'JetBrains Mono', monospace; margin-left: 4px; opacity: 0.8; white-space: nowrap;"></span>
       </div>
     </div>
       <div class="top-right">
@@ -285,7 +286,9 @@
     <div class="card btc-card">
       <div class="btc-top">
         <div class="btc-left">
-          <div class="btc-logo">₿</div>
+          <div class="btc-logo" id="coin-logo-container" style="overflow: hidden; padding: 0; background: transparent; display: flex; align-items: center; justify-content: center;">
+            <img id="coin-logo-img" src="" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none;">
+          </div>
           <div><div class="btc-title">BITCOIN</div><div class="btc-sub">BTC/USDT · DAILY</div></div>
         </div>
         <div class="btc-price-block">
@@ -301,9 +304,12 @@
       </div>
       <div class="btc-advice" id="btc-advice">...</div>
       <button class="btc-outlook-btn" onclick="openBtcOutlook()">
-        <span class="btc-outlook-btn-lbl">📊 <span id="lbl-btc-outlook">История и прогноз</span></span>
-        <span class="btc-outlook-pro-badge">💎 PRO</span>
+        <div class="btc-btn-glow"></div>
+        <div class="btc-btn-content">
+          <span class="btc-outlook-btn-lbl">📊 <span id="lbl-btc-outlook">История и прогноз</span></span>
+        </div>
       </button>
+      <div id="btc-outlook-inline" class="btc-outlook-inline" style="display: none;"></div>
     </div>
 
     <div class="card chart-card" style="position: relative;">
@@ -437,7 +443,7 @@
     </div> <!-- КОНЕЦ home-main-content -->
 
     <!-- ВКЛАДКА "ИЗБРАННОЕ" (внутри главного экрана) -->
-    <div id="home-fav-content" style="display:none;">
+    <div id="home-fav-content" class="hidden">
       <div class="fav-market-header" id="fav-market-header">
         <!-- Market Cap -->
         <div class="fmh-cell">
@@ -746,7 +752,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.37</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.38</div>
     </div>
 
     <div class="terms-body">
@@ -782,7 +788,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.37</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.38</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>

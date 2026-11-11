@@ -12,11 +12,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  padding: 14px 16px; /* Чуть больше отступов */
+  background: rgba(255,255,255,0.02); /* Едва заметная подложка */
+  border: 1px solid rgba(255,255,255,0.05);
   border-radius: var(--r-md);
-  transition: border-color .15s, background .15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Мягкая тень */
+  transition: all .2s ease;
 }
 
 .theme-card.active {
@@ -152,10 +153,10 @@
 /* ─── Группы полей в редакторе ─── */
 
 .theme-group {
-  padding: 10px 12px;
-  background: rgba(0,0,0,.25);
+  padding: 12px 14px;
+  background: rgba(0,0,0,.15);
   border-radius: var(--r-sm);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.03);
 }
 
 .theme-group-title {

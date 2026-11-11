@@ -62,13 +62,19 @@
     contain: none !important;
   }
 
-  #chart-container {
-    height: 420px !important;
-    min-height: 420px !important;
-  }
+  /* Отдаем высоту графика на откуп components.css (там 520px) */
+  /* #chart-container { height: 420px !important; ... } — УДАЛЕНО */
 
-  #screen-home { display: block !important; max-width: 1400px !important; margin: 0 auto !important; }
-  #screen-home > * { margin-bottom: 16px !important; width: 100% !important; }
+  /* Убираем display: block, чтобы заработал Bento Grid из components.css */
+  #screen-home { 
+    max-width: 1800px !important; 
+    margin: 0 auto !important; 
+    /* display: block удален! */
+  }
+  #screen-home > * { 
+    /* width: 100% — УДАЛЕНО, чтобы карточки не растягивались в колонку */
+    margin-bottom: 0 !important; 
+  }
 
   .card, .chart-card { contain: none !important; }
 

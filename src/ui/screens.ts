@@ -5,12 +5,15 @@
 import { state, setText, setHTML, toast } from '../utils';
 import { tm, isEN, setLang as i18nSetLang, getLang } from '../i18n';
 import { getBtcDailyAnalysis } from '../market';
+import { fetchCandlesWithSource } from '../sources/candles';
+import { P } from '../config';
 import { renderPro } from './oracle';
 import { renderFavorites } from './scanner';
 import { mobileSyncPortfolio } from '../trading';
 import { renderOracleDashboard } from './oracle';
 import { cancelDemoOrder, resetDemo } from '../demo';
 import { openBtcOutlook, closeBtcOutlook, applyBtcGlow } from './btc-outlook';
+import { calcRsiSimple, calcAtr, calcAdx } from '../indicators';
 
 // ═══ ВКЛАДКИ ГЛАВНОГО ЭКРАНА (СВАЙП) ═══
 export function switchHomeTab(tab: 'main' | 'fav'): void {
@@ -22,13 +25,13 @@ export function switchHomeTab(tab: 'main' | 'fav'): void {
   if (!mainContent || !favContent || !htabMain || !htabFav) return;
 
   if (tab === 'main') {
-    mainContent.style.display = 'block';
-    favContent.style.display = 'none';
+    mainContent.classList.remove('hidden');
+    favContent.classList.add('hidden');
     htabMain.classList.add('active');
     htabFav.classList.remove('active');
   } else {
-    mainContent.style.display = 'none';
-    favContent.style.display = 'block';
+    mainContent.classList.add('hidden');
+    favContent.classList.remove('hidden');
     htabMain.classList.remove('active');
     htabFav.classList.add('active');
     import('./scanner').then(m => m.renderFavorites());
@@ -213,41 +216,107 @@ export function applyStaticTranslations(): void {
   if (stopBtn) stopBtn.textContent = tm('stop');
 }
 
-// ═══ BTC ═══
-export async function loadBTC(): Promise<void> {
+// ═══ АКТИВНАЯ МОНЕТА (Динамическая карточка) ═══
+export async function loadActiveCoinCard(): Promise<void> {
   try {
-    const d = await getBtcDailyAnalysis();
-    if (d.status !== 'success') return;
+    const tickerInput = document.getElementById('ticker') as HTMLInputElement;
+    const ticker = (tickerInput?.value || state.currentTicker || 'BTC').toUpperCase();
 
-    setText('btc-price', '$' + d.price.toLocaleString('en-US', {
-      minimumFractionDigits: 2, maximumFractionDigits: 2,
-    }));
+    // 1. Загружаем свечи
+    const [dailyRes, maxRes] = await Promise.all([
+      fetchCandlesWithSource(ticker, '1d'),
+      fetchCandlesWithSource(ticker, 'max')
+    ]);
+    const data = dailyRes.data;
+    const maxData = maxRes.data;
+    
+    if (!data || data.length < 2) return;
+
+    const price = data[data.length - 1].close;
+    const prevPrice = data[data.length - 2].close;
+    const change = ((price - prevPrice) / prevPrice) * 100;
+    const rsi = calcRsiSimple(data.map(c => c.close), 14);
+
+    // 2. Загружаем ПОЛНЫЕ данные с CoinGecko
+    let desc = 'Актив на криптовалютном рынке.';
+    let links: any = { homepage: [], twitter: '', telegram: '' };
+    try {
+      const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${ticker}`);
+      const searchJson = await searchRes.json();
+      
+      if (searchJson.coins && searchJson.coins.length > 0) {
+        const matchedCoin = searchJson.coins.find((c: any) => c.symbol.toUpperCase() === ticker);
+        const coinId = matchedCoin ? matchedCoin.id : searchJson.coins[0].id;
+        
+        const coinRes = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`);
+        const coinJson = await coinRes.json();
+        
+        if (coinJson.description && coinJson.description.en) {
+          const rawDesc = coinJson.description.en;
+          desc = rawDesc.length > 250 ? rawDesc.substring(0, 250) + '...' : rawDesc;
+        }
+        if (coinJson.links) {
+          links = {
+            homepage: coinJson.links.homepage?.filter((l: string) => l) || [],
+            twitter: coinJson.links.twitter_screen_name ? `https://twitter.com/${coinJson.links.twitter_screen_name}` : '',
+            telegram: coinJson.links.telegram_channel_identifier ? `https://t.me/${coinJson.links.telegram_channel_identifier}` : ''
+          };
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    // 3. Обновляем DOM
+    setText('btc-price', '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }));
+    
+    const titleEl = document.querySelector('.btc-title');
+    if (titleEl) titleEl.textContent = ticker;
+    
+    const subEl = document.querySelector('.btc-sub');
+    if (subEl) subEl.textContent = `${ticker}/USDT · DAILY`;
 
     const ch = document.getElementById('btc-change');
     if (ch) {
-      ch.textContent = (d.change_24h >= 0 ? '+' : '') + d.change_24h.toFixed(2) + '%';
-      ch.style.color = d.change_24h >= 0 ? 'var(--mint)' : 'var(--coral)';
+      ch.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+      ch.style.color = change >= 0 ? 'var(--mint)' : 'var(--coral)';
     }
 
+    // Заполняем верхнюю панель (RSI, Отскок, Падение, Тренд)
     const r = document.getElementById('btc-rsi');
-    if (r) {
-      r.textContent = d.rsi.toFixed(1);
-      r.style.color = d.rsi < 35 ? 'var(--mint)' : d.rsi > 65 ? 'var(--coral)' : 'var(--hi)';
-    }
-
-    setText('btc-rebound', '+' + d.rebound_pct.toFixed(1) + '%');
-    setText('btc-drop', '-' + d.drop_pct.toFixed(1) + '%');
-
+    if (r) { r.textContent = rsi.toFixed(1); r.style.color = rsi < 35 ? 'var(--mint)' : rsi > 65 ? 'var(--coral)' : 'var(--hi)'; }
+    setText('btc-rebound', '+' + Math.max(0, change).toFixed(1) + '%'); 
+    setText('btc-drop', '-' + Math.abs(Math.min(0, change)).toFixed(1) + '%');
     const tr = document.getElementById('btc-trend');
-    if (tr) {
-      tr.textContent = d.trend === 'up' ? '📈' : '📉';
-      tr.style.color = d.trend === 'up' ? 'var(--mint)' : 'var(--coral)';
+    if (tr) { tr.textContent = change >= 0 ? '📈' : '📉'; tr.style.color = change >= 0 ? 'var(--mint)' : 'var(--coral)'; }
+    
+    setText('btc-advice', desc.split('.')[0] + '.'); // Короткая выжимка для карточки
+
+    // 4. Логотип
+    const logoContainer = document.getElementById('coin-logo-container');
+    const logoImg = document.getElementById('coin-logo-img') as HTMLImageElement;
+    if (logoContainer && logoImg) {
+      const iconUrl = `https://essamamdani.github.io/open-crypto-icons/icons_svg/${ticker.toLowerCase()}.svg`;
+      logoImg.src = iconUrl;
+      logoImg.style.display = 'block';
+      
+      logoImg.onerror = () => {
+        logoImg.style.display = 'none';
+        logoContainer.style.background = 'var(--violet)';
+        logoContainer.style.color = '#fff';
+        logoContainer.textContent = ticker.charAt(0);
+      };
     }
 
-    setText('btc-advice', d.advice);
-
-    // Glow на BTC-карточке — работает для всех (тизер)
-    applyBtcGlow(d.change_24h);
+    applyBtcGlow(change);
+    
+    // Передаем данные в внутренний Outlook
+    if (window.innerWidth >= 1024) {
+      const outlookBox = document.getElementById('btc-outlook-inline');
+      if (outlookBox) {
+         import('./btc-outlook').then(m => m.initCoinOutlookInline(ticker, maxData, {
+           price, change_24h: change, rsi, desc, links
+         }));
+      }
+    }
   } catch { /* silent */ }
 }
 
@@ -549,7 +618,7 @@ if (typeof window !== 'undefined') {
     switchHomeTab,
     setLanguage,
     applyStaticTranslations,
-    loadBTC,
+    loadActiveCoinCard,
     openSheet,
     closeSheet,
     enterDemoMode,

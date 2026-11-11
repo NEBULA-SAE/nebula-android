@@ -11,7 +11,7 @@ import { checkLocalProStatus } from '../pro';
 import { openExternalService } from '../platform/browser';
 
 // ─── Реальные модули ───
-import { applyStaticTranslations, loadBTC } from './screens';
+import { applyStaticTranslations, loadActiveCoinCard } from './screens';
 import { initAutocomplete, renderFavorites, updateStarButton } from './scanner';
 import { runFullDiagnostics } from './diagnostics';
 
@@ -27,12 +27,12 @@ export function initApp(): void {
   console.log('[init] NEBULA v2 стартует...');
 
   // Проверка PRO статуса
-  const proStatus = checkLocalProStatus();
+  const proStatus: any = checkLocalProStatus();
   state.isPro = proStatus.active;
   if (state.isPro) {
     console.log('[init] PRO License Active ✓');
     
-    // Меняем текст на NEBULA PRO и включаем золотой цвет для ПК и Мобилки
+    // 1. Меняем текст на NEBULA PRO и включаем золотой цвет
     const updateBrand = (textId: string, brandId: string) => {
       const textEl = document.getElementById(textId);
       const brandEl = document.getElementById(brandId);
@@ -42,6 +42,45 @@ export function initApp(): void {
     
     updateBrand('brand-text', 'main-brand');
     updateBrand('brand-text-pc', 'main-brand-pc');
+
+    // 2. Вывод срока действия подписки
+    const expEl = document.getElementById('pro-expiry-text');
+    if (expEl) {
+      let expiresAt = proStatus.expiresAt || proStatus.expires_at || proStatus.expiry;
+
+      // Если в статусе нет даты, пробуем достать из токена (если это JWT)
+      if (!expiresAt) {
+        try {
+          const token = localStorage.getItem('nebulaProToken');
+          if (token && token.includes('.')) {
+            // Декодируем payload JWT
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const payload = JSON.parse(jsonPayload);
+            if (payload.exp) expiresAt = payload.exp * 1000; // JWT выдает время в секундах
+            if (payload.expiresAt) expiresAt = payload.expiresAt;
+          }
+        } catch (e) { /* silent */ }
+      }
+
+      if (expiresAt) {
+        const daysLeft = Math.ceil((expiresAt - Date.now()) / (1000 * 3600 * 24));
+        if (daysLeft > 36500) {
+           expEl.textContent = `(∞)`;
+        } else if (daysLeft > 0) {
+           expEl.textContent = `(${daysLeft} дн.)`;
+        } else {
+           expEl.textContent = `(истекла)`;
+           expEl.style.color = 'var(--coral)';
+        }
+      } else {
+        expEl.textContent = `(бессрочно)`;
+      }
+      expEl.style.display = 'inline';
+    }
   }
 
   // ─── 0. Восстанавливаем сохранённый таймфрейм ДО первого анализа ───
@@ -69,14 +108,26 @@ export function initApp(): void {
   try { initAutocomplete(); } catch (e) { console.warn('initAutocomplete:', e); }
 
   // ─── 3. BTC-карточка + периодическое обновление ───
-  setInterval(() => { try { loadBTC(); } catch { /* silent */ } }, 90000);
-  setTimeout(() => { try { loadBTC(); } catch { /* silent */ } }, 100);
+  setInterval(() => { try { loadActiveCoinCard(); } catch { /* silent */ } }, 90000);
+  setTimeout(() => { try { loadActiveCoinCard(); } catch { /* silent */ } }, 100);
 
   // ─── 4. Основной анализ при старте ───
   setTimeout(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     try { (window as any).mobileAnalyze?.(); } catch (e) { console.warn('mobileAnalyze:', e); }
   }, 100);
+
+  // Перехватываем mobileAnalyze, чтобы при нажатии GO обновлялась и левая карточка
+  setTimeout(() => {
+    const originalAnalyze = (window as any).mobileAnalyze;
+    if (originalAnalyze) {
+      (window as any).mobileAnalyze = async function(...args: any[]) {
+        const result = await originalAnalyze.apply(this, args);
+        try { loadActiveCoinCard(); } catch { /* silent */ }
+        return result;
+      };
+    }
+  }, 500);
 
   // ─── 5. Dash Network — ленивая загрузка через 8 секунд ───
   setTimeout(async () => {
@@ -276,9 +327,10 @@ export function initApp(): void {
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
             ${tm('xgram_desc')}
           </div>
-          <button class="btn-primary" onclick="closeSheet();openXgramSwap()" style="background:linear-gradient(135deg, #8b5cf6, #a78bfa); font-size:11px; padding:10px;">
-            ${tm('xgram_btn')}
-          </button>
+          <div class="neon-btn-wrap" onclick="closeSheet();openXgramSwap()">
+            <div class="neon-btn-glow"></div>
+            <div class="neon-btn-content purple">${tm('xgram_btn')}</div>
+          </div>
         </div>
 
         <!-- Binance P2P -->
@@ -290,9 +342,10 @@ export function initApp(): void {
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
             ${tm('p2p_desc')}
           </div>
-          <button class="btn-primary" onclick="closeSheet();openP2PMarket()" style="background:linear-gradient(135deg, #f0b90b, #fcd535); color:#000; font-size:11px; padding:10px;">
-            ${tm('p2p_btn')}
-          </button>
+          <div class="neon-btn-wrap" onclick="closeSheet();openP2PMarket()">
+            <div class="neon-btn-glow"></div>
+            <div class="neon-btn-content gold">${tm('p2p_btn')}</div>
+          </div>
         </div>
 
         <!-- Mining Calculator (WhatToMine) -->
@@ -304,14 +357,16 @@ export function initApp(): void {
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
             ${tm('mining_desc')}
           </div>
-          <button class="btn-primary btn-mint" onclick="closeSheet();openMiningWhatToMine()" style="font-size:11px; padding:10px;">
-            ${tm('mining_btn_open')}
-          </button>
+          <div class="neon-btn-wrap" onclick="closeSheet();openMiningWhatToMine()">
+            <div class="neon-btn-glow"></div>
+            <div class="neon-btn-content green">${tm('mining_btn_open')}</div>
+          </div>
         </div>
 
-        <button class="btn-primary btn-mint" onclick="closeSheet()" style="margin-top:8px;">
-          ${tm('tools_close')}
-        </button>
+        <div class="neon-btn-wrap" onclick="closeSheet()" style="margin-top:8px;">
+          <div class="neon-btn-glow"></div>
+          <div class="neon-btn-content green">${tm('tools_close')}</div>
+        </div>
       </div>
     `;
     (window as any).openSheet?.(tm('exchange_menu_title'), html);

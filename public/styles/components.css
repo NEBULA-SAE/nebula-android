@@ -1,21 +1,29 @@
 .card {
-  background: var(--bg-card); border: 1px solid var(--border);
+  background: var(--bg-card); 
+  border: 1px solid rgba(255, 255, 255, 0.04); /* Тончайшая рамка */
   border-radius: var(--r-lg);
-  box-shadow: 0 12px 32px -12px rgba(0,0,0,.7), inset 0 1px 0 var(--glass);
-  overflow: hidden; margin-bottom: 12px;
+  /* Многослойная тень для эффекта парения */
+  box-shadow: 0 8px 24px -4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow: hidden; margin-bottom: 16px; /* Увеличили отступ между карточками */
   contain: layout style paint;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 12px 32px -4px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .card:last-child { margin-bottom: 0; }
 .card-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px; background: rgba(0,0,0,.28);
+  padding: 14px 18px; background: transparent; /* Убираем темную плашку */
+  border-bottom: 1px solid rgba(255,255,255,0.03); /* Тонкий разделитель */
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 10.5px; font-weight: 700; letter-spacing: 1.4px;
+  font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
   text-transform: uppercase; color: var(--mut);
 }
 .card-head-icon { display: flex; align-items: center; gap: 8px; }
 .card-head-icon svg { width: 16px; height: 16px; }
-.card-body { padding: 14px; }
+.card-body { padding: 18px; /* Больше внутреннего пространства */ }
 .btn-primary {
   width:100%; padding:13px; border:none; border-radius: var(--r-sm);
   background: linear-gradient(135deg, var(--accent), var(--cyan));
@@ -376,23 +384,57 @@ body.chart-fullscreen-active { overflow: hidden !important; }
    HOME SCREEN · Desktop grid (≥ 1024px)
    ═══════════════════════════════════════════════════════════════ */
 @media (min-width: 1024px) {
-  #chart-container { width: 100% !important; height: 420px !important; min-height: 420px !important; max-height: 420px !important; display: block !important; }
-  .card, .chart-card { contain: none !important; }
-  #screen-home { display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; grid-auto-flow: row dense; }
-  #screen-home > * { margin-bottom: 0 !important; }
-  #screen-home > .btc-card, #screen-home > .chart-card, #screen-home > #verdict, #screen-home > #whale-card, #screen-home > #monitor-panel { grid-column: 1 / -1 !important; }
-  #screen-home > #plan-card, #screen-home > #agent-card, #screen-home > #xray-card, #screen-home > #walls-card { grid-column: span 1 !important; }
-  #screen-home > #plan-card[style*="display: none"], #screen-home > #agent-card[style*="display: none"] { display: none !important; }
-  #screen-pro { display: grid !important; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; }
-  #screen-pro > * { margin-bottom: 0 !important; }
-  #pro-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  #scan-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  #scan-list > .coin-item { margin-bottom: 0; }
-  .port-stats { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .mp-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .learn-grid { grid-template-columns: 1fr 1fr 1fr; }
-}
+  /* Растягиваем контейнер на всю ширину */
+  #screen-home {
+    max-width: 1800px !important;
+    margin: 0 auto !important;
+    /* Убираем padding: 0 24px, чтобы не перебивать верхний отступ от шапки */
+  }
 
+  /* Включаем сетку 12 колонок ВНУТРИ обертки */
+  #home-main-content {
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr) !important;
+    gap: 20px !important;
+    align-content: start !important;
+    width: 100% !important;
+  }
+
+  /* Убираем старые отступы */
+  #home-main-content > * { margin-bottom: 0 !important; }
+
+  /* BTC слева (4 колонки), График справа (8 колонок) */
+  #home-main-content > .btc-card { grid-column: span 4 !important; }
+  #home-main-content > .chart-card { grid-column: span 8 !important; }
+
+  /* Блоки на всю ширину */
+  #home-main-content > #verdict,
+  #home-main-content > #monitor-panel,
+  #home-main-content > #confluence-card,
+  #home-main-content > .app-footer { grid-column: 1 / -1 !important; }
+
+  /* План, ИИ, Киты — по половине экрана (6 колонок) */
+  #home-main-content > #plan-card,
+  #home-main-content > #agent-card,
+  #home-main-content > #whale-card,
+  #home-main-content > #xray-card,
+  #home-main-content > #walls-card { grid-column: span 6 !important; }
+
+  /* График делаем высоким */
+  #chart-container {
+    height: 520px !important;
+    min-height: 520px !important;
+  }
+
+  /* Остальные экраны (Аналитика, Сканер) */
+  #screen-pro { display: grid !important; grid-template-columns: 1fr 1fr; gap: 20px; align-content: start; }
+  #pro-content { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  #scan-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  #scan-list > .coin-item { margin-bottom: 0; }
+  .port-stats { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .mp-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .learn-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+}
 /* ═══════════════════════════════════════════════════════════════
    УЛЬТИМАТИВНЫЙ МОБИЛЬНЫЙ ФИКС ДЛЯ КАРТОЧЕК
    ═══════════════════════════════════════════════════════════════ */
@@ -441,4 +483,134 @@ body.chart-fullscreen-active { overflow: hidden !important; }
   .fav-list-header span:nth-child(4) { font-size: 9px !important; }
   .fav-row-price { font-size: 11px !important; }
   .fav-row-change { font-size: 10px !important; padding: 2px 4px !important; }
+}
+
+/* ═══ БЕГУЩИЙ НЕОН ДЛЯ КНОПОК ОКНА ОБМЕНА ═══ */
+.neon-btn-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 1.5px; /* Толщина неоновой рамки */
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08); /* Тусклая рамка в обычном состоянии */
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+/* Слой с бегущим радужным светом */
+.neon-btn-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 60%,
+    #5ecbff 75%,   /* Cyan */
+    #a78bfa 85%,   /* Violet */
+    #45e0a8 95%,   /* Mint */
+    transparent 100%
+  );
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  animation: spin-border 3s linear infinite;
+}
+
+.neon-btn-wrap:hover .neon-btn-glow {
+  opacity: 1;
+}
+
+/* Внутренний контент кнопки */
+.neon-btn-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 10px;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* ─── Цветовые вариации (внутри) ─── */
+
+/* Xgram (Фиолетовый) */
+.neon-btn-content.purple {
+  background: rgba(26, 16, 51, 0.9);
+  color: #a78bfa;
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+.neon-btn-wrap:hover .neon-btn-content.purple {
+  background: #28144d;
+  color: #fff;
+  text-shadow: 0 0 8px #a78bfa;
+  border-color: transparent;
+}
+
+/* P2P (Золотой) */
+.neon-btn-content.gold {
+  background: rgba(36, 26, 10, 0.9);
+  color: #ffd27f;
+  border: 1px solid rgba(255, 210, 127, 0.2);
+}
+.neon-btn-wrap:hover .neon-btn-content.gold {
+  background: #382810;
+  color: #fff;
+  text-shadow: 0 0 8px #ffd27f;
+  border-color: transparent;
+}
+
+/* Майнинг и Закрыть (Зеленый) */
+.neon-btn-content.green {
+  background: rgba(12, 34, 25, 0.9);
+  color: #45e0a8;
+  border: 1px solid rgba(69, 224, 168, 0.2);
+}
+.neon-btn-wrap:hover .neon-btn-content.green {
+  background: #143527;
+  color: #fff;
+  text-shadow: 0 0 8px #45e0a8;
+  border-color: transparent;
+}
+
+@keyframes spin-border {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ═══ ЖЕСТКИЙ ФИКС СКРЫТИЯ (перебиваем display: grid) ═══ */
+#home-main-content.hidden,
+#home-fav-content.hidden {
+  display: none !important;
+}
+
+/* ═══ ВСТРОЕННЫЙ BTC OUTLOOK (ТОЛЬКО ДЛЯ ПК) ═══ */
+@media (min-width: 1024px) {
+  .btc-outlook-btn { display: none !important; }
+  .btc-outlook-inline {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  }
+  .btc-card { display: flex; flex-direction: column; }
+  .btc-outlook-inline .btc-head { display: none; }
+  .btc-outlook-inline .btc-tabs { margin-top: 0; margin-bottom: 12px; }
 }

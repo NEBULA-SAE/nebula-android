@@ -353,10 +353,9 @@ async function refreshCurrentScreen(): Promise<void> {
         }
         try {
           const screensMod = await import('./screens');
-          if (screensMod.loadBTC) jobs.push(Promise.resolve(screensMod.loadBTC()));
+          if (screensMod.loadActiveCoinCard) jobs.push(Promise.resolve(screensMod.loadActiveCoinCard()));
         }
         catch { /* silent */ }
-
         await Promise.allSettled(jobs);
         break;
       }
