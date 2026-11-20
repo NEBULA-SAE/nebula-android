@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.40** | Branch: `main` | Commit: `3d5b255`
-> Generated: 2026-11-20 11:54
+> Version: **2.0.41** | Branch: `main` | Commit: `904606c`
+> Generated: 2026-11-20 12:55
 
 ---
 
@@ -38,16 +38,31 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 57
-- Total LOC in `src/`: 19061
-- Bundle (`dist/`): 61 files, 824.8 KB
+- Total LOC in `src/`: 19240
+- Bundle (`dist/`): 61 files, 837.9 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.40**
-- Last git tag: `v2.0.39`
+- `package.json` version: **2.0.41**
+- Last git tag: `v2.0.40`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `904606c` - 2026-11-20 - chore(release): v2.0.40
+
+Files:
+- `AI_CONTEXT.md`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/new-skin.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
 
 ### `3d5b255` - 2026-11-20 - chore(release): v2.0.39
 
@@ -145,29 +160,13 @@ Files:
 - `src/ui/scanner.ts`
 - `src/ui/screens.ts`
 
-### `79a0bca` - 2026-11-04 - chore(release): v2.0.35
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/components.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/ui/scanner.ts`
-- `src/ui/screens.ts`
-
 ## Last release diff
 
-No changes since `v2.0.39`
+No changes since `v2.0.40`
 
 ## Recent tags
 
+- `v2.0.40`
 - `v2.0.39`
 - `v2.0.38`
 - `v2.0.37`
@@ -177,7 +176,6 @@ No changes since `v2.0.39`
 - `v2.0.33`
 - `v2.0.32`
 - `v2.0.31`
-- `v2.0.30`
 
 ## File tree (src/)
 
@@ -218,7 +216,7 @@ src/
 |   +--   435 pull-refresh.ts
 |   +--   331 risk.ts
 |   +--   458 scanner.ts
-|   +--   686 screens.ts
+|   +--   865 screens.ts
 |   +--   632 settings.ts
 |   +--   292 splash.ts
 |   +--   149 terms.ts
@@ -980,6 +978,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- 904606c  2026-11-20  chore(release): v2.0.40
 - 3d5b255  2026-11-20  chore(release): v2.0.39
 - 8fa67c2  2026-11-11  chore(release): v2.0.38
 - baad85d  2026-11-07  chore(release): v2.0.37
@@ -994,7 +993,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 6f7a1b1  2026-11-01  chore(release): v2.0.29
 - 1d8acd6  2026-11-01  chore(release): v2.0.28
 - c30bae8  2026-11-01  chore(release): v2.0.27
-- d7db1b1  2026-10-31  chore(release): v2.0.26
 
 ---
 

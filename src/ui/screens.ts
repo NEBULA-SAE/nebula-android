@@ -536,127 +536,306 @@ export function initRadarMenu() {
   const trigger = document.getElementById('radar-trigger');
   const overlay = document.getElementById('radar-overlay');
   const items = Array.from(document.querySelectorAll<HTMLElement>('.radar-item'));
-  const laserLine = document.querySelector('.radar-laser-line line') as SVGLineElement;
   const centerOrb = document.getElementById('radar-center-orb');
-  
-  if (!trigger || !overlay || !laserLine || items.length === 0) return;
 
-  localStorage.removeItem('nebulaRadarPositions_v1');
+  if (!trigger || !overlay || items.length === 0) return;
 
+  overlay.classList.add('orbital-mode');
   const total = items.length;
-  const radius = 140;
 
-  items.forEach((item, index) => {
-    const angle = (360 / total) * index;
-    item.style.setProperty('--angle', `${angle}deg`);
-    item.style.setProperty('--radius', `${radius}px`);
-  });
+  // Создаём декоративные орбитальные кольца и точки-индикаторы (один раз)
+if (!overlay.querySelector('.orbital-rings')) {
+    const rings = document.createElement('div');
+    rings.className = 'orbital-rings';
+    rings.innerHTML = `
+      <div class="orbital-stage-glow" id="orbital-stage-glow"></div>
+      <div class="orbital-track-3d"></div>
+      <div class="orbital-track-3d-inner"></div>
+    `;
+    overlay.prepend(rings);
+  }
 
-  let isDragging = false;
-  let currentActiveIndex = -1;
-  let centerX = 0;
-  let centerY = 0;
+  let hudTitle = overlay.querySelector('.orbital-hud-title') as HTMLElement | null;
+  if (!hudTitle) {
+    hudTitle = document.createElement('div');
+    hudTitle.className = 'orbital-hud-title';
+    overlay.appendChild(hudTitle);
+  }
 
-  trigger.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    isDragging = true;
-    overlay.classList.add('open');
-    currentActiveIndex = -1;
-    items.forEach(i => i.classList.remove('active'));
+  // Логотип и анимация воронки «чёрной дыры» в нижней кнопке
+  if (centerOrb && !centerOrb.querySelector('.orb-logo-img')) {
+    centerOrb.innerHTML = `
+      <div class="orb-vortex">
+        <div class="vortex-disk"></div>
+        <div class="vortex-ring vr-1"></div>
+        <div class="vortex-ring vr-2"></div>
+        <div class="vortex-ring vr-3"></div>
+      </div>
+      <div class="orb-core">
+        <img src="/titlebar-logo.png" class="orb-logo-img" alt="NEBULA" onerror="this.style.display='none'">
+      </div>
+    `;
+  }
 
-    centerX = window.innerWidth / 2;
-    centerY = window.innerHeight / 2;
+  let dotsWrap = overlay.querySelector('.orbital-dots') as HTMLElement | null;
+  if (!dotsWrap) {
+    dotsWrap = document.createElement('div');
+    dotsWrap.className = 'orbital-dots';
+    dotsWrap.innerHTML = items.map((_, i) => `<span class="orbital-dot" data-idx="${i}"></span>`).join('');
+    overlay.appendChild(dotsWrap);
+  }
+  const dots = Array.from(dotsWrap.querySelectorAll<HTMLElement>('.orbital-dot'));
 
-    laserLine.setAttribute('x1', centerX.toString());
-    laserLine.setAttribute('y1', centerY.toString());
-    laserLine.setAttribute('x2', centerX.toString());
-    laserLine.setAttribute('y2', centerY.toString());
-    laserLine.style.opacity = '1';
+  let isOpen = false;
+  let anglePos = 0;           // Текущая позиция карусели (в единицах индекса)
+  let velocity = 0;           // Инерция
+  let snapTarget: number | null = null;
+  let rafId: number | null = null;
+  let lastFocusedIdx = 0;
 
-    if (centerOrb) {
-      centerOrb.style.left = centerX + 'px';
-      centerOrb.style.top = centerY + 'px';
-      centerOrb.classList.add('visible');
+  let isPointerDown = false;
+  let startX = 0;
+  let lastX = 0;
+  let totalDragDist = 0;
+  let downTarget: HTMLElement | null = null;
+
+  function normIdx(pos: number): number {
+    return ((Math.round(pos) % total) + total) % total;
+  }
+
+function renderOrbit() {
+    const rx = Math.min(window.innerWidth * 0.39, 158);
+    const ry = 56; // Глубина наклона кольца по вертикали
+    const focused = normIdx(anglePos);
+
+    if (focused !== lastFocusedIdx) {
+      lastFocusedIdx = focused;
+      if (isOpen && navigator.vibrate) navigator.vibrate(8);
     }
 
-    if (navigator.vibrate) navigator.vibrate(20);
-  });
-
-  document.addEventListener('pointermove', (e) => {
-    if (!isDragging) return;
-
-    const x = e.clientX;
-    const y = e.clientY;
-    
-    laserLine.setAttribute('x2', x.toString());
-    laserLine.setAttribute('y2', y.toString());
-
-    let closestIndex = -1;
-    let minDistance = Infinity;
-
-    items.forEach((item, index) => {
-      const rect = item.getBoundingClientRect();
-      const itemCenterX = rect.left + rect.width / 2;
-      const itemCenterY = rect.top + rect.height / 2;
-      
-      const dist = Math.hypot(x - itemCenterX, y - itemCenterY);
-      
-      if (dist < minDistance) {
-        minDistance = dist;
-        closestIndex = index;
+    // Обновляем HUD-заголовок и цвет свечения под активную кнопку
+    const activeEl = items[focused];
+    if (activeEl && hudTitle) {
+      const labelText = activeEl.querySelector('.radar-label')?.textContent?.trim() || '';
+      if (hudTitle.textContent !== labelText) {
+        hudTitle.textContent = labelText;
       }
+      const iconWrap = activeEl.querySelector('.radar-icon-wrap') as HTMLElement | null;
+      const accentColor = iconWrap?.style.color || 'var(--cyan)';
+      hudTitle.style.setProperty('--hud-accent', accentColor);
+      const stageGlow = document.getElementById('orbital-stage-glow');
+      if (stageGlow) stageGlow.style.setProperty('--hud-accent', accentColor);
+    }
+
+    items.forEach((item, i) => {
+      let diff = ((i - anglePos) % total + total) % total;
+      if (diff > total / 2) diff -= total;
+
+      const theta = (diff / total) * Math.PI * 2;
+      const x = Math.sin(theta) * rx;
+      // Передняя кнопка ниже (+ry), задние уходят вверх (-ry) за неё
+      const y = Math.cos(theta) * ry;
+      const depth = (Math.cos(theta) + 1) / 2; // 0 (самая дальняя сзади) .. 1 (в фокусе спереди)
+
+      const scale = 0.46 + Math.pow(depth, 1.15) * 0.78;
+      // Чем дальше назад по кругу, тем сильнее растворяется в темноте
+      const opacity = depth < 0.14 ? 0 : Math.pow(depth, 1.85);
+      // Лёгкий 3D-наклон по окружности
+      const rotateY = Math.sin(theta) * -36;
+      const rotateX = (1 - depth) * 14;
+      const blur = depth > 0.85 ? 0 : (1 - depth) * 3.2;
+      const zIndex = Math.round(depth * 100);
+
+      item.style.transform = `translate3d(calc(-50% + ${x.toFixed(1)}px), calc(-50% + ${y.toFixed(1)}px), 0) perspective(700px) rotateY(${rotateY.toFixed(1)}deg) rotateX(${rotateX.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+      item.style.opacity = opacity.toFixed(3);
+      item.style.zIndex = String(zIndex);
+      item.style.filter = blur > 0.2 ? `blur(${blur.toFixed(1)}px)` : 'none';
+      item.style.pointerEvents = depth > 0.42 ? 'auto' : 'none';
+
+      const isFocus = i === focused && Math.abs(diff) < 0.35;
+      item.classList.toggle('orbital-focus', isFocus);
     });
 
-    if (minDistance < 80) {
-      if (currentActiveIndex !== closestIndex) {
-        currentActiveIndex = closestIndex;
-        
-        items.forEach((item, idx) => {
-          item.classList.toggle('active', idx === closestIndex);
-        });
+    dots.forEach((d, i) => d.classList.toggle('active', i === focused));
+  }
 
-        const rect = items[closestIndex].getBoundingClientRect();
-        laserLine.setAttribute('x2', (rect.left + rect.width / 2).toString());
-        laserLine.setAttribute('y2', (rect.top + rect.height / 2).toString());
+  function tick() {
+    if (!isOpen) {
+      rafId = null;
+      return;
+    }
 
-        if (navigator.vibrate) navigator.vibrate(10);
+    let needMore = false;
+
+    if (!isPointerDown) {
+      if (Math.abs(velocity) > 0.015) {
+        anglePos += velocity;
+        velocity *= 0.91;
+        needMore = true;
+      } else {
+        velocity = 0;
+        if (snapTarget === null) snapTarget = Math.round(anglePos);
+        const delta = snapTarget - anglePos;
+        if (Math.abs(delta) > 0.004) {
+          anglePos += delta * 0.18;
+          needMore = true;
+        } else {
+          anglePos = snapTarget;
+          snapTarget = null;
+        }
       }
     } else {
-      if (currentActiveIndex !== -1) {
-        currentActiveIndex = -1;
-        items.forEach(i => i.classList.remove('active'));
+      needMore = true;
+    }
+
+    renderOrbit();
+    rafId = needMore ? requestAnimationFrame(tick) : null;
+  }
+
+  function ensureAnim() {
+    if (rafId === null) rafId = requestAnimationFrame(tick);
+  }
+
+  function openOrbit() {
+    isOpen = true;
+    velocity = 0;
+    snapTarget = Math.round(anglePos);
+    overlay!.classList.add('open');
+    centerOrb?.classList.add('visible');
+    renderOrbit();
+    ensureAnim();
+    if (navigator.vibrate) navigator.vibrate(18);
+  }
+
+  function closeOrbit() {
+    isOpen = false;
+    isPointerDown = false;
+    velocity = 0;
+    snapTarget = null;
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    overlay!.classList.remove('open');
+    centerOrb?.classList.remove('visible');
+  }
+
+  function activateItem(item: HTMLElement) {
+    const action = item.getAttribute('data-action');
+    const value = item.getAttribute('data-value');
+    if (navigator.vibrate) navigator.vibrate([12, 24, 18]);
+    closeOrbit();
+
+    setTimeout(() => {
+      if (action === 'tab' && value) {
+        switchTab(value);
+      } else if (action === 'func' && value) {
+        const fn = (window as any)[value];
+        if (typeof fn === 'function') fn();
       }
-    }
+    }, 90);
+  }
+
+  // Открытие / закрытие по кнопке NEBULA в нижней панели
+  trigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOpen) closeOrbit();
+    else openOrbit();
   });
 
-  document.addEventListener('pointerup', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    laserLine.style.opacity = '0';
+  // Закрытие по нижнему светящемуся хабу NEBULA
+  centerOrb?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeOrbit();
+  });
 
-    if (currentActiveIndex !== -1) {
-      const activeItem = items[currentActiveIndex];
-      const action = activeItem.getAttribute('data-action');
-      const value = activeItem.getAttribute('data-value');
+  // Свайп и тапы внутри оверлея
+  overlay.addEventListener('pointerdown', (e) => {
+    if (!isOpen) return;
+    isPointerDown = true;
+    startX = e.clientX;
+    lastX = e.clientX;
+    totalDragDist = 0;
+    velocity = 0;
+    snapTarget = null;
+    downTarget = e.target as HTMLElement;
+    ensureAnim();
+  });
 
-      if (navigator.vibrate) navigator.vibrate([10, 30, 20]);
+  overlay.addEventListener('pointermove', (e) => {
+    if (!isPointerDown || !isOpen) return;
+    const dx = e.clientX - lastX;
+    lastX = e.clientX;
+    totalDragDist += Math.abs(dx);
 
-      setTimeout(() => {
-        if (action === 'tab' && value) {
-          switchTab(value);
-        } else if (action === 'func' && value) {
-          const fn = (window as any)[value];
-          if (typeof fn === 'function') fn();
+    const step = dx / 115;
+    anglePos -= step;
+    velocity = -step * 0.85;
+    renderOrbit();
+  });
+
+  const finishPointer = (e: PointerEvent) => {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+
+    const wasTap = totalDragDist < 10 && Math.abs(e.clientX - startX) < 10;
+    if (wasTap) {
+      const clickedItem = downTarget?.closest('.radar-item') as HTMLElement | null;
+      const clickedOrb = downTarget?.closest('#radar-center-orb');
+
+      if (clickedOrb) {
+        closeOrbit();
+        return;
+      }
+
+      if (clickedItem) {
+        const idx = items.indexOf(clickedItem);
+        const focused = normIdx(anglePos);
+        if (idx === focused) {
+          activateItem(clickedItem);
+        } else if (idx >= 0) {
+          // Плавно докручиваем выбранную боковую планету в центр по кратчайшему пути
+          let diff = ((idx - anglePos) % total + total) % total;
+          if (diff > total / 2) diff -= total;
+          velocity = 0;
+          snapTarget = anglePos + diff;
+          ensureAnim();
+          if (navigator.vibrate) navigator.vibrate(10);
         }
-      }, 50);
+        return;
+      }
+
+      // Тап по пустому фону закрывает орбиту
+      closeOrbit();
+      return;
     }
 
-    overlay.classList.remove('open');
-    items.forEach(i => i.classList.remove('active'));
-    if (centerOrb) centerOrb.classList.remove('visible');
-  });
+    // После свайпа запускаем инерцию и магнитную фиксацию
+    snapTarget = null;
+    ensureAnim();
+  };
 
-  trigger.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+  overlay.addEventListener('pointerup', finishPointer);
+  overlay.addEventListener('pointercancel', finishPointer);
+
+  // Колёсико мыши для удобного теста на ПК в режиме мобилки
+  overlay.addEventListener('wheel', (e) => {
+    if (!isOpen) return;
+    e.preventDefault();
+    const dir = e.deltaY > 0 || e.deltaX > 0 ? 1 : -1;
+    velocity = 0;
+    snapTarget = Math.round((snapTarget ?? anglePos) + dir);
+    ensureAnim();
+  }, { passive: false });
+
+window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) {
+      if (isOpen) closeOrbit();
+      return;
+    }
+    if (isOpen) renderOrbit();
+  });
 }
 
 export const loadBTC = loadActiveCoinCard;

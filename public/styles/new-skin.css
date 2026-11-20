@@ -2227,7 +2227,342 @@ body.skin-active .nav-section-lbl {
   body.skin-active .bottom-nav > .nav-btn[onclick*="openOrdersSheet"] {
     order: 99 !important;
   }
-  body.skin-active .bottom-nav > .nav-btn[onclick*="enterDemoMode"] {
+body.skin-active .bottom-nav > .nav-btn[onclick*="enterDemoMode"] {
     order: 100 !important;
+  }
+
+/* Мгновенно отключаем мобильную 3D-орбиту на ПК без анимации пролёта */
+  body.skin-active .radar-overlay.orbital-mode,
+  body.skin-active .orbital-rings,
+  body.skin-active .orbital-hud-title,
+  body.skin-active .orbital-dots {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  body.skin-active .radar-overlay.orbital-mode .radar-center-orb {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3D-ОРБИТАЛЬНОЕ МЕНЮ (ТОЛЬКО МОБИЛКА < 1024px)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  body.skin-active .radar-overlay.orbital-mode {
+    position: fixed !important;
+    inset: 0 !important;
+    background: radial-gradient(circle at 50% 58%, rgba(20, 26, 38, 0.84) 0%, rgba(8, 8, 12, 0.94) 75%) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    z-index: 9990 !important;
+    touch-action: none !important;
+    user-select: none !important;
+    overflow: hidden !important;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease !important;
+  }
+
+  body.skin-active .radar-overlay.orbital-mode.open {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Прячем старую лазерную линию */
+  body.skin-active .radar-overlay.orbital-mode .radar-laser-line {
+    display: none !important;
+  }
+
+/* Наклонный 3D-трек и динамическое свечение */
+  body.skin-active .orbital-rings {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  body.skin-active .orbital-stage-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 260px;
+    height: 180px;
+    transform: translate(-50%, -35%);
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--hud-accent, #5ecbff) 0%, transparent 70%);
+    opacity: 0.16;
+    filter: blur(36px);
+    transition: background 0.35s ease;
+  }
+
+  body.skin-active .orbital-track-3d {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 316px;
+    height: 112px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 24px rgba(94, 203, 255, 0.12), inset 0 0 24px rgba(94, 203, 255, 0.06);
+  }
+
+  body.skin-active .orbital-track-3d-inner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 220px;
+    height: 76px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px dashed rgba(94, 203, 255, 0.16);
+  }
+
+  /* Контейнер планет */
+  body.skin-active .radar-overlay.orbital-mode .radar-items-container {
+    position: absolute !important;
+    left: 50% !important;
+    top: 44% !important;
+    width: 0 !important;
+    height: 0 !important;
+    transform: none !important;
+  }
+
+  /* Отдельная планета (стеклянный 3D-диск) */
+  body.skin-active .radar-overlay.orbital-mode .radar-item {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 76px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    will-change: transform, opacity !important;
+    transition: none !important;
+  }
+
+  body.skin-active .radar-overlay.orbital-mode .radar-icon-wrap {
+    width: 72px !important;
+    height: 72px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(155deg, rgba(36, 40, 52, 0.92) 0%, rgba(14, 15, 20, 0.96) 100%) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.18) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease !important;
+  }
+
+  body.skin-active .radar-overlay.orbital-mode .radar-icon-wrap svg {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  /* Прячем подписи под кружками, чтобы ничего не наползало */
+  body.skin-active .radar-overlay.orbital-mode .radar-label {
+    display: none !important;
+  }
+
+  /* Центральная планета в фокусе */
+  body.skin-active .radar-overlay.orbital-mode .radar-item.orbital-focus .radar-icon-wrap {
+    border-width: 2px !important;
+    border-color: currentColor !important;
+    background: linear-gradient(155deg, rgba(28, 34, 46, 0.98) 0%, rgba(10, 12, 16, 0.98) 100%) !important;
+    box-shadow:
+      0 14px 32px rgba(0, 0, 0, 0.7),
+      0 0 28px color-mix(in srgb, currentColor 45%, transparent),
+      inset 0 1px 2px rgba(255, 255, 255, 0.25) !important;
+  }
+
+  /* Стеклянная HUD-плашка с названием активного раздела */
+  body.skin-active .orbital-hud-title {
+    position: fixed;
+    left: 50%;
+    top: calc(44% + 122px);
+    transform: translateX(-50%);
+    padding: 8px 20px;
+    border-radius: 999px;
+    background: rgba(20, 22, 28, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 2px solid var(--hud-accent, #5ecbff);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #ffffff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    z-index: 110;
+    pointer-events: none;
+    transition: border-color 0.25s ease;
+  }
+
+/* Нижний хаб — Чёрная дыра с логотипом NEBULA */
+  body.skin-active .radar-overlay.orbital-mode .radar-center-orb {
+    position: fixed !important;
+    left: 50% !important;
+    top: auto !important;
+    bottom: 92px !important;
+    transform: translateX(-50%) !important;
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    overflow: visible !important;
+    z-index: 120 !important;
+  }
+
+  /* Овальная воронка (эффект всасывания) */
+  body.skin-active .orb-vortex {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 260px;
+    height: 260px;
+    transform: translate(-50%, -50%) scaleY(0.24);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Вращающийся аккреционный диск */
+  body.skin-active .vortex-disk {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(94, 203, 255, 0.42) 70deg,
+      rgba(167, 139, 250, 0.35) 140deg,
+      transparent 200deg,
+      rgba(29, 185, 84, 0.32) 270deg,
+      transparent 360deg
+    );
+    -webkit-mask-image: radial-gradient(circle, transparent 22%, #000 45%, transparent 72%);
+    mask-image: radial-gradient(circle, transparent 22%, #000 45%, transparent 72%);
+    filter: blur(4px);
+    animation: vortexSpin 3.6s linear infinite;
+  }
+
+  /* Втягивающиеся кольца */
+  body.skin-active .vortex-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    border: 2px solid rgba(94, 203, 255, 0.65);
+    box-shadow: 0 0 14px rgba(94, 203, 255, 0.4), inset 0 0 10px rgba(167, 139, 250, 0.25);
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0;
+    animation: vortexSuck 2.4s cubic-bezier(0.45, 0, 0.85, 0.45) infinite;
+  }
+
+  body.skin-active .vortex-ring.vr-2 { animation-delay: 0.8s; border-color: rgba(167, 139, 250, 0.6); }
+  body.skin-active .vortex-ring.vr-3 { animation-delay: 1.6s; border-color: rgba(29, 185, 84, 0.55); }
+
+  @keyframes vortexSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes vortexSuck {
+    0% {
+      transform: translate(-50%, -50%) scale(1.15) rotate(0deg);
+      opacity: 0;
+    }
+    25% {
+      opacity: 0.75;
+    }
+    85% {
+      opacity: 0.45;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(0.18) rotate(120deg);
+      opacity: 0;
+    }
+  }
+
+  /* Ядро (горизонт событий) с логотипом */
+  body.skin-active .orb-core {
+    position: relative;
+    z-index: 2;
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #101520 35%, #050608 100%);
+    border: 1.5px solid rgba(94, 203, 255, 0.7);
+    box-shadow:
+      0 0 24px rgba(94, 203, 255, 0.4),
+      0 0 44px rgba(167, 139, 250, 0.18),
+      inset 0 0 18px rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body.skin-active .orb-logo-img {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(94, 203, 255, 0.65));
+    animation: orbLogoPulse 3s ease-in-out infinite;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  @keyframes orbLogoPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(94, 203, 255, 0.55)); }
+    50% { transform: scale(1.06); filter: drop-shadow(0 0 14px rgba(94, 203, 255, 0.85)); }
+  }
+
+  /* Индикатор точек */
+  body.skin-active .orbital-dots {
+    position: fixed;
+    left: 50%;
+    bottom: 54px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    z-index: 120;
+    pointer-events: none;
+  }
+
+  body.skin-active .orbital-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    transition: all 0.2s ease;
+  }
+
+  body.skin-active .orbital-dot.active {
+    width: 18px;
+    border-radius: 4px;
+    background: var(--skin-accent, #1DB954);
+    box-shadow: 0 0 8px var(--skin-accent, #1DB954);
   }
 }
