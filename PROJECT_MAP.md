@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.41** | Branch: `main` | Commit: `904606c`
-> Generated: 2026-11-20 12:55
+> Version: **2.0.42** | Branch: `main` | Commit: `9c9eb58`
+> Generated: 2026-11-20 13:16
 
 ---
 
@@ -38,16 +38,31 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 57
-- Total LOC in `src/`: 19240
-- Bundle (`dist/`): 61 files, 837.9 KB
+- Total LOC in `src/`: 19277
+- Bundle (`dist/`): 61 files, 838.5 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.41**
-- Last git tag: `v2.0.40`
+- `package.json` version: **2.0.42**
+- Last git tag: `v2.0.41`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `9c9eb58` - 2026-11-20 - chore(release): v2.0.41
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/new-skin.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ui/screens.ts`
 
 ### `904606c` - 2026-11-20 - chore(release): v2.0.40
 
@@ -138,34 +153,13 @@ Files:
 - `src/ui/btc-outlook.ts`
 - `src/ui/screens.ts`
 
-### `3beab82` - 2026-11-05 - chore(release): v2.0.36
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/components.css`
-- `public/styles/screens.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/i18n.ts`
-- `src/oracle.ts`
-- `src/patterns.ts`
-- `src/ui/oracle.ts`
-- `src/ui/scanner.ts`
-- `src/ui/screens.ts`
-
 ## Last release diff
 
-No changes since `v2.0.40`
+No changes since `v2.0.41`
 
 ## Recent tags
 
+- `v2.0.41`
 - `v2.0.40`
 - `v2.0.39`
 - `v2.0.38`
@@ -175,7 +169,6 @@ No changes since `v2.0.40`
 - `v2.0.34`
 - `v2.0.33`
 - `v2.0.32`
-- `v2.0.31`
 
 ## File tree (src/)
 
@@ -240,7 +233,7 @@ src/
 +--   482 market.ts
 +--   971 oracle.ts
 +--   236 patterns.ts
-+--   242 pro.ts
++--   279 pro.ts
 +--   282 themes.ts
 +--   700 trading.ts
 +--   228 utils.ts
@@ -978,6 +971,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- 9c9eb58  2026-11-20  chore(release): v2.0.41
 - 904606c  2026-11-20  chore(release): v2.0.40
 - 3d5b255  2026-11-20  chore(release): v2.0.39
 - 8fa67c2  2026-11-11  chore(release): v2.0.38
@@ -992,7 +986,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 5e5791c  2026-11-01  chore(release): v2.0.30
 - 6f7a1b1  2026-11-01  chore(release): v2.0.29
 - 1d8acd6  2026-11-01  chore(release): v2.0.28
-- c30bae8  2026-11-01  chore(release): v2.0.27
 
 ---
 

@@ -1,9 +1,46 @@
 import { isEN } from './i18n';
 import { toast, state } from './utils';
 
-const API_URL = 'http://85.192.42.177:3000';
+const DEFAULT_API_URLS = [
+  'http://147.45.71.123:3000',
+  'http://85.192.42.177:3000',
+];
+const API_URL_OVERRIDE_KEY = 'nebulaLicenseApiUrl';
 const PRO_TOKEN_KEY = 'nebulaProToken';
 const HWID_KEY = 'nebulaDeviceHwid';
+
+function getCandidateApiUrls(): string[] {
+  const custom = localStorage.getItem(API_URL_OVERRIDE_KEY)?.trim().replace(/\/+$/, '');
+  const list = custom ? [custom, ...DEFAULT_API_URLS] : DEFAULT_API_URLS;
+  return Array.from(new Set(list));
+}
+
+async function fetchWithFallback(path: string, init: RequestInit): Promise<Response> {
+  const urls = getCandidateApiUrls();
+  let lastError: unknown = null;
+
+  for (const baseUrl of urls) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(`${baseUrl}${path}`, {
+        ...init,
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.status >= 500 && urls.indexOf(baseUrl) < urls.length - 1) {
+        continue;
+      }
+      localStorage.setItem(API_URL_OVERRIDE_KEY, baseUrl);
+      return res;
+    } catch (err) {
+      clearTimeout(timer);
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('All license servers unreachable');
+}
 
 export interface ProStatus {
   active: boolean;
@@ -52,8 +89,8 @@ export async function activateProKey(key: string): Promise<{ success: boolean; m
   const hwid = getHardwareId();
   const platform = getPlatform();
 
-  try {
-    const res = await fetch(`${API_URL}/api/activate`, {
+try {
+    const res = await fetchWithFallback('/api/activate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: key.trim(), hwid, platform }),
