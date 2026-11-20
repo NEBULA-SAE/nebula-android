@@ -255,7 +255,11 @@ export function openSettings(): void {
         mexcOn = !!(mk.api && mk.secret);
       } catch (e) { console.warn('[settings] mexc load:', e); }
 
-      // Перерисовываем body с реальными данными
+    // Перерисовываем только если шторка всё ещё открыта на Настройках
+      const sheetOpen = document.getElementById('sheet')?.classList.contains('open');
+      const currentTitle = document.getElementById('sheet-title')?.textContent;
+      if (!sheetOpen || (currentTitle !== '⚙️ Настройки' && currentTitle !== '⚙️ Settings')) return;
+
       setHTML('sheet-body', buildSettingsHTML({
         pwdOn: hasAppPassword(),
         bioSupported,

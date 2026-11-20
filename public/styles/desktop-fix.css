@@ -1,4 +1,4 @@
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
 
   .bottom-nav {
     position: fixed !important;
@@ -40,7 +40,7 @@
   }
   .bottom-nav .nav-btn.active {
     background: rgba(94,203,255,.12) !important;
-    color: #5ecbff !important;
+    color: #1DB954 !important;
   }
 
   .top-bar {

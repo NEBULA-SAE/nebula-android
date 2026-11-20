@@ -20,6 +20,7 @@ function getLearnedPatterns(): Record<string, any> {
 
 // ─── Переключение табов ───
 export function switchLearnTab(tab: 'overview' | 'patterns' | 'insights'): void {
+  const isNewSkin = document.body.classList.contains('skin-active');
   document.querySelectorAll('.learn-tab-content').forEach(el => (el as HTMLElement).style.display = 'none');
   document.querySelectorAll('.learn-tab').forEach(el => {
     el.classList.remove('active');
@@ -33,8 +34,10 @@ export function switchLearnTab(tab: 'overview' | 'patterns' | 'insights'): void 
   const activeBtn = document.getElementById(`tab-btn-${tab}`);
   if (activeBtn) {
     activeBtn.classList.add('active');
-    activeBtn.style.background = 'linear-gradient(135deg, rgba(94,203,255,.2), rgba(167,139,250,.2))';
-    activeBtn.style.color = 'var(--hi)';
+    activeBtn.style.background = isNewSkin
+      ? 'var(--skin-accent, #1DB954)'
+      : 'linear-gradient(135deg, rgba(94,203,255,.2), rgba(167,139,250,.2))';
+    activeBtn.style.color = isNewSkin ? '#000000' : 'var(--hi)';
   }
 }
 
@@ -169,7 +172,7 @@ export async function openLearning(): Promise<void> {
       <!-- Табы -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
          <div class="learn-tabs" style="display:flex; gap:8px; flex:1; background:rgba(0,0,0,.4); padding:4px; border-radius:10px; margin-right:8px;">
-        <button class="learn-tab active" onclick="switchLearnTab('overview')" id="tab-btn-overview" style="flex:1; padding:10px; border:none; border-radius:8px; background:linear-gradient(135deg, rgba(94,203,255,.2), rgba(167,139,250,.2)); color:var(--hi); font-family:'Space Grotesk'; font-size:12px; font-weight:700; cursor:pointer;">${tm('learn_tab_overview')}</button>
+        <button class="learn-tab active" onclick="switchLearnTab('overview')" id="tab-btn-overview" style="flex:1; padding:10px; border:none; border-radius:8px; background:${document.body.classList.contains('skin-active') ? 'var(--skin-accent, #1DB954)' : 'linear-gradient(135deg, rgba(94,203,255,.2), rgba(167,139,250,.2))'}; color:${document.body.classList.contains('skin-active') ? '#000000' : 'var(--hi)'}; font-family:'Space Grotesk'; font-size:12px; font-weight:700; cursor:pointer;">${tm('learn_tab_overview')}</button>
         <button class="learn-tab" onclick="switchLearnTab('patterns')" id="tab-btn-patterns" style="flex:1; padding:10px; border:none; border-radius:8px; background:transparent; color:var(--mut); font-family:'Space Grotesk'; font-size:12px; font-weight:700; cursor:pointer;">${tm('learn_tab_patterns')}</button>
         <button class="learn-tab" onclick="switchLearnTab('insights')" id="tab-btn-insights" style="flex:1; padding:10px; border:none; border-radius:8px; background:transparent; color:var(--mut); font-family:'Space Grotesk'; font-size:12px; font-weight:700; cursor:pointer;">${tm('learn_tab_insights')}</button>
       </div>
@@ -226,7 +229,7 @@ export function openLearningHelp(): void {
         <div style="font-weight:700; color:var(--amber); margin-bottom:4px;">💡 ${tm('learn_help_ins')}</div>
         <div>${tm('learn_help_ins_desc')}</div>
       </div>
-      <button class="btn-primary" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top:10px;">
+      <button class="btn-primary" onclick="closeSheet()" style="margin-top:10px;">
         OK
       </button>
     </div>

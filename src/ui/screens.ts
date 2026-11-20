@@ -19,21 +19,15 @@ import { calcRsiSimple, calcAtr, calcAdx } from '../indicators';
 export function switchHomeTab(tab: 'main' | 'fav'): void {
   const mainContent = document.getElementById('home-main-content');
   const favContent = document.getElementById('home-fav-content');
-  const htabMain = document.getElementById('htab-main');
-  const htabFav = document.getElementById('htab-fav');
 
-  if (!mainContent || !favContent || !htabMain || !htabFav) return;
+  if (!mainContent || !favContent) return;
 
   if (tab === 'main') {
     mainContent.classList.remove('hidden');
     favContent.classList.add('hidden');
-    htabMain.classList.add('active');
-    htabFav.classList.remove('active');
   } else {
     mainContent.classList.add('hidden');
     favContent.classList.remove('hidden');
-    htabMain.classList.remove('active');
-    htabFav.classList.add('active');
     import('./scanner').then(m => m.renderFavorites());
   }
 }
@@ -41,20 +35,22 @@ export function switchHomeTab(tab: 'main' | 'fav'): void {
 // ═══ ВКЛАДКИ ═══
 export function switchTab(tab: string): void {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const sc = document.getElementById('screen-' + tab);
+  const sc = document.getElementById('screen-' + (tab === 'fav' ? 'home' : tab));
   if (sc) sc.classList.add('active');
 
   document.querySelectorAll<HTMLElement>('.nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
 
+  if (tab === 'fav') {
+    switchHomeTab('fav'); // Просто открываем Избранное
+    return;
+  } else {
+    switchHomeTab('main'); // Если ушли с Избранного, возвращаем График
+  }
+
   if (tab === 'scanner' && !state.scannerRunning) {
     (window as any).runScanner?.();
-  }
-  if (tab === 'fav') {
-    switchTab('home');
-    switchHomeTab('fav');
-    return;
   }
   if (tab === 'portfolio') mobileSyncPortfolio(true);
   if (tab === 'oracle') renderOracleDashboard();
@@ -87,8 +83,9 @@ export function setLanguage(lang: 'ru' | 'en'): void {
     (window as any).mobileAnalyze?.();
   }
 
-  const activeScreen = document.querySelector('.screen.active')?.id;
-  if (activeScreen === 'screen-home' && document.getElementById('home-fav-content')?.style.display === 'block') {
+const activeScreen = document.querySelector('.screen.active')?.id;
+  const favEl = document.getElementById('home-fav-content');
+  if (activeScreen === 'screen-home' && favEl && !favEl.classList.contains('hidden')) {
     renderFavorites();
   }
   if (activeScreen === 'screen-oracle') renderOracleDashboard();
@@ -237,30 +234,40 @@ export async function loadActiveCoinCard(): Promise<void> {
     const change = ((price - prevPrice) / prevPrice) * 100;
     const rsi = calcRsiSimple(data.map(c => c.close), 14);
 
-    // 2. Загружаем ПОЛНЫЕ данные с CoinGecko
+  // 2. Загружаем ПОЛНЫЕ данные с CoinGecko (с кэшем на 24ч)
     let desc = 'Актив на криптовалютном рынке.';
     let links: any = { homepage: [], twitter: '', telegram: '' };
     try {
-      const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${ticker}`);
-      const searchJson = await searchRes.json();
-      
-      if (searchJson.coins && searchJson.coins.length > 0) {
-        const matchedCoin = searchJson.coins.find((c: any) => c.symbol.toUpperCase() === ticker);
-        const coinId = matchedCoin ? matchedCoin.id : searchJson.coins[0].id;
-        
-        const coinRes = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`);
-        const coinJson = await coinRes.json();
-        
-        if (coinJson.description && coinJson.description.en) {
-          const rawDesc = coinJson.description.en;
-          desc = rawDesc.length > 250 ? rawDesc.substring(0, 250) + '...' : rawDesc;
-        }
-        if (coinJson.links) {
-          links = {
-            homepage: coinJson.links.homepage?.filter((l: string) => l) || [],
-            twitter: coinJson.links.twitter_screen_name ? `https://twitter.com/${coinJson.links.twitter_screen_name}` : '',
-            telegram: coinJson.links.telegram_channel_identifier ? `https://t.me/${coinJson.links.telegram_channel_identifier}` : ''
-          };
+      const cacheKey = `nebulaCgCache_${ticker}`;
+      const cachedRaw = localStorage.getItem(cacheKey);
+      const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+
+      if (cached && (Date.now() - cached.ts) < 86400000) {
+        desc = cached.desc;
+        links = cached.links;
+      } else {
+        const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${ticker}`);
+        const searchJson = await searchRes.json();
+
+        if (searchJson.coins && searchJson.coins.length > 0) {
+          const matchedCoin = searchJson.coins.find((c: any) => c.symbol.toUpperCase() === ticker);
+          const coinId = matchedCoin ? matchedCoin.id : searchJson.coins[0].id;
+
+          const coinRes = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`);
+          const coinJson = await coinRes.json();
+
+          if (coinJson.description && coinJson.description.en) {
+            const rawDesc = coinJson.description.en;
+            desc = rawDesc.length > 250 ? rawDesc.substring(0, 250) + '...' : rawDesc;
+          }
+          if (coinJson.links) {
+            links = {
+              homepage: coinJson.links.homepage?.filter((l: string) => l) || [],
+              twitter: coinJson.links.twitter_screen_name ? `https://twitter.com/${coinJson.links.twitter_screen_name}` : '',
+              telegram: coinJson.links.telegram_channel_identifier ? `https://t.me/${coinJson.links.telegram_channel_identifier}` : ''
+            };
+          }
+          localStorage.setItem(cacheKey, JSON.stringify({ desc, links, ts: Date.now() }));
         }
       }
     } catch (e) { /* ignore */ }
@@ -272,6 +279,29 @@ export async function loadActiveCoinCard(): Promise<void> {
     if (titleEl) titleEl.textContent = ticker;
     
     const subEl = document.querySelector('.btc-sub');
+        // Рисуем спарклайн (мини-график)
+    try {
+      const { data: sparkData } = await fetchCandlesWithSource(ticker, '1h');
+      const closesS = sparkData.slice(-24).map((c: any) => c.close);
+      const sparkEl = document.getElementById('btc-spark');
+      if (sparkEl) {
+        if (closesS.length > 1) {
+          const mn = Math.min(...closesS);
+          const mx = Math.max(...closesS);
+          const rng = mx - mn || 1;
+          const w = 80, h = 28;
+          const pts = closesS.map((v, i) => {
+            const x = (i / (closesS.length - 1)) * w;
+            const y = h - ((v - mn) / rng) * h;
+            return `${x.toFixed(2)},${y.toFixed(2)}`;
+          }).join(' L ');
+          const stroke = change >= 0 ? '#1DB954' : '#ff6584'; // Наш зеленый/красный
+          sparkEl.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><path d="M ${pts}" fill="none" stroke="${stroke}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        } else {
+          sparkEl.innerHTML = '';
+        }
+      }
+    } catch { /* silent */ }
     if (subEl) subEl.textContent = `${ticker}/USDT · DAILY`;
 
     const ch = document.getElementById('btc-change');
@@ -280,30 +310,47 @@ export async function loadActiveCoinCard(): Promise<void> {
       ch.style.color = change >= 0 ? 'var(--mint)' : 'var(--coral)';
     }
 
-    // Заполняем верхнюю панель (RSI, Отскок, Падение, Тренд)
+// Заполняем верхнюю панель (RSI, Отскок 120d, Падение 120d, Тренд)
+    const last120 = data.slice(-120);
+    const min120 = Math.min(...last120.map(c => c.low));
+    const max120 = Math.max(...last120.map(c => c.high));
+    const rebound120 = min120 > 0 ? ((price - min120) / min120) * 100 : 0;
+    const drop120 = max120 > 0 ? ((max120 - price) / max120) * 100 : 0;
+
     const r = document.getElementById('btc-rsi');
     if (r) { r.textContent = rsi.toFixed(1); r.style.color = rsi < 35 ? 'var(--mint)' : rsi > 65 ? 'var(--coral)' : 'var(--hi)'; }
-    setText('btc-rebound', '+' + Math.max(0, change).toFixed(1) + '%'); 
-    setText('btc-drop', '-' + Math.abs(Math.min(0, change)).toFixed(1) + '%');
+    setText('btc-rebound', '+' + rebound120.toFixed(1) + '%');
+    setText('btc-drop', '-' + drop120.toFixed(1) + '%');
     const tr = document.getElementById('btc-trend');
     if (tr) { tr.textContent = change >= 0 ? '📈' : '📉'; tr.style.color = change >= 0 ? 'var(--mint)' : 'var(--coral)'; }
     
     setText('btc-advice', desc.split('.')[0] + '.'); // Короткая выжимка для карточки
 
-    // 4. Логотип
+    // 4. Логотип (без уничтожения <img> при ошибке)
     const logoContainer = document.getElementById('coin-logo-container');
-    const logoImg = document.getElementById('coin-logo-img') as HTMLImageElement;
+    const logoImg = document.getElementById('coin-logo-img') as HTMLImageElement | null;
     if (logoContainer && logoImg) {
+      let fallback = document.getElementById('coin-logo-fallback');
+      if (!fallback) {
+        fallback = document.createElement('span');
+        fallback.id = 'coin-logo-fallback';
+        fallback.style.cssText = 'display:none;font-weight:700;font-size:18px;color:#fff;';
+        logoContainer.appendChild(fallback);
+      }
+
       const iconUrl = `https://essamamdani.github.io/open-crypto-icons/icons_svg/${ticker.toLowerCase()}.svg`;
-      logoImg.src = iconUrl;
-      logoImg.style.display = 'block';
-      
+      logoImg.onload = () => {
+        logoImg.style.display = 'block';
+        fallback!.style.display = 'none';
+        logoContainer.style.background = 'transparent';
+      };
       logoImg.onerror = () => {
         logoImg.style.display = 'none';
+        fallback!.textContent = ticker.charAt(0);
+        fallback!.style.display = 'inline';
         logoContainer.style.background = 'var(--violet)';
-        logoContainer.style.color = '#fff';
-        logoContainer.textContent = ticker.charAt(0);
       };
+      logoImg.src = iconUrl;
     }
 
     applyBtcGlow(change);
@@ -612,6 +659,8 @@ export function initRadarMenu() {
   trigger.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
 }
 
+export const loadBTC = loadActiveCoinCard;
+
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     switchTab,
@@ -619,6 +668,7 @@ if (typeof window !== 'undefined') {
     setLanguage,
     applyStaticTranslations,
     loadActiveCoinCard,
+    loadBTC,
     openSheet,
     closeSheet,
     enterDemoMode,

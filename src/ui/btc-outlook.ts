@@ -34,7 +34,6 @@ async function openProPaywall(): Promise<void> {
       mod.openProModal();
       return;
     }
-    // fallback — если по какой-то причине функции нет
     (window as any).openProModal?.();
   } catch {
     (window as any).openProModal?.();
@@ -104,27 +103,37 @@ async function render(): Promise<void> {
     const change = ((price - prevPrice) / prevPrice) * 100;
     const rsi = calcRsiSimple(daily.map(c => c.close), 14);
 
-    // Загружаем описание и ссылки
+  // Загружаем описание и ссылки (с кэшем на 24ч)
     let desc = 'Актив на криптовалютном рынке.';
     let links: any = {};
     try {
-      const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${ticker}`);
-      const searchJson = await searchRes.json();
-      if (searchJson.coins && searchJson.coins.length > 0) {
-        const matchedCoin = searchJson.coins.find((c: any) => c.symbol.toUpperCase() === ticker);
-        const coinId = matchedCoin ? matchedCoin.id : searchJson.coins[0].id;
-        const coinRes = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`);
-        const coinJson = await coinRes.json();
-        if (coinJson.description && coinJson.description.en) {
-          const rawDesc = coinJson.description.en;
-          desc = rawDesc.length > 250 ? rawDesc.substring(0, 250) + '...' : rawDesc;
-        }
-        if (coinJson.links) {
-          links = {
-            homepage: coinJson.links.homepage?.filter((l: string) => l) || [],
-            twitter: coinJson.links.twitter_screen_name ? `https://twitter.com/${coinJson.links.twitter_screen_name}` : '',
-            telegram: coinJson.links.telegram_channel_identifier ? `https://t.me/${coinJson.links.telegram_channel_identifier}` : ''
-          };
+      const cacheKey = `nebulaCgCache_${ticker}`;
+      const cachedRaw = localStorage.getItem(cacheKey);
+      const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+
+      if (cached && (Date.now() - cached.ts) < 86400000) {
+        desc = cached.desc;
+        links = cached.links;
+      } else {
+        const searchRes = await fetch(`https://api.coingecko.com/api/v3/search?query=${ticker}`);
+        const searchJson = await searchRes.json();
+        if (searchJson.coins && searchJson.coins.length > 0) {
+          const matchedCoin = searchJson.coins.find((c: any) => c.symbol.toUpperCase() === ticker);
+          const coinId = matchedCoin ? matchedCoin.id : searchJson.coins[0].id;
+          const coinRes = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false`);
+          const coinJson = await coinRes.json();
+          if (coinJson.description && coinJson.description.en) {
+            const rawDesc = coinJson.description.en;
+            desc = rawDesc.length > 250 ? rawDesc.substring(0, 250) + '...' : rawDesc;
+          }
+          if (coinJson.links) {
+            links = {
+              homepage: coinJson.links.homepage?.filter((l: string) => l) || [],
+              twitter: coinJson.links.twitter_screen_name ? `https://twitter.com/${coinJson.links.twitter_screen_name}` : '',
+              telegram: coinJson.links.telegram_channel_identifier ? `https://t.me/${coinJson.links.telegram_channel_identifier}` : ''
+            };
+          }
+          localStorage.setItem(cacheKey, JSON.stringify({ desc, links, ts: Date.now() }));
         }
       }
     } catch (e) { /* ignore */ }
@@ -144,7 +153,7 @@ async function render(): Promise<void> {
   }
 }
 
-function html(btc: any, s: any, p: any, cycles: any[], cal: any[], ticker: string = 'BTC', links: any = {}): string {
+function html(btc: any, s: any, p: any, cycles: any[], cal: any[], ticker: string = 'BTC', links: any = {}, isInline: boolean = false): string {
   const chg = btc.change_24h || 0;
   const chgColor = chg >= 0 ? 'var(--mint)' : 'var(--coral)';
   const chgSign = chg >= 0 ? '+' : '';
@@ -158,6 +167,25 @@ function html(btc: any, s: any, p: any, cycles: any[], cal: any[], ticker: strin
     </div>
   `;
 
+  const tabsHtml = `
+    <div class="btc-tabs">
+      <button class="btc-tab active" data-tab="snap">${tm('btc_tab_snap')}</button>
+      <button class="btc-tab" data-tab="about">О проекте</button>
+      <button class="btc-tab" data-tab="break">${tm('btc_tab_break')}</button>
+      <button class="btc-tab" data-tab="cal">${tm('btc_tab_cal')}</button>
+    </div>
+  `;
+
+  const statsHtml = `
+    <div class="btc-grid4">
+      <div class="btc-cell"><div class="btc-cell-l">${tm('btc_rsi')}</div><div class="btc-cell-v">${btc.rsi.toFixed(1)}</div></div>
+      <div class="btc-cell"><div class="btc-cell-l">${tm('btc_ath')}</div><div class="btc-cell-v" style="color:var(--amber)">$${s.current_ath.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div></div>
+      <div class="btc-cell"><div class="btc-cell-l">${tm('btc_to_ath')}</div><div class="btc-cell-v" style="color:${atAth ? 'var(--mint)' : 'var(--coral)'}">${s.pct_to_ath.toFixed(1)}%</div></div>
+      <div class="btc-cell"><div class="btc-cell-l">${tm('btc_days')}</div><div class="btc-cell-v">${s.days_since_ath}</div></div>
+    </div>
+  `;
+
+  // Если это инлайн-версия, мы выводим вкладки и статы в одну строку (.btc-inline-header)
   return `
   <div class="btc-head">
     <div class="btc-head-info">
@@ -168,15 +196,15 @@ function html(btc: any, s: any, p: any, cycles: any[], cal: any[], ticker: strin
     <button class="btc-close" onclick="closeBtcOutlook()">✕</button>
   </div>
 
-  <div class="btc-tabs">
-    <button class="btc-tab active" data-tab="snap">${tm('btc_tab_snap')}</button>
-    <button class="btc-tab" data-tab="about">О проекте</button>
-    <button class="btc-tab" data-tab="break">${tm('btc_tab_break')}</button>
-    <button class="btc-tab" data-tab="cal">${tm('btc_tab_cal')}</button>
-  </div>
+  ${isInline ? `
+    <div class="btc-inline-header">
+      ${tabsHtml}
+      ${statsHtml}
+    </div>
+  ` : tabsHtml}
 
   <div class="btc-tab-body active" data-tab-body="snap">
-    ${renderSnap(btc, s, atAth, ticker)}
+    ${isInline ? renderSnapContent(btc, s, atAth, ticker) : renderSnap(btc, s, atAth, ticker)}
   </div>
   
   <div class="btc-tab-body" data-tab-body="about">
@@ -198,6 +226,7 @@ function html(btc: any, s: any, p: any, cycles: any[], cal: any[], ticker: strin
   `;
 }
 
+// Для модалки (со статой внутри)
 function renderSnap(btc: any, s: any, atAth: boolean, ticker: string = 'BTC'): string {
   return `
     <div class="btc-grid4">
@@ -206,7 +235,13 @@ function renderSnap(btc: any, s: any, atAth: boolean, ticker: string = 'BTC'): s
       <div class="btc-cell"><div class="btc-cell-l">${tm('btc_to_ath')}</div><div class="btc-cell-v" style="color:${atAth ? 'var(--mint)' : 'var(--coral)'}">${s.pct_to_ath.toFixed(1)}%</div></div>
       <div class="btc-cell"><div class="btc-cell-l">${tm('btc_days')}</div><div class="btc-cell-v">${s.days_since_ath}</div></div>
     </div>
+    ${renderSnapContent(btc, s, atAth, ticker)}
+  `;
+}
 
+// Только контент (для инлайн-версии, где статы вынесены наверх)
+function renderSnapContent(btc: any, s: any, atAth: boolean, ticker: string = 'BTC'): string {
+  return `
     <div class="btc-note">${btc.advice}</div>
 
     ${atAth
@@ -355,12 +390,13 @@ export async function initCoinOutlookInline(ticker: string, candles: any[], extr
     const liveDesc = extra?.desc || 'Актив на криптовалютном рынке.';
     const liveLinks = extra?.links || {};
 
+    // ВАЖНО: передаем true последним аргументом, чтобы включить инлайн-режим
     box.innerHTML = html({ 
       price: finalPrice, 
       change_24h: finalChange, 
       rsi: finalRsi, 
       advice: liveDesc 
-    }, stats, prob, [], cal, ticker, liveLinks);
+    }, stats, prob, [], cal, ticker, liveLinks, true);
     
     const tabs = box.querySelectorAll<HTMLElement>('.btc-tab');
     const bodies = box.querySelectorAll<HTMLElement>('.btc-tab-body');

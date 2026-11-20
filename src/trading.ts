@@ -232,11 +232,16 @@ function initPairAutocomplete(): void {
     debounceT = setTimeout(showSuggest, 150);
   });
 
-  document.addEventListener('click', (e) => {
+const onDocClick = (e: MouseEvent) => {
+    if (!document.body.contains(box)) {
+      document.removeEventListener('click', onDocClick);
+      return;
+    }
     if (!box.contains(e.target as Node) && e.target !== input) {
       box.classList.remove('open');
     }
-  }, { once: true }); // Убираем лишние слушатели при закрытии
+  };
+  document.addEventListener('click', onDocClick);
 
   function showSuggest() {
     const q = (input!.value || '').toUpperCase().replace('/USDT', '').trim();
@@ -645,7 +650,8 @@ export async function mobileSyncPortfolio(silent = false): Promise<void> {
   }
   if (status) status.textContent = `${tm('rate')}: ${rate.toFixed(2)} ₽`;
 
-  const assets = data.assets || [];
+const assets = data.assets || [];
+  (state as any).portfolioAssets = assets;
   if (assets.length === 0) {
     setHTML('assets-list', `<div class="empty-msg">—</div>`);
   } else {

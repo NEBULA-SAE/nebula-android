@@ -191,12 +191,23 @@ export function suggestPick(sym: string): void {
 // ═══ ИЗБРАННОЕ ═══
 
 export function updateStarButton(): void {
-  const btn = document.getElementById('star-btn');
-  if (!btn) return;
   const isFav = state.favoriteCoins.includes(state.currentTicker);
-  btn.classList.toggle('active', isFav);
-  const use = btn.querySelector('use');
-  if (use) use.setAttribute('href', isFav ? '#i-star-fill' : '#i-star');
+  
+  // 1. Обновляем старую кнопку (которая скрыта в шапке)
+  const btn = document.getElementById('star-btn');
+  if (btn) {
+    btn.classList.toggle('active', isFav);
+    const use = btn.querySelector('use');
+    if (use) use.setAttribute('href', isFav ? '#i-star-fill' : '#i-star');
+  }
+
+  // 2. Обновляем новую кнопку в карточке на мобилке
+  const mobileBtn = document.querySelector('.btc-actions .btc-btn-outline:not(.outlook)');
+  if (mobileBtn) {
+    mobileBtn.classList.toggle('active', isFav);
+    const use = mobileBtn.querySelector('use');
+    if (use) use.setAttribute('href', isFav ? '#i-star-fill' : '#i-star');
+  }
 }
 
 export function toggleFavCurrent(): void {

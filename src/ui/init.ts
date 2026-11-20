@@ -32,16 +32,16 @@ export function initApp(): void {
   if (state.isPro) {
     console.log('[init] PRO License Active ✓');
     
-    // 1. Меняем текст на NEBULA PRO и включаем золотой цвет
-    const updateBrand = (textId: string, brandId: string) => {
-      const textEl = document.getElementById(textId);
-      const brandEl = document.getElementById(brandId);
-      if (textEl) textEl.textContent = 'NEBULA PRO';
-      if (brandEl) brandEl.classList.add('pro-active');
-    };
-    
-    updateBrand('brand-text', 'main-brand');
-    updateBrand('brand-text-pc', 'main-brand-pc');
+    // 1. Меняем текст на NEBULA PRO и включаем золотой цвет (ОТКЛЮЧЕНО ДЛЯ НОВОГО СКИНА)
+    // const updateBrand = (textId: string, brandId: string) => {
+    //   const textEl = document.getElementById(textId);
+    //   const brandEl = document.getElementById(brandId);
+    //   if (textEl) textEl.textContent = 'NEBULA PRO';
+    //   if (brandEl) brandEl.classList.add('pro-active');
+    // };
+    // 
+    // updateBrand('brand-text', 'main-brand');
+    // updateBrand('brand-text-pc', 'main-brand-pc');
 
     // 2. Вывод срока действия подписки
     const expEl = document.getElementById('pro-expiry-text');
@@ -107,27 +107,14 @@ export function initApp(): void {
   // ─── 2. Автодополнение тикера ───
   try { initAutocomplete(); } catch (e) { console.warn('initAutocomplete:', e); }
 
-  // ─── 3. BTC-карточка + периодическое обновление ───
+// ─── 3. Периодическое обновление карточки активной монеты ───
   setInterval(() => { try { loadActiveCoinCard(); } catch { /* silent */ } }, 90000);
-  setTimeout(() => { try { loadActiveCoinCard(); } catch { /* silent */ } }, 100);
 
-  // ─── 4. Основной анализ при старте ───
+  // ─── 4. Основной анализ при старте (сам обновит и карточку монеты) ───
   setTimeout(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     try { (window as any).mobileAnalyze?.(); } catch (e) { console.warn('mobileAnalyze:', e); }
   }, 100);
-
-  // Перехватываем mobileAnalyze, чтобы при нажатии GO обновлялась и левая карточка
-  setTimeout(() => {
-    const originalAnalyze = (window as any).mobileAnalyze;
-    if (originalAnalyze) {
-      (window as any).mobileAnalyze = async function(...args: any[]) {
-        const result = await originalAnalyze.apply(this, args);
-        try { loadActiveCoinCard(); } catch { /* silent */ }
-        return result;
-      };
-    }
-  }, 500);
 
   // ─── 5. Dash Network — ленивая загрузка через 8 секунд ───
   setTimeout(async () => {
@@ -218,7 +205,7 @@ export function initApp(): void {
       const themesMod = await import('../themes');
       await themesMod.loadThemes();
       const activeId = themesMod.getActiveThemeId();
-      if (activeId) {
+      if (activeId && activeId !== 'default') {
         themesMod.applyTheme(activeId);
         console.log('[init] theme applied:', activeId);
       }
@@ -318,8 +305,8 @@ export function initApp(): void {
           ${tm('exchange_menu_desc')}
         </div>
 
-        <!-- Xgram -->
-        <div style="text-align:left; background:rgba(167,139,250,.08); border:1px solid rgba(167,139,250,.3); border-radius:12px; padding:14px; margin-bottom:12px;">
+      <!-- Xgram -->
+        <div style="text-align:left; background:var(--skin-bg, rgba(167,139,250,.08)); border:1px solid var(--skin-border, rgba(167,139,250,.3)); border-radius:12px; padding:14px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
             <div style="font-size:20px;">🔄</div>
             <div style="font-family:'Space Grotesk'; font-size:14px; font-weight:700; color:#a78bfa;">Xgram (Swap)</div>
@@ -327,14 +314,11 @@ export function initApp(): void {
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
             ${tm('xgram_desc')}
           </div>
-          <div class="neon-btn-wrap" onclick="closeSheet();openXgramSwap()">
-            <div class="neon-btn-glow"></div>
-            <div class="neon-btn-content purple">${tm('xgram_btn')}</div>
-          </div>
+          <button class="btn-primary btn-mint" onclick="closeSheet();openXgramSwap()" style="margin-top:0;">${tm('xgram_btn')}</button>
         </div>
 
         <!-- Binance P2P -->
-        <div style="text-align:left; background:rgba(252,213,53,.08); border:1px solid rgba(252,213,53,.3); border-radius:12px; padding:14px; margin-bottom:12px;">
+        <div style="text-align:left; background:var(--skin-bg, rgba(252,213,53,.08)); border:1px solid var(--skin-border, rgba(252,213,53,.3)); border-radius:12px; padding:14px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
             <div style="font-size:20px;">🤝</div>
             <div style="font-family:'Space Grotesk'; font-size:14px; font-weight:700; color:#fcd535;">Binance P2P</div>
@@ -342,14 +326,11 @@ export function initApp(): void {
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
             ${tm('p2p_desc')}
           </div>
-          <div class="neon-btn-wrap" onclick="closeSheet();openP2PMarket()">
-            <div class="neon-btn-glow"></div>
-            <div class="neon-btn-content gold">${tm('p2p_btn')}</div>
-          </div>
+          <button class="btn-primary btn-mint" onclick="closeSheet();openP2PMarket()" style="margin-top:0;">${tm('p2p_btn')}</button>
         </div>
 
         <!-- Mining Calculator (WhatToMine) -->
-        <div style="text-align:left; background:rgba(69,224,168,.08); border:1px solid rgba(69,224,168,.3); border-radius:12px; padding:14px; margin-bottom:12px;">
+        <div style="text-align:left; background:var(--skin-bg, rgba(69,224,168,.08)); border:1px solid var(--skin-border, rgba(69,224,168,.3)); border-radius:12px; padding:14px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
             <div style="font-size:20px;">⛏️</div>
             <div style="font-family:'Space Grotesk'; font-size:14px; font-weight:700; color:#45e0a8;">${tm('mining_calc_title')}</div>
@@ -357,22 +338,62 @@ export function initApp(): void {
           <div style="font-size:11px; color:var(--mut); line-height:1.5; margin-bottom:10px;">
             ${tm('mining_desc')}
           </div>
-          <div class="neon-btn-wrap" onclick="closeSheet();openMiningWhatToMine()">
-            <div class="neon-btn-glow"></div>
-            <div class="neon-btn-content green">${tm('mining_btn_open')}</div>
-          </div>
+          <button class="btn-primary btn-mint" onclick="closeSheet();openMiningWhatToMine()" style="margin-top:0;">${tm('mining_btn_open')}</button>
         </div>
 
-        <div class="neon-btn-wrap" onclick="closeSheet()" style="margin-top:8px;">
-          <div class="neon-btn-glow"></div>
-          <div class="neon-btn-content green">${tm('tools_close')}</div>
-        </div>
+        <button class="btn-primary" onclick="closeSheet()" style="margin-top:8px;">${tm('tools_close')}</button>
       </div>
     `;
     (window as any).openSheet?.(tm('exchange_menu_title'), html);
   };
 
+initHotkeys();
   console.log('[init] NEBULA v2 готов ✓');
+}
+
+function initHotkeys(): void {
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target as HTMLElement)?.tagName;
+    const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+    // Esc — закрыть любую открытую шторку, модалку или подсказки поиска
+    if (e.key === 'Escape') {
+      (window as any).closeSheet?.();
+      (window as any).closeBtcOutlook?.();
+      (window as any).hideAbout?.();
+      (window as any).closeDiagnostics?.();
+      document.getElementById('ticker-suggest')?.classList.remove('open');
+      document.getElementById('demo-ticker-suggest')?.classList.remove('open');
+      return;
+    }
+
+    // Ctrl+K или / — фокус на поиск тикера
+    if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (!isTyping && e.key === '/')) {
+      e.preventDefault();
+      const inp = document.getElementById(state.isDemoMode ? 'demo-ticker' : 'ticker') as HTMLInputElement | null;
+      if (inp) {
+        inp.focus();
+        inp.select();
+      }
+      return;
+    }
+
+    // Цифры 1–6 (вне полей ввода) — быстрое переключение таймфреймов
+    if (!isTyping && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      const tfMap: Record<string, string> = {
+        '1': '1m',
+        '2': '15m',
+        '3': '1h',
+        '4': '1d',
+        '5': '1w',
+        '6': '1M',
+      };
+      const tf = tfMap[e.key];
+      if (tf) {
+        (window as any).setTimeframe?.(tf);
+      }
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════

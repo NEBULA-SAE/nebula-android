@@ -85,10 +85,14 @@ export async function mobileAnalyze(): Promise<void> {
 
   const myGen = ++_analyzeGen;
 
-  // Синхронизируем оба инпута
+// Синхронизируем оба инпута
   state.currentTicker = raw;
   const mainInp = document.getElementById('ticker') as HTMLInputElement | null;
   if (mainInp) mainInp.value = raw;
+
+  // Обновляем верхнюю карточку монеты и кнопку «В избранное»
+  (window as any).updateStarButton?.();
+  (window as any).loadActiveCoinCard?.();
 
   state.lastOracleResult = null;
   state.lastMarketData = null;
@@ -987,6 +991,7 @@ export function answerQuizM(key: string, val: string): void {
 function computeQuiz(): void {
   const profile = computeRiskProfile(state.quizAnswers);
   saveRiskProfile(profile);
+  renderOracleDashboard();
 
   const labels: Record<string, string> = {
     conservative: isEN() ? '🛡️ Conservative' : '🛡️ Консервативный',
@@ -1000,7 +1005,7 @@ function computeQuiz(): void {
       <div style="font-family:'Space Grotesk';font-size:18px;font-weight:700;color:var(--mint);margin-bottom:8px">${tm('quiz_done')}</div>
       <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--hi);margin-bottom:8px">${labels[profile.level] || profile.level}</div>
       <div style="font-size:12.5px;color:var(--mut);line-height:1.6;margin-bottom:12px">${esc(profile.description)}</div>
-      <button class="btn-primary" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');">OK</button>
+      <button class="btn-primary btn-mint" onclick="closeSheet()">OK</button>
     </div>`);
 }
 
@@ -1084,7 +1089,7 @@ export function openJournalEntry(index: number): void {
       </div>
     </div>
 
-    <button class="btn-primary btn-mint" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top:20px;">
+<button class="btn-primary btn-mint" onclick="closeSheet()" style="margin-top:20px;">
       ${tm('journal_close')}
     </button>
   `;
@@ -1115,7 +1120,7 @@ export function showConfluenceHelp(): void {
       ${tm('conf_help_rsi_desc')}
     </div>
 
-    <button class="btn-primary btn-mint" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top:20px;">
+<button class="btn-primary btn-mint" onclick="closeSheet()" style="margin-top:20px;">
       ${tm('conf_help_ok')}
     </button>
   `;

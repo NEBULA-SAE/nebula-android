@@ -281,7 +281,7 @@ export function showRiskHelp(): void {
         </div>
       </div>
 
-      <button class="btn-primary btn-mint" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="margin-top: 20px;">
+     <button class="btn-primary btn-mint" onclick="closeSheet()" style="margin-top: 20px;">
         ${tm('risk_help_close')}
       </button>
     </div>

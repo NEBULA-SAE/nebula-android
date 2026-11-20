@@ -1,0 +1,2132 @@
+/* ═══════════════════════════════════════════════════════════════
+   NEBULA · NEW SKIN (ГЛОБАЛЬНАЯ БАЗА)
+   ═══════════════════════════════════════════════════════════════ */
+
+body.skin-active {
+/* 1. Цвета (акцент подхватывается из выбранной темы, по умолчанию #1DB954) */
+  --skin-bg: #0E0E10;
+  --skin-surface: #18181B;
+  --skin-accent: var(--accent, #1DB954);
+  --skin-border: rgba(255, 255, 255, 0.06);
+  --skin-text: #FFFFFF;
+  --skin-mut: #A1A1AA;
+  --skin-dim: #52525B;
+
+  /* 2. Базовые настройки */
+  background-color: var(--skin-bg) !important;
+  color: var(--skin-text) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* 3. Шрифты */
+body.skin-active h1, 
+body.skin-active h2, 
+body.skin-active h3, 
+body.skin-active .btc-title,
+body.skin-active .brand-mini,
+body.skin-active #brand-text-pc {
+  font-family: 'Space Grotesk', sans-serif !important;
+}
+
+body.skin-active .btc-price,
+body.skin-active .btc-change,
+body.skin-active .btc-stat-val,
+body.skin-active .chart-stats,
+body.skin-active .nav-btn .lbl,
+body.skin-active .ticker-wrap input {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* 4. Flat Design: Убираем все тени и свечения (кроме заставки) */
+body.skin-active *:not(.splash):not(.splash *) {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Убираем неоновые блики с карточек */
+body.skin-active .card::before,
+body.skin-active .card::after,
+body.skin-active .chart-card::before,
+body.skin-active .btc-card::before,
+body.skin-active .btc-card::after {
+  display: none !important;
+}
+
+/* 5. Карточки (Surface + Border + Radius) */
+body.skin-active .card {
+  background-color: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+
+/* 6. Кнопки (Radius: 6px) */
+body.skin-active button, 
+body.skin-active .chip,
+body.skin-active .nav-btn {
+  border-radius: 6px !important;
+}
+
+/* 7. Поиск (Pill-shaped) */
+body.skin-active .ticker-wrap input {
+  border-radius: 9999px !important;
+}
+
+/* 8. Базовый акцент (Зеленый) */
+body.skin-active .btn-go,
+body.skin-active #brand-pro-btn,
+body.skin-active #brand-pro-btn-pc {
+  background-color: var(--skin-accent) !important;
+  color: #000000 !important;
+  border: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ШАГ 1: САЙДБАР (ПК) И НИЖНЕЕ МЕНЮ (МОБИЛКА)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── ДЕСКТОП (ПК) ─── */
+@media (min-width: 1024px) {
+  
+  /* 1. Общий фон сайдбара */
+  body.skin-active .bottom-nav {
+    background-color: var(--skin-bg) !important;
+    border-right: 1px solid var(--skin-border) !important;
+    padding: 24px 16px !important;
+    width: 240px !important;
+  }
+
+  /* 2. Логотип NEBULA PRO */
+  body.skin-active #main-brand-pc {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 0 0 32px 16px !important;
+    border-bottom: none !important;
+    margin-bottom: 8px !important;
+  }
+  body.skin-active #main-brand-pc .brand-dot { display: none !important; }
+  
+  body.skin-active #main-brand-pc #brand-text-pc {
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    letter-spacing: 1px !important;
+  }
+
+  /* Плашка PRO */
+  body.skin-active #main-brand-pc #brand-pro-btn-pc {
+    background-color: var(--skin-accent) !important;
+    color: #000000 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 2px 8px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    animation: none !important;
+  }
+  body.skin-active #main-brand-pc #brand-pro-btn-pc::after {
+    content: ' ✓' !important;
+  }
+
+  /* 3. Пункты меню (Flat) */
+  body.skin-active .nav-btn {
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    padding: 12px 16px !important;
+    background: transparent !important;
+    color: var(--skin-mut) !important;
+    border-radius: 8px !important;
+    border-left: 3px solid transparent !important;
+    gap: 14px !important;
+    margin-bottom: 4px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  /* Иконки и текст в меню */
+  body.skin-active .nav-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+    color: currentColor !important;
+  }
+  body.skin-active .nav-btn .lbl {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    color: currentColor !important;
+  }
+
+  /* Наведение */
+  body.skin-active .nav-btn:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  /* Активный пункт (Зеленая линия слева и зеленая иконка) */
+  body.skin-active .nav-btn.active {
+    color: #ffffff !important;
+    background: transparent !important;
+    border-left: 3px solid var(--skin-accent) !important;
+    border-radius: 0 8px 8px 0 !important; /* Скругляем только правую часть */
+    padding-left: 13px !important; /* Чуть сдвигаем текст, чтобы компенсировать линию */
+  }
+  body.skin-active .nav-btn.active svg {
+    color: var(--skin-accent) !important;
+  }
+  
+  /* Убираем старую синюю полоску */
+  body.skin-active .nav-btn.active::before {
+    display: none !important;
+  }
+
+  /* 4. Кнопки внизу сайдбара (Exchange, Orders, DEMO) */
+  body.skin-active .bottom-nav > .nav-btn.sidebar-exchange-btn,
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openOrdersSheet"],
+  body.skin-active .bottom-nav > .nav-btn[onclick*="enterDemoMode"] {
+    background-color: #27272A !important; /* Плоский темно-серый */
+    color: #A1A1AA !important;
+    border-radius: 6px !important;
+    border-left: none !important;
+    justify-content: center !important;
+    font-weight: 600 !important;
+    margin-top: 8px !important;
+    padding: 12px !important;
+    border-left: none !important;
+  }
+
+  /* Магия Flexbox: принудительно ставим их в самый низ в нужном порядке */
+  body.skin-active .bottom-nav > .nav-btn.sidebar-exchange-btn { 
+    order: 98 !important; 
+    margin-top: auto !important; /* Этот отступ прижимает всю группу вниз */
+  }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openOrdersSheet"] { 
+    order: 99 !important; 
+  }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="enterDemoMode"] { 
+    order: 100 !important; 
+  }
+
+  /* Эффект при наведении */
+  body.skin-active .bottom-nav > .nav-btn.sidebar-exchange-btn:hover,
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openOrdersSheet"]:hover,
+  body.skin-active .bottom-nav > .nav-btn[onclick*="enterDemoMode"]:hover {
+    background-color: #3F3F46 !important;
+    color: #ffffff !important;
+  }
+}
+
+/* ─── МОБИЛКА (Нижняя навигация) ─── */
+@media (max-width: 1023px) {
+  
+  /* 1. Общий фон нижнего меню */
+  body.skin-active .bottom-nav {
+    background-color: var(--skin-bg) !important;
+    border-top: 1px solid var(--skin-border) !important;
+    padding: 8px 4px calc(8px + var(--safe-bot)) !important;
+    justify-content: space-around !important;
+  }
+
+  /* 2. ПУЗЫРЬ NEBULA (Возвращаем, но делаем плоским и зеленым) */
+  body.skin-active .radar-center-wrap {
+    display: flex !important;
+    margin-top: -20px !important; /* Чуть приподнимаем над панелью */
+  }
+
+  body.skin-active .radar-trigger {
+    background: var(--skin-surface) !important;
+    border: 2px solid var(--skin-accent) !important; /* Зеленая рамка */
+    box-shadow: none !important; /* Убираем свечение */
+    width: 64px !important;
+    height: 64px !important;
+    border-radius: 50% !important;
+  }
+
+  body.skin-active .rt-core {
+    color: var(--skin-accent) !important; /* Зеленый текст */
+    text-shadow: none !important; /* Убираем тень текста */
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 800 !important;
+  }
+  
+  /* Эффект при нажатии (легкое уменьшение, как в Spotify) */
+  body.skin-active .radar-trigger:active {
+    transform: scale(0.92) !important;
+    background: rgba(29, 185, 84, 0.1) !important;
+  }
+
+  /* 3. Кнопки в нижнем меню */
+  body.skin-active .nav-btn {
+    color: var(--skin-dim) !important;
+    padding: 8px 0 !important;
+    flex: 1 !important;
+    gap: 4px !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+  
+  body.skin-active .nav-btn .lbl {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+  }
+
+  body.skin-active .nav-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  /* 4. Активный пункт (Зеленый) */
+  body.skin-active .nav-btn.active {
+    color: var(--skin-accent) !important;
+  }
+  
+  /* Убираем верхнюю полоску у активного пункта, оставляем только цвет */
+  body.skin-active .nav-btn.active::before {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   УБИРАЕМ ЗАСТАВКУ (СПЛЭШ)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active #nebula-splash,
+body.skin-active .splash {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Даем карточке чуть больше воздуха сверху, так как вкладок больше нет */
+body.skin-active #screen-home {
+  padding-top: calc(var(--safe-top) + var(--topbar-h) + 16px) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ФИКС ПУЗЫРЯ NEBULA (УВЕЛИЧИВАЕМ РАДИУС)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .radar-item {
+  /* Увеличиваем радиус, чтобы 9 иконок не наезжали друг на друга */
+  --radius: 180px !important; 
+}
+
+/* Делаем активную иконку (на которую наведен лазер) ярко-зеленой */
+body.skin-active .radar-item.active .radar-icon-wrap {
+  border-color: var(--skin-accent) !important;
+  background: rgba(29, 185, 84, 0.2) !important;
+  box-shadow: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ИСПРАВЛЕНИЕ ДЕМО-РЕЖИМА (ВЫРАВНИВАНИЕ)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active.in-demo-mode #home-main-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+/* Шапка демо-режима */
+body.skin-active .demo-header {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+  padding: 16px 20px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  box-shadow: none !important;
+}
+
+/* Блок с балансами (Свободно, В сделках, PnL) */
+body.skin-active .demo-balance-grid {
+  display: flex !important;
+  gap: 24px !important;
+  margin-left: auto !important;
+}
+
+body.skin-active .db-cell {
+  text-align: right !important;
+}
+
+body.skin-active .db-lbl {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  color: var(--skin-mut) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+body.skin-active .db-val {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+}
+
+/* Поле ввода в демо-режиме */
+body.skin-active .demo-ticker-wrap {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 9999px !important;
+  padding: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  min-width: 280px !important;
+}
+
+body.skin-active .demo-ticker-wrap input {
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 14px !important;
+  padding-left: 16px !important;
+  outline: none !important;
+}
+
+body.skin-active .demo-go-btn {
+  background: var(--skin-accent) !important;
+  color: #000 !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  padding: 8px 20px !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+
+/* Кнопки Покинуть и Сброс */
+body.skin-active .demo-exit-btn {
+  background: transparent !important;
+  border: 1px solid var(--skin-border) !important;
+  color: var(--skin-mut) !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+body.skin-active .demo-exit-btn:hover {
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+/* Сетка для карточек (План Оракула / Виртуальные сделки) */
+body.skin-active .demo-layout {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important; /* Две колонки на ПК */
+  gap: 20px !important;
+  width: 100% !important;
+}
+
+/* Настройка самих карточек */
+body.skin-active .demo-layout > .card {
+  margin-bottom: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--skin-border) !important;
+  background: var(--skin-surface) !important;
+}
+
+body.skin-active .demo-layout .card-head {
+  border-bottom: 1px solid var(--skin-border) !important;
+  padding: 16px !important;
+  background: transparent !important;
+  color: #fff !important;
+}
+
+body.skin-active .demo-layout .card-body {
+  flex: 1 !important;
+  padding: 20px !important;
+}
+
+/* Чтобы кнопка СБРОС внутри карточки не ехала */
+body.skin-active .demo-layout .card-head button {
+  background: transparent !important;
+  border: 1px solid var(--skin-border) !important;
+  color: var(--skin-mut) !important;
+  padding: 4px 10px !important;
+  border-radius: 4px !important;
+  font-size: 10px !important;
+}
+
+/* Мобильная адаптация (чтобы карточки встали друг под другом) */
+@media (max-width: 1023px) {
+  body.skin-active .demo-layout {
+    grid-template-columns: 1fr !important; /* Одна колонка */
+  }
+  body.skin-active .demo-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  body.skin-active .demo-balance-grid {
+    margin-left: 0 !important;
+    justify-content: space-between !important;
+    background: var(--skin-bg) !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+  body.skin-active .db-cell {
+    text-align: center !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ФИКС СТРАНИЦЫ ИЗБРАННОЕ (ЧТОБЫ НЕ ВИСЕЛО ОКНОМ)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active #screen-home {
+  display: block !important; /* Убираем старую сетку */
+}
+
+body.skin-active #home-fav-content {
+  width: 100% !important;
+  display: block !important;
+  padding-top: 10px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЛОГОТИП NEBULA И ПЛАШКА PRO
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── ПК (Сайдбар) ─── */
+body.skin-active #main-brand-pc {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+  padding: 16px !important;
+  margin-bottom: 16px !important;
+}
+body.skin-active #main-brand-pc .brand-dot { display: none !important; }
+
+body.skin-active #main-brand-pc #brand-text-pc {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important; /* Белый */
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  letter-spacing: 1px !important;
+  text-shadow: none !important;
+}
+
+body.skin-active #main-brand-pc #brand-pro-btn-pc {
+  display: inline-block !important;
+  background-color: var(--skin-accent) !important; /* Зеленая */
+  color: #000000 !important; /* Черный текст */
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  animation: none !important;
+}
+body.skin-active #main-brand-pc #brand-pro-btn-pc::after {
+  content: ' ✓' !important;
+}
+
+/* ─── МОБИЛКА (Хедер) ─── */
+body.skin-active #main-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+body.skin-active #main-brand .brand-dot { display: none !important; }
+
+body.skin-active #main-brand #brand-text {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+body.skin-active #main-brand #brand-pro-btn {
+  display: inline-block !important;
+  background-color: var(--skin-accent) !important;
+  color: #000000 !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  animation: none !important;
+}
+body.skin-active #main-brand #brand-pro-btn::after {
+  content: ' ✓' !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   СКРЫВАЕМ МОБИЛЬНЫЙ ЛОГОТИП НА ПК (ЧТОБЫ НЕ ДУБЛИРОВАЛСЯ)
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  body.skin-active .top-bar .brand-mini-wrap {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЛОГИЧНОЕ РАСПОЛОЖЕНИЕ КНОПОК НА ПК (ЧЕРЕЗ FLEX ORDER)
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  
+  /* 1. БЛОК ТОРГОВЛИ */
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('home')"] { order: 1 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('fav')"] { order: 2 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('pro')"] { order: 3 !important; margin-bottom: 16px !important; } /* Отступ после блока */
+
+  /* 2. БЛОК ИНСТРУМЕНТОВ */
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('scanner')"] { order: 4 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('oracle')"] { order: 5 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('risk')"] { order: 6 !important; margin-bottom: 16px !important; }
+
+  /* 3. БЛОК ПОРТФЕЛЯ */
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('portfolio')"] { order: 7 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openMarketPulse"] { order: 8 !important; margin-bottom: 16px !important; }
+
+  /* 4. БЛОК РЕСУРСОВ */
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openCryptoHub"] { order: 9 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openLearning"] { order: 10 !important; }
+
+  /* Визуальное выделение активной кнопки, чтобы не терялась */
+  body.skin-active .bottom-nav > .nav-btn.active {
+    background: rgba(29, 185, 84, 0.08) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ИДЕАЛЬНАЯ КАРТОЧКА DASH (ТОЧНОЕ СОВПАДЕНИЕ С МАКЕТОМ)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Сброс старых стилей */
+body.skin-active .btc-card { padding: 20px 24px !important; }
+body.skin-active .btc-stat { background: transparent !important; padding: 0 !important; border: none !important; }
+
+/* Базовые шрифты */
+body.skin-active .btc-title { font-family: 'Space Grotesk', sans-serif !important; font-size: 24px !important; font-weight: 700 !important; color: #fff !important; line-height: 1.1 !important; }
+body.skin-active .btc-fullname { font-family: 'Inter', sans-serif !important; font-size: 13px !important; color: var(--skin-mut) !important; margin-top: 2px !important; }
+body.skin-active .btc-sub { font-family: 'JetBrains Mono', monospace !important; font-size: 10px !important; color: var(--skin-dim) !important; margin-top: 4px !important; letter-spacing: 0.5px !important; }
+body.skin-active .btc-price { font-family: 'JetBrains Mono', monospace !important; font-size: 32px !important; font-weight: 500 !important; color: #fff !important; letter-spacing: -0.5px !important; }
+body.skin-active .btc-change { font-family: 'JetBrains Mono', monospace !important; font-size: 15px !important; font-weight: 500 !important; }
+body.skin-active .btc-stat-lbl { font-family: 'Inter', sans-serif !important; font-size: 12px !important; color: var(--skin-mut) !important; text-transform: uppercase !important; }
+body.skin-active .btc-stat-val { font-family: 'JetBrains Mono', monospace !important; font-size: 13px !important; font-weight: 600 !important; color: #fff !important; }
+
+/* ─── ДЕСКТОП (≥ 1024px) ─── */
+@media (min-width: 1024px) {
+  /* Сетка */
+  body.skin-active #home-main-content { display: flex !important; flex-direction: column !important; gap: 16px !important; }
+
+  body.skin-active .btc-top {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* Левая часть (Лого) */
+  body.skin-active .btc-left { display: flex !important; align-items: center !important; gap: 16px !important; }
+  body.skin-active .btc-logo { width: 48px !important; height: 48px !important; }
+
+  /* Правая часть */
+  body.skin-active .btc-right {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 6px !important;
+  }
+
+  /* Цена, Спарклайн, Изменение */
+  body.skin-active .btc-price-row {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 10px !important;
+  }
+  body.skin-active .btc-spark {
+    display: flex !important;
+    align-items: center !important;
+    width: 80px !important;
+    height: 28px !important;
+    margin-left: 4px !important;
+    transform: translateY(4px) !important; /* Выравниваем по нижнему краю текста */
+  }
+
+  /* Статистика (RSI · Отскок · Падение · Тренд) */
+  body.skin-active .btc-stats {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  body.skin-active .btc-stat { display: flex !important; align-items: center !important; gap: 4px !important; }
+  body.skin-active .btc-stat + .btc-stat::before {
+    content: '·' !important; color: var(--skin-dim) !important; margin: 0 10px !important; font-size: 18px !important; line-height: 1 !important;
+  }
+
+  /* Кнопки (History & Add to favorites) */
+  body.skin-active .btc-actions {
+    display: flex !important;
+    gap: 8px !important;
+    margin-top: 6px !important;
+  }
+  body.skin-active .btc-btn-outline {
+    display: flex !important;
+    align-items: center !important;
+    background: transparent !important;
+    border: 1px solid var(--skin-border) !important;
+    color: var(--skin-mut) !important;
+    border-radius: 9999px !important;
+    padding: 6px 14px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+  }
+  body.skin-active .btc-btn-outline:hover { color: #fff !important; border-color: #fff !important; }
+  body.skin-active .btc-btn-outline.outlook { color: var(--skin-accent) !important; border-color: var(--skin-accent) !important; }
+  body.skin-active .btc-btn-outline.outlook:hover { background: rgba(29, 185, 84, 0.1) !important; }
+
+  /* Нижняя панель (Вкладки + Статы) */
+  body.skin-active .btc-outlook-inline { display: flex !important; flex-direction: column !important; border-top: 1px solid var(--skin-border) !important; }
+
+  body.skin-active .btc-inline-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 16px !important;
+    border-bottom: 1px solid var(--skin-border) !important;
+  }
+
+  body.skin-active .btc-inline-header .btc-tabs {
+    display: flex !important;
+    gap: 24px !important;
+    border: none !important;
+    margin: 0 !important;
+  }
+  body.skin-active .btc-inline-header .btc-tab {
+    padding: 12px 0 !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    color: var(--skin-mut) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+  }
+  body.skin-active .btc-inline-header .btc-tab.active { color: var(--skin-accent) !important; border-bottom-color: var(--skin-accent) !important; }
+
+  /* Плашка со статами справа от вкладок */
+  body.skin-active .btc-inline-header .btc-grid4 {
+    display: flex !important;
+    border: none !important;
+    background: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+  }
+  body.skin-active .btc-inline-header .btc-cell {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    border-left: 1px solid var(--skin-border) !important;
+    padding: 6px 20px !important;
+    margin: 0 !important;
+  }
+  body.skin-active .btc-inline-header .btc-cell:first-child { border-left: none !important; }
+  body.skin-active .btc-inline-header .btc-cell-l { font-size: 11px !important; color: var(--skin-mut) !important; margin-bottom: 2px !important; }
+  body.skin-active .btc-inline-header .btc-cell-v { font-size: 13px !important; font-weight: 600 !important; color: #fff !important; }
+
+  /* Прячем мобильную кнопку */
+  body.skin-active .btc-outlook-btn-mobile { display: none !important; }
+}
+
+/* ─── МОБИЛКА (≤ 1023px) ─── */
+@media (max-width: 1023px) {
+  body.skin-active .btc-top { flex-direction: column !important; gap: 12px !important; }
+  body.skin-active .btc-right { display: flex !important; flex-direction: column !important; width: 100% !important; }
+
+  body.skin-active .btc-price-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+  body.skin-active .btc-price { font-size: 28px !important; }
+  body.skin-active .btc-spark { width: 80px !important; height: 24px !important; display: block !important; }
+  
+  body.skin-active .btc-stats {
+    display: flex !important;
+    justify-content: flex-start !important;
+    padding: 12px 0 !important;
+    gap: 8px !important;
+    border-top: 1px solid var(--skin-border) !important;
+  }
+  body.skin-active .btc-stat:nth-child(4) { display: none !important; }
+  body.skin-active .btc-stat + .btc-stat::before { content: '·' !important; margin: 0 8px !important; }
+  
+  body.skin-active .btc-actions { display: none !important; }
+  body.skin-active .btc-outlook-inline { display: none !important; }
+  
+  body.skin-active .btc-outlook-btn-mobile {
+    display: flex !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: 1px solid var(--skin-accent) !important;
+    border-radius: 9999px !important;
+    padding: 14px !important;
+    margin-top: 16px !important;
+    color: var(--skin-accent) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  body.skin-active .btc-outlook-btn-mobile .btc-btn-glow { display: none !important; }
+  body.skin-active .btc-outlook-btn-mobile .btc-outlook-btn-lbl { color: var(--skin-accent) !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ГРАФИК (ШИРОКИЙ И НИЗКИЙ, КАК НА МАКЕТЕ)
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  
+  /* 1. График растягивается на всю ширину контейнера */
+  body.skin-active .chart-card {
+    width: 100% !important;
+    max-width: 100% !important; 
+    margin: 0 auto !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+    background: var(--skin-surface) !important;
+    border: 1px solid var(--skin-border) !important;
+    box-shadow: none !important;
+  }
+
+  /* 2. Убираем лишние отступы */
+  body.skin-active .chart-card .tf-bar {
+    padding: 0 0 12px 0 !important;
+    border: none !important;
+  }
+
+  body.skin-active .chart-card .chart-stats {
+    padding: 0 0 12px 0 !important;
+    border: none !important;
+  }
+
+  /* 3. Делаем график НЕ КВАДРАТНЫМ, а широким и компактным по высоте */
+  body.skin-active .chart-card #chart-container {
+    height: 320px !important; /* Уменьшили высоту (было 420) */
+    min-height: 320px !important;
+    border-radius: 8px !important;
+    background: var(--skin-bg) !important; 
+  }
+}
+
+/* ─── Настройка для мобилки ─── */
+@media (max-width: 1023px) {
+  body.skin-active .chart-card {
+    margin-top: 16px !important;
+    padding: 12px !important;
+  }
+  body.skin-active .chart-card #chart-container {
+    height: 240px !important;
+    min-height: 240px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ТОПБАР (ПК И МОБИЛКА)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Сброс базовых стилей */
+body.skin-active .top-bar {
+  background: var(--skin-bg) !important;
+  border-bottom: 1px solid var(--skin-border) !important;
+}
+
+/* ─── ДЕСКТОП (≥ 1024px) ─── */
+@media (min-width: 1024px) {
+  body.skin-active .top-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 16px 24px !important;
+    height: 80px !important;
+  }
+
+  /* Прячем обертки на ПК, чтобы выстроить в одну линию */
+  body.skin-active .top-row-1 { display: contents !important; }
+  body.skin-active .top-row-2 { display: contents !important; }
+
+  /* Поиск (Таблетка) */
+  body.skin-active .ticker-wrap {
+    display: flex !important;
+    align-items: center !important;
+    max-width: 450px !important;
+    width: 100% !important;
+    height: 48px !important;
+    background: var(--skin-surface) !important;
+    border: 1px solid var(--skin-border) !important;
+    border-radius: 9999px !important;
+    padding: 4px 4px 4px 16px !important;
+    margin: 0 !important;
+  }
+  body.skin-active .ticker-wrap input {
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    padding: 0 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+  body.skin-active .btn-go {
+    position: static !important;
+    background: var(--skin-accent) !important;
+    color: #000 !important;
+    border-radius: 9999px !important;
+    height: 40px !important;
+    padding: 0 24px !important;
+    margin-left: auto !important;
+  }
+
+  /* Шестеренка */
+  body.skin-active .top-right .chip.cyan {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 8px !important;
+    background: var(--skin-surface) !important;
+    border: 1px solid var(--skin-border) !important;
+    color: var(--skin-mut) !important;
+  }
+}
+
+/* ─── МОБИЛКА (≤ 1023px) ─── */
+@media (max-width: 1023px) {
+  body.skin-active .top-bar {
+    display: flex !important;
+    flex-direction: column !important; /* Выстраиваем в колонку */
+    padding: 12px 16px !important;
+    gap: 12px !important;
+    height: auto !important;
+  }
+
+  /* Верхняя строка: Лого и Шестеренка */
+  body.skin-active .top-row-1 {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+  body.skin-active .brand-mini-wrap { display: flex !important; }
+  
+  /* Нижняя строка: Поиск */
+  body.skin-active .top-row-2 {
+    display: flex !important;
+    width: 100% !important;
+  }
+  body.skin-active .ticker-wrap {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 44px !important;
+    background: var(--skin-surface) !important;
+    border: 1px solid var(--skin-border) !important;
+    border-radius: 9999px !important;
+    padding: 4px 4px 4px 16px !important;
+  }
+  body.skin-active .ticker-wrap input {
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+  body.skin-active .btn-go {
+    position: static !important;
+    background: var(--skin-accent) !important;
+    color: #000 !important;
+    border-radius: 9999px !important;
+    height: 36px !important;
+    padding: 0 20px !important;
+    margin-left: auto !important;
+  }
+
+  /* Шестеренка */
+  body.skin-active .top-right .chip.cyan {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 8px !important;
+    background: var(--skin-surface) !important;
+    border: 1px solid var(--skin-border) !important;
+    color: var(--skin-mut) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ГЛОБАЛЬНЫЙ ФИКС МОБИЛЬНОЙ ВЕРСИИ (ЖЕСТКИЙ)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  
+  /* ─── 1. НИЖНЕЕ МЕНЮ ─── */
+  /* Жестко прячем логотип NEBULA PRO (он вылез внизу) */
+  body.skin-active #main-brand-pc {
+    display: none !important;
+  }
+
+  /* Жестко прячем ВСЕ кнопки с классом hide-on-mobile */
+  body.skin-active .bottom-nav .nav-btn.hide-on-mobile {
+    display: none !important;
+  }
+  
+  /* Выстраиваем оставшиеся 5 элементов (4 кнопки + пузырь) в ровный ряд */
+  body.skin-active .bottom-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: 0 5px calc(8px + var(--safe-bot)) 5px !important;
+    background: var(--skin-bg) !important;
+    border-top: 1px solid var(--skin-border) !important;
+    height: 65px !important;
+    width: 100% !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100 !important;
+  }
+
+  /* Сами кнопки (График, Аналитика, Сканер, Оракул) */
+  body.skin-active .bottom-nav .nav-btn:not(.hide-on-mobile) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    gap: 4px !important;
+    padding: 4px 0 !important;
+    height: auto !important;
+    background: transparent !important;
+  }
+  body.skin-active .bottom-nav .nav-btn:not(.hide-on-mobile) svg {
+    width: 22px !important;
+    height: 22px !important;
+    color: var(--skin-dim) !important;
+  }
+  body.skin-active .bottom-nav .nav-btn:not(.hide-on-mobile) .lbl {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: var(--skin-dim) !important;
+  }
+  /* Активная кнопка */
+  body.skin-active .bottom-nav .nav-btn.active:not(.hide-on-mobile) svg,
+  body.skin-active .bottom-nav .nav-btn.active:not(.hide-on-mobile) .lbl {
+    color: var(--skin-accent) !important;
+  }
+
+  /* Центральный пузырь NEBULA */
+  body.skin-active .radar-center-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 60px !important;
+    height: 60px !important;
+    flex-shrink: 0 !important;
+    margin: 0 5px !important;
+    position: relative !important;
+    top: -15px !important; 
+    z-index: 101 !important;
+  }
+  body.skin-active .radar-trigger {
+    width: 60px !important;
+    height: 60px !important;
+    border: 2px solid var(--skin-accent) !important;
+    background: var(--skin-bg) !important;
+  }
+
+  /* ─── 2. КАРТОЧКА DASH (СТАТЫ В СТРОКУ) ─── */
+  body.skin-active .btc-stats {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important; /* Запрещаем перенос */
+    justify-content: flex-start !important;
+    align-items: center !important;
+    padding: 12px 0 !important;
+    gap: 6px !important;
+    border-top: 1px solid var(--skin-border) !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+  }
+  body.skin-active .btc-stat {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  /* Прячем "Тренд" */
+  body.skin-active .btc-stat:nth-child(4) {
+    display: none !important; 
+  }
+  /* Точка-разделитель */
+  body.skin-active .btc-stat + .btc-stat::before {
+    content: '·' !important;
+    margin: 0 4px !important;
+    color: var(--skin-dim) !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+  }
+  body.skin-active .btc-stat-lbl {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    color: var(--skin-mut) !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+  body.skin-active .btc-stat-val {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЧИСТЫЙ ЛОГОТИП NEBULA PRO (БЕЗ КОСТЫЛЕЙ И ДУБЛИРОВАНИЯ)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Прячем старую зеленую точку */
+body.skin-active .brand-dot {
+  display: none !important;
+}
+
+/* ─── МОБИЛКА ─── */
+body.skin-active #main-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+body.skin-active #main-brand #brand-text {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  letter-spacing: 1px !important;
+}
+
+body.skin-active #main-brand #brand-pro-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  background-color: var(--skin-accent) !important;
+  color: #000000 !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  animation: none !important;
+}
+body.skin-active #main-brand #brand-pro-btn::after {
+  content: ' ✓' !important;
+}
+
+/* ─── ПК ─── */
+body.skin-active #main-brand-pc {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+
+body.skin-active #main-brand-pc #brand-text-pc {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  letter-spacing: 1px !important;
+}
+
+body.skin-active #main-brand-pc #brand-pro-btn-pc {
+  display: inline-flex !important;
+  align-items: center !important;
+  background-color: var(--skin-accent) !important;
+  color: #000000 !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  animation: none !important;
+}
+body.skin-active #main-brand-pc #brand-pro-btn-pc::after {
+  content: ' ✓' !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ВЫРАВНИВАНИЕ ШАПКИ И ОТСТУПОВ НА МОБИЛКЕ
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  /* 1. Фиксируем шапку */
+  body.skin-active .top-bar {
+    height: 125px !important; 
+    padding: calc(var(--safe-top) + 12px) 16px 12px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  /* 2. Контент начинается ровно под шапкой */
+  body.skin-active .screens {
+    top: calc(var(--safe-top) + 125px) !important; 
+  }
+
+  /* 3. Убираем лишние внутренние отступы, чтобы карточка прижалась к поиску */
+  body.skin-active #screen-home {
+    padding-top: 12px !important; 
+  }
+  body.skin-active .screen {
+    padding-top: 12px !important;
+    padding-bottom: calc(var(--safe-bot) + 80px) !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ПРЯЧЕМ ОШИБКУ "НЕДОСТАТОЧНО ДАННЫХ" В OUTLOOK
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .btc-outlook-inline .btc-empty,
+body.skin-active .btc-outlook-inline .btc-err {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ФИНАЛЬНЫЙ ФИКС: ПРЯЧЕМ ДУБЛЬ ЛОГОТИПА ВНИЗУ И ВОЗВРАЩАЕМ ТЕКСТ PRO
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  /* 1. Насмерть прячем десктопный логотип, который вылез в нижнем меню */
+  body.skin-active #main-brand-pc {
+    display: none !important;
+  }
+}
+
+/* 2. Возвращаем текст в зеленую плашку PRO (сверху) */
+body.skin-active #brand-pro-btn,
+body.skin-active #brand-pro-btn-pc {
+  color: #000000 !important; /* Черный текст */
+  -webkit-text-fill-color: #000000 !important; /* Принудительно черный */
+  font-size: 10px !important; /* Убираем возможный 0 */
+  opacity: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 800 !important;
+}
+
+/* На всякий случай перебиваем прозрачность, если JS пытался её ставить */
+body.skin-active #main-brand #brand-pro-btn,
+body.skin-active #main-brand-pc #brand-pro-btn-pc {
+  -webkit-text-fill-color: #000000 !important;
+  color: #000000 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ВОЗВРАЩАЕМ КНОПКУ "В ИЗБРАННОЕ" НА МОБИЛКЕ
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  /* Показываем контейнер с кнопками */
+  body.skin-active .btc-actions {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 12px !important;
+  }
+
+  /* Маленькую кнопку History прячем (у нас есть большая зеленая) */
+  body.skin-active .btc-actions .btc-btn-outline.outlook {
+    display: none !important;
+  }
+
+  /* Кнопку "Add to favorites" делаем широкой и красивой */
+  body.skin-active .btc-actions .btc-btn-outline {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px !important;
+    border-radius: 9999px !important;
+    background: transparent !important;
+    border: 1px solid var(--skin-border) !important;
+    color: var(--skin-mut) !important;
+    font-size: 13px !important;
+  }
+}
+
+body.skin-active #home-main-content.hidden,
+body.skin-active #home-fav-content.hidden {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ВЫПАДАЮЩИЙ СПИСОК ПОИСКА (SUGGEST) В НАШЕМ СТИЛЕ
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .suggest {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important; /* Мягкая тень */
+  top: calc(100% + 8px) !important; /* Чуть отступа от поиска */
+}
+
+body.skin-active .suggest-item {
+  border-bottom: 1px solid var(--skin-border) !important;
+  padding: 12px 16px !important;
+}
+
+body.skin-active .suggest-item:hover,
+body.skin-active .suggest-item:active {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.skin-active .suggest-item .si-symbol {
+  color: #ffffff !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+body.skin-active .suggest-item .si-vol {
+  color: var(--skin-mut) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   КНОПКА "В ИЗБРАННОЕ" НА МОБИЛКЕ (ЗВЕЗДА ГОРИТ ЖЕЛТЫМ)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  body.skin-active .btc-actions .btc-btn-outline {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 12px !important;
+    border-radius: 9999px !important;
+    background: transparent !important;
+    border: 1px solid var(--skin-border) !important;
+    color: var(--skin-mut) !important;
+    font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+  }
+
+  /* Сама иконка звезды */
+  body.skin-active .btc-actions .btc-btn-outline svg {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--skin-mut) !important;
+    transition: all 0.2s ease !important;
+  }
+
+  /* КОГДА МОНЕТА В ИЗБРАННОМ (класс active) */
+  body.skin-active .btc-actions .btc-btn-outline.active {
+    color: #ffffff !important; /* Текст становится белым (для читаемости) */
+    border-color: rgba(255, 255, 255, 0.2) !important; /* Рамка чуть ярче */
+  }
+
+  /* А вот ЗВЕЗДА загорается желтым и светится */
+  body.skin-active .btc-actions .btc-btn-outline.active svg {
+    color: #fcd535 !important; /* Желтый цвет (Binance style) */
+    fill: #fcd535 !important; /* Заливаем звезду */
+    filter: drop-shadow(0 0 6px rgba(252, 213, 53, 0.5)) !important; /* Легкое желтое свечение */
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ПОЛНОЭКРАННЫЙ РЕЖИМ ДЛЯ МОДАЛОК (ВМЕСТО ШТОРОК)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active #screen-generic {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 20px 16px calc(var(--safe-bot) + 80px) 16px !important;
+  background: var(--skin-bg) !important;
+}
+
+body.skin-active .generic-screen-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  margin-bottom: 24px !important;
+}
+
+body.skin-active .generic-back-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--skin-mut) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+}
+
+body.skin-active .generic-back-btn:hover {
+  color: #fff !important;
+}
+
+body.skin-active .generic-screen-title {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  margin: 0 !important;
+}
+
+body.skin-active .generic-screen-body {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 800px !important;
+  margin: 0 auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   РЕСТАЙЛИНГ ОКОН (ОРДЕРА, НАСТРОЙКИ, ОБМЕН И Т.Д.)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1. ОТСТУПЫ И ЦЕНТРИРОВАНИЕ */
+body.skin-active #screen-generic {
+  padding-top: calc(var(--safe-top) + 100px) !important; /* Отодвигаем от шапки */
+  padding-bottom: calc(var(--safe-bot) + 80px) !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+}
+
+@media (max-width: 1023px) {
+  body.skin-active #screen-generic {
+    padding-top: calc(var(--safe-top) + 135px) !important; /* Для мобилки шапка выше */
+  }
+}
+
+/* Сужаем контент для удобства чтения (как в Spotify) */
+body.skin-active .generic-screen-body {
+  max-width: 600px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+/* 2. АНИМАЦИЯ ПОЯВЛЕНИЯ */
+body.skin-active #screen-generic.active .generic-screen-body {
+  animation: slideUpFade 0.3s ease-out forwards !important;
+}
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 3. ВКЛАДКИ (MEXC / KuCoin / Сетка / TWAP) */
+body.skin-active .order-tabs,
+body.skin-active .exec-mode-tabs {
+  display: flex !important;
+  gap: 20px !important;
+  border-bottom: 1px solid var(--skin-border) !important;
+  margin-bottom: 24px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+body.skin-active .order-tab,
+body.skin-active .exec-mode-tab {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  color: var(--skin-mut) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 10px 0 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  box-shadow: none !important;
+}
+
+body.skin-active .order-tab.active,
+body.skin-active .exec-mode-tab.active {
+  color: var(--skin-accent) !important;
+  border-bottom-color: var(--skin-accent) !important;
+  font-weight: 600 !important;
+}
+
+/* 4. ФОРМЫ И ИНПУТЫ */
+body.skin-active #sheet-body .form-row {
+  margin-bottom: 16px !important;
+}
+
+body.skin-active #sheet-body label,
+body.skin-active #sheet-body .form-lbl {
+  display: block !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  color: var(--skin-mut) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 8px !important;
+}
+
+body.skin-active #sheet-body input[type="text"],
+body.skin-active #sheet-body input[type="password"],
+body.skin-active #sheet-body input[type="number"],
+body.skin-active #sheet-body select,
+body.skin-active #sheet-body .form-input {
+  width: 100% !important;
+  background-color: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 14px 16px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 14px !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: border-color 0.2s !important;
+}
+
+body.skin-active #sheet-body input:focus,
+body.skin-active #sheet-body select:focus {
+  border-color: var(--skin-accent) !important;
+}
+
+/* Специфичный фикс для селекта (стрелочка) */
+body.skin-active #sheet-body select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23A1A1AA%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 16px top 50% !important;
+  background-size: 10px auto !important;
+  padding-right: 40px !important;
+}
+
+/* Сетка для полей ввода (Сумма / Кол-во) */
+body.skin-active #sheet-body .form-grid-2 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+}
+
+/* 5. КНОПКИ */
+body.skin-active #sheet-body .btn-primary {
+  width: 100% !important;
+  background-color: #27272A !important;
+  color: #ffffff !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+  padding: 14px 16px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  margin-top: 10px !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s, background-color 0.2s !important;
+}
+body.skin-active #sheet-body .btn-primary:hover {
+  background-color: #3F3F46 !important;
+}
+
+body.skin-active #sheet-body .btn-primary.btn-mint,
+body.skin-active #sheet-body button[onclick*="saveKeys"],
+body.skin-active #sheet-body button[onclick*="calculateStrategy"] {
+  background-color: var(--skin-accent) !important;
+  color: #000000 !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+body.skin-active #sheet-body .btn-primary.btn-amber {
+  background-color: transparent !important;
+  color: var(--skin-accent) !important;
+  border: 1px solid var(--skin-accent) !important;
+  font-weight: 700 !important;
+}
+
+/* Блок расчетов, Портфель и Монитор в новом стиле */
+body.skin-active .calc-result {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .port-stat {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .asset-row {
+  border-bottom: 1px solid var(--skin-border) !important;
+}
+body.skin-active .monitor-bar {
+  background: var(--skin-bg) !important;
+}
+body.skin-active .monitor-fill {
+  background: var(--skin-accent) !important;
+}
+body.skin-active #sheet-body .btn-primary:active {
+  opacity: 0.8 !important;
+}
+
+/* Ссылка "Удалить ключи" (красная) */
+body.skin-active #sheet-body [onclick*="deleteKeys"],
+body.skin-active #sheet-body .text-coral {
+  color: #ff6584 !important;
+  font-size: 12px !important;
+  font-family: 'Inter', sans-serif !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  margin-top: 8px !important;
+}
+
+/* 6. Мелкие тексты и подсказки */
+body.skin-active #sheet-body .text-mut,
+body.skin-active #sheet-body p {
+  color: var(--skin-mut) !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* Прячем старые неоновые обводки, если они где-то остались */
+body.skin-active #sheet-body .neon-btn-wrap {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ГЛОБАЛЬНЫЙ ФИКС ЭКРАНОВ ИЗ ШТОРОК (GENERIC SCREEN)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active #screen-generic {
+  padding-top: calc(var(--safe-top) + 80px) !important; /* Уменьшили отступ сверху */
+  padding-bottom: calc(var(--safe-bot) + 80px) !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+  background: var(--skin-bg) !important;
+}
+
+@media (max-width: 1023px) {
+  body.skin-active #screen-generic {
+    padding-top: calc(var(--safe-top) + 125px) !important; /* Для мобилки оставляем под шапкой */
+  }
+}
+
+/* Широкий контент на ПК, узкий на мобилке */
+body.skin-active .generic-screen-body {
+  width: 100% !important;
+  max-width: 1000px !important; /* Было 800, стало шире на ПК */
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+/* Убираем дублирующийся заголовок внутри самого контента (если он есть) */
+body.skin-active .generic-screen-body > h2:first-child,
+body.skin-active .generic-screen-body > div:first-child > .hub-tabs {
+  margin-top: 0 !important;
+}
+
+/* ─── СТИЛИ ДЛЯ КАРТОЧЕК ИНСТРУМЕНТОВ (ОБМЕН, ХАБ, РЫНОК) ─── */
+body.skin-active .hub-card,
+body.skin-active .trending-item,
+body.skin-active .pattern-card,
+body.skin-active .learn-stat {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  transition: transform 0.2s, background 0.2s !important;
+}
+
+body.skin-active .hub-card:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Убираем старые неоновые обводки у карточек инструментов */
+body.skin-active [style*="rgba(167,139,250"] ,
+body.skin-active [style*="rgba(252,213,53"],
+body.skin-active [style*="rgba(69,224,168"] {
+  background: var(--skin-surface) !important;
+  border-color: var(--skin-border) !important;
+}
+
+/* Вкладки (Хаб: Биржи / Обучение / Инструменты) */
+body.skin-active .hub-tabs {
+  display: flex !important;
+  gap: 20px !important;
+  border-bottom: 1px solid var(--skin-border) !important;
+  margin-bottom: 24px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+body.skin-active .hub-tab {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  color: var(--skin-mut) !important;
+  padding: 12px 0 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+}
+body.skin-active .hub-tab.active {
+  color: var(--skin-accent) !important;
+  border-bottom-color: var(--skin-accent) !important;
+  font-weight: 600 !important;
+}
+
+/* Бейджи в Хабе (Доступно/Недоступно) */
+body.skin-active .hub-badge {
+  background: transparent !important;
+  border: 1px solid var(--skin-border) !important;
+  color: var(--skin-mut) !important;
+  font-size: 10px !important;
+  padding: 4px 8px !important;
+}
+body.skin-active .hub-badge.ru {
+  color: var(--skin-accent) !important;
+  border-color: rgba(29, 185, 84, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ШТОРКА (#sheet) И МОДАЛКИ В НОВОМ ПЛОСКОМ СТИЛЕ
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .sheet-overlay,
+body.skin-active .terms-overlay,
+body.skin-active .diag-overlay,
+body.skin-active .btc-outlook-overlay {
+  background: rgba(0, 0, 0, 0.82) !important;
+}
+
+body.skin-active .sheet {
+  background: var(--skin-surface) !important;
+  border-top: 1px solid var(--skin-border) !important;
+  border-left: 1px solid var(--skin-border) !important;
+  border-right: 1px solid var(--skin-border) !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+body.skin-active .sheet-head,
+body.skin-active .terms-head,
+body.skin-active .diag-head {
+  background: var(--skin-surface) !important;
+  border-bottom: 1px solid var(--skin-border) !important;
+}
+
+body.skin-active .sheet-title,
+body.skin-active .terms-head h3,
+body.skin-active .diag-head h3 {
+  font-family: 'Space Grotesk', sans-serif !important;
+  color: #ffffff !important;
+}
+
+body.skin-active .sheet-close,
+body.skin-active .btc-close {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  color: var(--skin-mut) !important;
+  border-radius: 6px !important;
+}
+body.skin-active .sheet-close:hover,
+body.skin-active .btc-close:hover {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+body.skin-active .terms-modal,
+body.skin-active .diag-modal,
+body.skin-active .btc-outlook-modal {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 12px !important;
+}
+
+body.skin-active .terms-foot {
+  background: var(--skin-bg) !important;
+  border-top: 1px solid var(--skin-border) !important;
+}
+
+body.skin-active .terms-accept {
+  background: var(--skin-accent) !important;
+  color: #000000 !important;
+  border-radius: 8px !important;
+}
+
+body.skin-active .about-hero {
+  background: var(--skin-bg) !important;
+  border-bottom: 1px solid var(--skin-border) !important;
+}
+body.skin-active .about-hero h2 {
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+body.skin-active .diag-row,
+body.skin-active .btc-cell,
+body.skin-active .btc-cal-row,
+body.skin-active .btc-cycle-row,
+body.skin-active .btc-prob-examples {
+  background: var(--skin-bg) !important;
+  border-color: var(--skin-border) !important;
+}
+
+body.skin-active .btc-tab.active {
+  color: var(--skin-accent) !important;
+  border-bottom-color: var(--skin-accent) !important;
+}
+
+body.skin-active .btc-note {
+  background: var(--skin-bg) !important;
+  border-left-color: var(--skin-accent) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЗВЕЗДА ИЗБРАННОГО (ПК), СКАНЕР И ЭКРАН ИЗБРАННОГО
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Активная звезда на ПК */
+body.skin-active .btc-actions .btc-btn-outline.active {
+  color: #ffffff !important;
+  border-color: rgba(252, 213, 53, 0.45) !important;
+}
+body.skin-active .btc-actions .btc-btn-outline.active svg {
+  color: #fcd535 !important;
+  fill: #fcd535 !important;
+}
+
+/* Сканер */
+body.skin-active .scanner-head-card {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .coin-item {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+  transition: background-color 0.2s, border-color 0.2s !important;
+}
+body.skin-active .coin-item:hover {
+  background: #222226 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+body.skin-active .coin-rsi-badge {
+  background: rgba(29, 185, 84, 0.12) !important;
+  color: var(--skin-accent) !important;
+  border: 1px solid rgba(29, 185, 84, 0.3) !important;
+  border-radius: 6px !important;
+}
+
+/* Избранное (метрики рынка + таблица монет) */
+body.skin-active .fmh-cell {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .fav-list-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--skin-border) !important;
+  color: var(--skin-mut) !important;
+}
+body.skin-active .fav-row {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+  transition: background-color 0.2s, border-color 0.2s !important;
+}
+body.skin-active .fav-row:hover {
+  background: #222226 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+body.skin-active .fav-row-del {
+  background: transparent !important;
+  color: var(--skin-mut) !important;
+}
+body.skin-active .fav-row-del:hover {
+  color: #ff6584 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ВЕРДИКТ, МУЛЬТИ-ТФ, ИИ-НАСТАВНИК, АНАЛИТИКА (PRO) И ОРАКУЛ
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Вердикт */
+body.skin-active .verdict {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-left-width: 3px !important;
+  border-radius: 8px !important;
+}
+body.skin-active .verdict.green { border-left-color: var(--skin-accent) !important; }
+body.skin-active .verdict.yellow { border-left-color: #ffb858 !important; }
+body.skin-active .verdict.red { border-left-color: #ff6584 !important; }
+
+/* Мульти-ТФ Confluence */
+body.skin-active .conf-tf {
+  background: var(--skin-bg) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .conf-bar {
+  background: var(--skin-bg) !important;
+}
+body.skin-active .conf-fill {
+  background: var(--skin-accent) !important;
+}
+
+/* Вкладки ИИ-наставника и сценарии */
+body.skin-active .ai-mode-tabs,
+body.skin-active .ai-scenario-tabs {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+  padding: 3px !important;
+}
+body.skin-active .ai-mode-tab,
+body.skin-active .ai-scenario-tab {
+  background: transparent !important;
+  color: var(--skin-mut) !important;
+  border: none !important;
+}
+body.skin-active .ai-mode-tab.active,
+body.skin-active .ai-scenario-tab.active {
+  background: var(--skin-accent) !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+body.skin-active .ai-scenario-panel,
+body.skin-active .ai-verdict-line {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+
+/* Аналитика (экран PRO) */
+body.skin-active .pro-num-cell,
+body.skin-active .sr-item,
+body.skin-active .vp-cell,
+body.skin-active .div-main {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+
+/* Экран Оракула */
+body.skin-active .oracle-hero {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 10px !important;
+}
+body.skin-active .oracle-avatar-large {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+}
+body.skin-active .oracle-profile-cell,
+body.skin-active .oracle-stat-cell,
+body.skin-active .recent-item,
+body.skin-active .journal-cell {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .recent-item:hover {
+  background: #222226 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Кнопки действий Оракула и варианты Квиза */
+body.skin-active .oracle-action-btn,
+body.skin-active .quiz-opt {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  transition: background-color 0.2s, border-color 0.2s !important;
+}
+body.skin-active .oracle-action-btn:hover,
+body.skin-active .quiz-opt:hover {
+  background: #222226 !important;
+  border-color: var(--skin-accent) !important;
+}
+body.skin-active .oracle-action-btn.mint {
+  border-color: rgba(29, 185, 84, 0.4) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ЦЕНТР РИСКОВ И УВЕДОМЛЕНИЯ (ALERTS)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .risk-hero {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-left-width: 3px !important;
+  border-radius: 10px !important;
+}
+body.skin-active .risk-hero-low { border-left-color: var(--skin-accent) !important; }
+body.skin-active .risk-hero-medium { border-left-color: #ffb858 !important; }
+body.skin-active .risk-hero-high { border-left-color: #ff6584 !important; }
+body.skin-active .risk-hero-glow { display: none !important; }
+
+body.skin-active .risk-indicator {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .risk-indicator-low { border-top: 2px solid var(--skin-accent) !important; }
+body.skin-active .risk-indicator-medium { border-top: 2px solid #ffb858 !important; }
+body.skin-active .risk-indicator-high { border-top: 2px solid #ff6584 !important; }
+
+body.skin-active .risk-action-btn {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-accent) !important;
+  color: var(--skin-accent) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .risk-action-btn:hover {
+  background: rgba(29, 185, 84, 0.1) !important;
+}
+
+/* Окно уведомлений (alerts.ts) */
+body.skin-active .alert-form,
+body.skin-active .alert-row {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .alert-del-btn {
+  background: transparent !important;
+  color: var(--skin-mut) !important;
+}
+body.skin-active .alert-del-btn:hover {
+  color: #ff6584 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   НАСТРОЙКИ, КНОПКИ УДАЛЕНИЯ (CORAL) И РЕДАКТОР ТЕМ
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .settings-section-title {
+  color: var(--skin-mut) !important;
+}
+
+body.skin-active .settings-row {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+}
+body.skin-active .settings-row:hover,
+body.skin-active .settings-row:active {
+  background: #222226 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.skin-active .settings-row-icon {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+
+body.skin-active .settings-row-status {
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+}
+
+/* Переключатель языка RU / EN */
+body.skin-active .lang-mini {
+  display: flex !important;
+  gap: 4px !important;
+  background: var(--skin-surface) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 6px !important;
+  padding: 2px !important;
+}
+body.skin-active .lang-mini button {
+  background: transparent !important;
+  color: var(--skin-mut) !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+body.skin-active .lang-mini button.active {
+  background: var(--skin-accent) !important;
+  color: #000000 !important;
+}
+
+/* Кнопки удаления (.btn-coral) внутри шторок */
+body.skin-active #sheet-body .btn-primary.btn-coral {
+  background-color: transparent !important;
+  color: #ff6584 !important;
+  border: 1px solid rgba(255, 101, 132, 0.45) !important;
+  font-weight: 700 !important;
+}
+body.skin-active #sheet-body .btn-primary.btn-coral:hover {
+  background-color: rgba(255, 101, 132, 0.12) !important;
+}
+
+/* Карточки тем */
+body.skin-active .theme-card {
+  background: var(--skin-bg) !important;
+  border: 1px solid var(--skin-border) !important;
+  border-radius: 8px !important;
+}
+body.skin-active .theme-card.active {
+  border-color: var(--skin-accent) !important;
+}
+body.skin-active .theme-badge {
+  background: rgba(29, 185, 84, 0.15) !important;
+  color: var(--skin-accent) !important;
+  border: 1px solid rgba(29, 185, 84, 0.35) !important;
+}

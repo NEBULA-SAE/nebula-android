@@ -106,7 +106,7 @@ export function openHubDetails(name: string): void {
       <button class="btn-primary" onclick="openCryptoHub()" style="flex:1; background:rgba(255,255,255,.05); color:var(--hi);">
         ⬅️ ${tm('hub_back')}
       </button>
-      <button class="btn-primary btn-mint" onclick="document.getElementById('sheet-overlay').classList.remove('open');document.getElementById('sheet').classList.remove('open');" style="flex:1;">
+    <button class="btn-primary btn-mint" onclick="closeSheet()" style="flex:1;">
         ${tm('hub_close')}
       </button>
     </div>

@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { hmacSha256Hex } from '../crypto';
+import { getCurrentRate } from '../market';
 
 const KUCOIN_BASE = 'https://api.kucoin.com';
 
@@ -279,7 +280,7 @@ export interface PortfolioData {
 
 export async function getKucoinPortfolio(keys: KucoinKeys): Promise<PortfolioData> {
   try {
-    const rate = 95; // TODO: подтягивать из market.ts, как в mexc.ts
+    const rate = await getCurrentRate();
     const account = await kucoinRequest('GET', '/api/v1/accounts', keys, { type: 'trade' });
 
     const balances: Record<string, number> = {};
@@ -293,26 +294,40 @@ export async function getKucoinPortfolio(keys: KucoinKeys): Promise<PortfolioDat
     let total_pnl = 0;
     const free_usdt = balances['USDT'] || 0;
 
-    // Заглушка: в реальности нужно подтягивать цены через API KuCoin
-    for (const [coin, amt] of Object.entries(balances)) {
-      if (coin === 'USDT') {
-        assets.push({ coin, amount: amt, price: 1, pnl: 0, total_usd: amt, total_rub: amt * rate });
-        total_usd += amt;
-        continue;
-      }
-      // TODO: fetch price
-      const price = 0;
+    const entries = Object.entries(balances);
+    const priceResults = await Promise.allSettled(
+      entries.map(([coin]) => {
+        if (coin === 'USDT') return Promise.resolve({ coin, price: 1, pnl: 0 });
+        return fetch(`${KUCOIN_BASE}/api/v1/market/stats?symbol=${coin}-USDT`, {
+          signal: AbortSignal.timeout(8000),
+        })
+          .then(r => r.json())
+          .then(d => ({
+            coin,
+            price: parseFloat(d.data?.last) || 0,
+            pnl: (parseFloat(d.data?.changeRate) || 0) * 100,
+          }))
+          .catch(() => ({ coin, price: 0, pnl: 0 }));
+      })
+    );
+
+    for (let i = 0; i < entries.length; i++) {
+      const [coin, amt] = entries[i];
+      const r = priceResults[i];
+      if (r.status !== 'fulfilled') continue;
+      const { price, pnl } = r.value;
       const ausd = amt * price;
       if (ausd <= 1) continue;
       assets.push({
         coin,
-        amount: amt,
+        amount: Math.round(amt * 1e6) / 1e6,
         price,
-        pnl: 0,
+        pnl,
         total_usd: ausd,
-        total_rub: ausd * rate,
+        total_rub: Math.round(ausd * rate * 100) / 100,
       });
       total_usd += ausd;
+      if (coin !== 'USDT') total_pnl += ausd * (pnl / 100);
     }
 
     assets.sort((a, b) => b.total_usd - a.total_usd);

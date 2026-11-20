@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.38** | Branch: `main` | Commit: `baad85d`
-> Generated: 2026-11-11 20:32
+> Version: **2.0.39** | Branch: `main` | Commit: `8fa67c2`
+> Generated: 2026-11-20 11:35
 
 ---
 
@@ -38,16 +38,43 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 57
-- Total LOC in `src/`: 18910
-- Bundle (`dist/`): 60 files, 733.3 KB
+- Total LOC in `src/`: 19061
+- Bundle (`dist/`): 61 files, 819.7 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.38**
-- Last git tag: `v2.0.37`
+- `package.json` version: **2.0.39**
+- Last git tag: `v2.0.38`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `8fa67c2` - 2026-11-11 - chore(release): v2.0.38
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/ic_launcher-playstore.png`
+- `public/styles/base.css`
+- `public/styles/btc-outlook.css`
+- `public/styles/components.css`
+- `public/styles/desktop-fix.css`
+- `public/styles/layout.css`
+- `public/styles/screens.css`
+- `public/styles/theme.css`
+- `public/styles/themes.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/btc/outlook-engine.ts`
+- `src/ui/btc-outlook.ts`
+- `src/ui/init.ts`
+- `src/ui/pull-refresh.ts`
+- `src/ui/screens.ts`
 
 ### `baad85d` - 2026-11-07 - chore(release): v2.0.37
 
@@ -129,28 +156,13 @@ Files:
 - `src/ui/learning.ts`
 - `src/ui/oracle.ts`
 
-### `4b13def` - 2026-11-03 - chore(release): v2.0.33
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/components.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/ui/chart-overlay.ts`
-
 ## Last release diff
 
-No changes since `v2.0.37`
+No changes since `v2.0.38`
 
 ## Recent tags
 
+- `v2.0.38`
 - `v2.0.37`
 - `v2.0.36`
 - `v2.0.35`
@@ -160,7 +172,6 @@ No changes since `v2.0.37`
 - `v2.0.31`
 - `v2.0.30`
 - `v2.0.29`
-- `v2.0.28`
 
 ## File tree (src/)
 
@@ -180,7 +191,7 @@ src/
 |   +--   140 confluence.ts
 |   +--   158 dash.ts
 |   +--    95 funding.ts
-|   +--   336 kucoin.ts
+|   +--   351 kucoin.ts
 |   +--   331 mexc.ts
 |   +--   241 orderbook.ts
 |   +--   237 stream.ts
@@ -188,21 +199,21 @@ src/
 +-- styles/
 |   +--   136 main.css
 +-- ui/
-|   +--   379 btc-outlook.ts
+|   +--   415 btc-outlook.ts
 |   +--   510 chart-overlay.ts
 |   +--   236 dash.ts
 |   +--   511 diagnostics.ts
 |   +--   121 hub.ts
-|   +--   388 init.ts
-|   +--   244 learning.ts
+|   +--   409 init.ts
+|   +--   247 learning.ts
 |   +--    76 market.ts
 |   +--   115 mining.ts
-|   +--  1208 oracle.ts
+|   +--  1213 oracle.ts
 |   +--   435 pull-refresh.ts
 |   +--   331 risk.ts
-|   +--   447 scanner.ts
-|   +--   636 screens.ts
-|   +--   628 settings.ts
+|   +--   458 scanner.ts
+|   +--   686 screens.ts
+|   +--   632 settings.ts
 |   +--   292 splash.ts
 |   +--   149 terms.ts
 |   +--   383 themes.ts
@@ -227,7 +238,7 @@ src/
 +--   236 patterns.ts
 +--   242 pro.ts
 +--   282 themes.ts
-+--   694 trading.ts
++--   700 trading.ts
 +--   228 utils.ts
 +--   229 worker.ts
 ```
@@ -629,6 +640,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - setDemoAmount()
 - renderDemoPlan()
 - initRadarMenu()
+- loadBTC (const)
 
 ### `src/ui/settings.ts`
 - openSettings()
@@ -777,9 +789,9 @@ closeDiagnostics, openDiagnostics, runFullDiagnostics, showDiagnosticsModal
 
 openCryptoHub, openHubDetails
 
-### `src/ui/init.ts` (5)
+### `src/ui/init.ts` (4)
 
-mobileAnalyze, openExchangeMenu, openMiningWhatToMine, openP2PMarket, openXgramSwap
+openExchangeMenu, openMiningWhatToMine, openP2PMarket, openXgramSwap
 
 ### `src/ui/learning.ts` (4)
 
@@ -809,9 +821,9 @@ computeRiskSnapshot, injectRiskHelpBtn, renderRiskCenter, showRiskHelp
 
 initAutocomplete, pickCoin, removeFav, renderFavorites, runScanner, suggestPick, toggleFavCurrent, updateStarButton
 
-### `src/ui/screens.ts` (17)
+### `src/ui/screens.ts` (18)
 
-_currentDemoPlan, applyStaticTranslations, cancelDemoOrder, closeBtcOutlook, closeSheet, enterDemoMode, exitDemoMode, initRadarMenu, loadActiveCoinCard, openBtcOutlook, openSheet, renderDemoPlan, resetDemo, setDemoAmount, setLanguage, switchHomeTab, switchTab
+_currentDemoPlan, applyStaticTranslations, cancelDemoOrder, closeBtcOutlook, closeSheet, enterDemoMode, exitDemoMode, initRadarMenu, loadActiveCoinCard, loadBTC, openBtcOutlook, openSheet, renderDemoPlan, resetDemo, setDemoAmount, setLanguage, switchHomeTab, switchTab
 
 ### `src/ui/settings.ts` (17)
 
@@ -942,9 +954,9 @@ demoHistory: []
 
 Critical list: ticker, chart-container, chart-stats, tf-bar, verdict, verdict-title, verdict-text, plan-card, agent-card, whale-card, dash-section, dash-network-content, screen-home, screen-pro, screen-scanner, sheet, sheet-overlay, sheet-title, sheet-body, toast-wrap, app-lock-overlay, al-input, al-submit
 
-All IDs in index.html (238 total):
+All IDs in index.html (250 total):
 
-about-build, about-can, about-features-list, about-feedback, about-feedback-desc, about-overlay, about-plat-and, about-platforms, about-platforms-list, about-plat-web, about-plat-win, about-security, about-security-desc, about-tech, about-title, about-version, about-warn, about-what, about-what-desc, about-who, about-who-desc, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, brand-pro-btn, brand-pro-btn-pc, brand-text, brand-text-pc, btc-advice, btc-change, btc-drop, btc-outlook-content, btc-outlook-inline, btc-outlook-modal, btc-outlook-overlay, btc-price, btc-rebound, btc-rsi, btc-trend, chart-container, chart-stats, coin-logo-container, coin-logo-img, confluence-badge, confluence-card, confluence-content, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-empty-oracle, demo-empty-orders, demo-exit-btn, demo-oracle-content, demo-orders-list, demo-panel, demo-reset-btn, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, diag-title, fav-count, fav-list, fav-market-header, fmh-alt, fmh-alt-ring, fmh-alt-text, fmh-cmc20, fmh-cmc20-bar, fmh-cmc20-change, fmh-fng, fmh-fng-ring, fmh-fng-text, fmh-mcap, fmh-mcap-bar, fmh-mcap-change, home-fav-content, home-main-content, htab-fav, htab-main, i-bolt, i-brain, i-chart, i-demo, i-flask, i-globe, i-language, i-oracle, i-settings, i-shield, i-star, i-star-fill, i-target, i-wallet, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-btc-outlook, lbl-confluence, lbl-demo-free, lbl-demo-invested, lbl-demo-oracle-plan, lbl-demo-pnl, lbl-demo-virtual-trades, lbl-drop, lbl-fav, lbl-fmh-alt, lbl-fmh-cmc20, lbl-fmh-fng, lbl-fmh-mcap, lbl-oracle-analogs, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-tab-chart, lbl-tab-favorites, lbl-trend, lbl-walls, lbl-whale, lbl-white-paper, lbl-xray, main-brand, main-brand-pc, main-nav, monitor-panel, nav-home, nav-hub, nav-oracle, nav-portfolio, nav-pro, nav-risk, nav-scanner, nebula-splash, oracle-analogs-card, oracle-analogs-content, oracle-analogs-empty, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, pro-expiry-text, radar-center-orb, radar-hub, radar-items, radar-laser-line, radar-learning, radar-market, radar-orders, radar-overlay, radar-portfolio, radar-risk, radar-trigger, radar-trigger-wrap, risk-content, risk-page-title-text, rt-core-text, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-risk, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, star-btn, star-icon, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
+about-build, about-can, about-features-list, about-feedback, about-feedback-desc, about-overlay, about-plat-and, about-platforms, about-platforms-list, about-plat-web, about-plat-win, about-security, about-security-desc, about-tech, about-title, about-version, about-warn, about-what, about-what-desc, about-who, about-who-desc, agent-card, agent-content, ai-cmd-input, ai-cmd-result, ai-cmd-run, ai-deposit, ai-panel-agent, ai-panel-insight, al-biometric, al-confirm-row, al-desc, al-error, al-input, al-input2, al-reset, al-submit, al-title, app-lock-overlay, assets-list, brand-pro-btn, brand-pro-btn-pc, brand-text, brand-text-pc, btc-advice, btc-change, btc-drop, btc-fullname, btc-outlook-content, btc-outlook-inline, btc-outlook-modal, btc-outlook-overlay, btc-price, btc-rebound, btc-rsi, btc-spark, btc-trend, chart-container, chart-stats, coin-logo-container, coin-logo-img, confluence-badge, confluence-card, confluence-content, dash-network-content, dash-network-status, dash-section, demo-balance-free, demo-balance-invested, demo-balance-pnl, demo-empty-oracle, demo-empty-orders, demo-exit-btn, demo-oracle-content, demo-orders-list, demo-panel, demo-reset-btn, demo-ticker, demo-ticker-suggest, demo-ticker-summary, diag-body, diag-overlay, diag-title, fav-count, fav-list, fav-market-header, fmh-alt, fmh-alt-ring, fmh-alt-text, fmh-cmc20, fmh-cmc20-bar, fmh-cmc20-change, fmh-fng, fmh-fng-ring, fmh-fng-text, fmh-mcap, fmh-mcap-bar, fmh-mcap-change, home-fav-content, home-main-content, i-bell, i-bolt, i-brain, i-chart, i-clock, i-demo, i-flask, i-globe, i-info, i-language, i-oracle, i-play, i-pulse, i-refresh, i-scan, i-search, i-settings, i-shield, i-star, i-star-fill, i-target, i-trending, i-wallet, i-whale, lbl-agent, lbl-ai-agent-hint, lbl-ai-deposit, lbl-ai-mode-agent, lbl-ai-mode-insight, lbl-ai-run, lbl-assets, lbl-btc-outlook, lbl-confluence, lbl-demo-free, lbl-demo-invested, lbl-demo-oracle-plan, lbl-demo-pnl, lbl-demo-virtual-trades, lbl-drop, lbl-fav, lbl-fmh-alt, lbl-fmh-cmc20, lbl-fmh-fng, lbl-fmh-mcap, lbl-monitor, lbl-oracle-analogs, lbl-oracle-analyze, lbl-oracle-edit, lbl-oracle-edit-hint, lbl-oracle-name, lbl-oracle-profile, lbl-oracle-recent, lbl-oracle-refresh, lbl-oracle-refresh-hint, lbl-oracle-stats, lbl-oracle-status, lbl-plan, lbl-port-pnl, lbl-port-sync, lbl-port-total, lbl-rebound, lbl-scan-acc, lbl-trend, lbl-walls, lbl-whale, lbl-white-paper, lbl-xray, main-brand, main-brand-pc, main-nav, monitor-content, monitor-panel, mon-price, mon-sym, nav-exchange, nav-fav, nav-home, nav-hub, nav-oracle, nav-portfolio, nav-pro, nav-risk, nav-scanner, nebula-splash, oracle-analogs-card, oracle-analogs-content, oracle-analogs-empty, oracle-profile-content, oracle-recent-content, oracle-stats-content, oracle-ticker-hint, plan-card, plan-content, port-pnl, port-rate, port-total, port-total-rub, pro-content, pro-expiry-text, radar-center-orb, radar-hub, radar-items, radar-laser-line, radar-learning, radar-market, radar-orders, radar-overlay, radar-portfolio, radar-risk, radar-trigger, radar-trigger-wrap, risk-content, risk-page-title-text, rt-core-text, scan-list, scan-status, screen-fav, screen-home, screen-oracle, screen-portfolio, screen-pro, screen-risk, screen-scanner, sheet, sheet-body, sheet-overlay, sheet-title, splash-loader-bar, splash-stars-canvas, splash-status, tauri-titlebar, tb-close, tb-max, tb-min, terms-overlay, terms-title, tf-bar, ticker, ticker-suggest, toast-wrap, verdict, verdict-text, verdict-title, walls-card, walls-content, whale-card, whale-content, whale-status-badge, xray-card, xray-content
 
 ## Key dependencies
 
@@ -958,13 +970,11 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Tech debt
 
-2 markers found (TODO / FIXME / HACK / XXX):
-
-- `src/sources/kucoin.ts:282` - const rate = 95; // TODO: подтягивать из market.ts, как в mexc.ts
-- `src/sources/kucoin.ts:303` - // TODO: fetch price
+(no TODO/FIXME/HACK markers)
 
 ## Release history (last 15 commits)
 
+- 8fa67c2  2026-11-11  chore(release): v2.0.38
 - baad85d  2026-11-07  chore(release): v2.0.37
 - 3beab82  2026-11-05  chore(release): v2.0.36
 - 79a0bca  2026-11-04  chore(release): v2.0.35
@@ -979,7 +989,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - c30bae8  2026-11-01  chore(release): v2.0.27
 - d7db1b1  2026-10-31  chore(release): v2.0.26
 - 44c550b  2026-10-31  chore(release): v2.0.25
-- 8984049  2026-10-31  chore(release): v2.0.24
 
 ---
 
