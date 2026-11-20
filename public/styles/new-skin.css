@@ -2130,3 +2130,104 @@ body.skin-active .theme-badge {
   color: var(--skin-accent) !important;
   border: 1px solid rgba(29, 185, 84, 0.35) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   КОМПАКТНЫЙ САЙДБАР С КАТЕГОРИЯМИ (ТОЛЬКО ПК ≥ 1024px)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .nav-section-lbl {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  /* Контейнер сайдбара: компактнее отступы + скролл на будущее */
+  body.skin-active .bottom-nav {
+    padding: 16px 12px 14px 12px !important;
+    gap: 2px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
+
+  /* Логотип NEBULA PRO чуть компактнее */
+  body.skin-active #main-brand-pc {
+    padding: 4px 12px 14px 12px !important;
+    margin-bottom: 6px !important;
+    gap: 5px !important;
+  }
+
+  /* Пункты меню: меньше высота и аккуратнее иконки */
+  body.skin-active .bottom-nav > .nav-btn {
+    padding: 8px 12px !important;
+    gap: 11px !important;
+    margin-bottom: 1px !important;
+    border-radius: 7px !important;
+  }
+  body.skin-active .bottom-nav > .nav-btn.active {
+    padding-left: 9px !important;
+  }
+  body.skin-active .bottom-nav > .nav-btn svg {
+    width: 17px !important;
+    height: 17px !important;
+    flex-shrink: 0 !important;
+  }
+  body.skin-active .bottom-nav > .nav-btn .lbl {
+    font-size: 13px !important;
+  }
+
+  /* Заголовки категорий (АНАЛИЗ / ТОРГОВЛЯ / СЕРВИСЫ) */
+  body.skin-active .nav-section-lbl {
+    display: block !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+    color: var(--skin-dim) !important;
+    padding: 12px 12px 4px 12px !important;
+    margin-top: 6px !important;
+    border-top: 1px solid var(--skin-border) !important;
+    user-select: none !important;
+  }
+
+  /* Порядок блоков */
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('home')"] { order: 1 !important; margin-bottom: 1px !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('fav')"]  { order: 2 !important; margin-bottom: 1px !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('pro')"]  { order: 3 !important; margin-bottom: 1px !important; }
+
+  body.skin-active .nav-sec-analysis { order: 10 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('scanner')"] { order: 11 !important; margin-bottom: 1px !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('oracle')"]  { order: 12 !important; margin-bottom: 1px !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('risk')"]    { order: 13 !important; margin-bottom: 1px !important; }
+
+  body.skin-active .nav-sec-trade { order: 20 !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="switchTab('portfolio')"] { order: 21 !important; margin-bottom: 1px !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openMarketPulse"]        { order: 22 !important; margin-bottom: 1px !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openCryptoHub"]          { order: 23 !important; margin-bottom: 1px !important; }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openLearning"]           { order: 24 !important; margin-bottom: 1px !important; }
+
+  /* Нижний блок СЕРВИСЫ (прижимается к низу + компактные плашки) */
+  body.skin-active .nav-sec-services {
+    order: 97 !important;
+    margin-top: auto !important;
+    padding-top: 12px !important;
+  }
+  body.skin-active .bottom-nav > .nav-btn.sidebar-exchange-btn,
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openOrdersSheet"],
+  body.skin-active .bottom-nav > .nav-btn[onclick*="enterDemoMode"] {
+    margin-top: 4px !important;
+    padding: 8px 12px !important;
+    font-size: 12.5px !important;
+    background-color: #1F1F23 !important;
+    border: 1px solid var(--skin-border) !important;
+    border-radius: 7px !important;
+  }
+  body.skin-active .bottom-nav > .nav-btn.sidebar-exchange-btn {
+    order: 98 !important;
+  }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="openOrdersSheet"] {
+    order: 99 !important;
+  }
+  body.skin-active .bottom-nav > .nav-btn[onclick*="enterDemoMode"] {
+    order: 100 !important;
+  }
+}

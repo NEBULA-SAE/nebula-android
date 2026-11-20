@@ -713,10 +713,15 @@
         <span class="lbl" id="nav-exchange">Обмен</span>
       </button>
       
-      <button class="nav-btn hide-on-mobile" onclick="enterDemoMode()">
+    <button class="nav-btn hide-on-mobile" onclick="enterDemoMode()">
         <svg><use href="#i-flask"/></svg>
         <span class="lbl">Демо-режим</span>
       </button>
+
+  <!-- Заголовки категорий (только для ПК) -->
+  <div class="nav-section-lbl nav-sec-analysis hide-on-mobile">АНАЛИЗ</div>
+  <div class="nav-section-lbl nav-sec-trade hide-on-mobile">ТОРГОВЛЯ</div>
+  <div class="nav-section-lbl nav-sec-services hide-on-mobile">СЕРВИСЫ</div>
 </nav>
 
 <!-- ═══ РАДАРНОЕ МЕНЮ (ЦЕНТРАЛЬНЫЙ ПУЗЫРЬ + ЛАЗЕР) ═══ -->
@@ -817,7 +822,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.39</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.40</div>
     </div>
 
     <div class="terms-body">
@@ -853,7 +858,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.39</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.40</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
