@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.44** | Branch: `main` | Commit: `e180104`
-> Generated: 2026-11-21 14:56
+> Version: **2.0.45** | Branch: `main` | Commit: `a5c5811`
+> Generated: 2026-11-21 15:33
 
 ---
 
@@ -43,11 +43,31 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Consistency check
 
-- `package.json` version: **2.0.44**
-- Last git tag: `v2.0.43`
+- `package.json` version: **2.0.45**
+- Last git tag: `v2.0.44`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `a5c5811` - 2026-11-21 - chore(release): v2.0.44
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `scripts/i18n-sync.mjs`
+- `scripts/release.ps1`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/i18n.ts`
+- `src/locales/.i18n-lock.json`
+- `src/locales/auto-en.json`
+- `src/locales/en.json`
+- `src/locales/ru.json`
 
 ### `e180104` - 2026-11-21 - chore(release): v2.0.43
 
@@ -118,38 +138,13 @@ Files:
 - `src-tauri/Cargo.toml`
 - `src-tauri/tauri.conf.json`
 
-### `3d5b255` - 2026-11-20 - chore(release): v2.0.39
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/desktop-fix.css`
-- `public/styles/new-skin.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/sources/kucoin.ts`
-- `src/trading.ts`
-- `src/ui/btc-outlook.ts`
-- `src/ui/hub.ts`
-- `src/ui/init.ts`
-- `src/ui/learning.ts`
-- `src/ui/oracle.ts`
-- `src/ui/risk.ts`
-- `src/ui/scanner.ts`
-- `src/ui/screens.ts`
-- `src/ui/settings.ts`
-
 ## Last release diff
 
-No changes since `v2.0.43`
+No changes since `v2.0.44`
 
 ## Recent tags
 
+- `v2.0.44`
 - `v2.0.43`
 - `v2.0.42`
 - `v2.0.41`
@@ -159,7 +154,6 @@ No changes since `v2.0.43`
 - `v2.0.37`
 - `v2.0.36`
 - `v2.0.35`
-- `v2.0.34`
 
 ## File tree (src/)
 
@@ -996,6 +990,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- a5c5811  2026-11-21  chore(release): v2.0.44
 - e180104  2026-11-21  chore(release): v2.0.43
 - 1324cfa  2026-11-20  chore(release): v2.0.42
 - 9c9eb58  2026-11-20  chore(release): v2.0.41
@@ -1010,7 +1005,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 95f9b76  2026-11-03  chore(release): v2.0.32
 - a2ca92b  2026-11-02  chore(release): v2.0.31
 - 5b7bfc0  2026-11-02  before i18n fix
-- 5e5791c  2026-11-01  chore(release): v2.0.30
 
 ---
 

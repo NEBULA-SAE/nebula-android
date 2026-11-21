@@ -1,0 +1,28 @@
+{
+  "output": {
+    "filePath": "nebula-context.md",
+    "style": "markdown",
+    "compress": false,
+    "topFilesLimit": 0,
+    "showLineNumbers": false,
+    "copyToClipboard": false
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "nebula-context.md",
+      "src/locales/**",
+      "src/i18n.ts",
+      "dist_release/**",
+      "src-tauri/target/**",
+      "android/app/build/**",
+      "*.keystore",
+      "*.jks",
+      "*.p12",
+      "*.pfx",
+      "*.pem",
+      "*.key"
+    ]
+  }
+}
