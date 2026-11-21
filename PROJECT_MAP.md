@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.43** | Branch: `main` | Commit: `1324cfa`
-> Generated: 2026-11-21 11:44
+> Version: **2.0.44** | Branch: `main` | Commit: `e180104`
+> Generated: 2026-11-21 14:56
 
 ---
 
@@ -38,16 +38,41 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 60
-- Total LOC in `src/`: 20274
-- Bundle (`dist/`): 62 files, 855.6 KB
+- Total LOC in `src/`: 18956
+- Bundle (`dist/`): 62 files, 907.6 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.43**
-- Last git tag: `v2.0.42`
+- `package.json` version: **2.0.44**
+- Last git tag: `v2.0.43`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `e180104` - 2026-11-21 - chore(release): v2.0.43
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ai.ts`
+- `src/backtest/engine.ts`
+- `src/db.ts`
+- `src/demo.ts`
+- `src/oracle.ts`
+- `src/services/audio.ts`
+- `src/sources/candles.ts`
+- `src/trading.ts`
+- `src/trading/costs.ts`
+- `src/ui/oracle.ts`
+- `src/ui/screens.ts`
+- `src/ui/whale.ts`
 
 ### `1324cfa` - 2026-11-20 - chore(release): v2.0.42
 
@@ -119,39 +144,13 @@ Files:
 - `src/ui/screens.ts`
 - `src/ui/settings.ts`
 
-### `8fa67c2` - 2026-11-11 - chore(release): v2.0.38
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/ic_launcher-playstore.png`
-- `public/styles/base.css`
-- `public/styles/btc-outlook.css`
-- `public/styles/components.css`
-- `public/styles/desktop-fix.css`
-- `public/styles/layout.css`
-- `public/styles/screens.css`
-- `public/styles/theme.css`
-- `public/styles/themes.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/btc/outlook-engine.ts`
-- `src/ui/btc-outlook.ts`
-- `src/ui/init.ts`
-- `src/ui/pull-refresh.ts`
-- `src/ui/screens.ts`
-
 ## Last release diff
 
-No changes since `v2.0.42`
+No changes since `v2.0.43`
 
 ## Recent tags
 
+- `v2.0.43`
 - `v2.0.42`
 - `v2.0.41`
 - `v2.0.40`
@@ -161,7 +160,6 @@ No changes since `v2.0.42`
 - `v2.0.36`
 - `v2.0.35`
 - `v2.0.34`
-- `v2.0.33`
 
 ## File tree (src/)
 
@@ -174,6 +172,11 @@ src/
 +-- data/
 |   +--   310 hub.ts
 |   +--    42 info.ts
++-- locales/
+|   +--   697 .i18n-lock.json
+|   +--   505 auto-en.json
+|   +--   697 en.json
+|   +--   697 ru.json
 +-- platform/
 |   +--    58 browser.ts
 |   +--   103 http.ts
@@ -225,7 +228,7 @@ src/
 +--   210 crypto.ts
 +--   174 db.ts
 +--   359 demo.ts
-+--  1506 i18n.ts
++--   188 i18n.ts
 +--   411 indicators.ts
 +--   249 learning-core.ts
 +--   265 main.ts
@@ -346,6 +349,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - resetDemo()
 
 ### `src/i18n.ts`
+- applyAutoDomTranslation()
 - tm()
 - isEN()
 - getLang()
@@ -992,6 +996,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- e180104  2026-11-21  chore(release): v2.0.43
 - 1324cfa  2026-11-20  chore(release): v2.0.42
 - 9c9eb58  2026-11-20  chore(release): v2.0.41
 - 904606c  2026-11-20  chore(release): v2.0.40
@@ -1006,7 +1011,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - a2ca92b  2026-11-02  chore(release): v2.0.31
 - 5b7bfc0  2026-11-02  before i18n fix
 - 5e5791c  2026-11-01  chore(release): v2.0.30
-- 6f7a1b1  2026-11-01  chore(release): v2.0.29
 
 ---
 

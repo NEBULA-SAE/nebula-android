@@ -18,6 +18,7 @@ param(
     [switch]$SkipBuild,
     [switch]$SkipPush,
     [switch]$SkipTests,
+    [switch]$SkipI18n,
     [switch]$DryRun,
     [switch]$Yes
 )
@@ -494,6 +495,29 @@ if (-not $SkipTests) {
 }
 else {
     Write-Step "4/9 - TypeScript (skipped)"
+}
+
+# ---- 4.5/9 I18N SYNC ----
+if (-not $SkipI18n) {
+    Write-Step "4.5/9 - i18n sync"
+    $prevOutEnc = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    try {
+        $i18nOut = npm run i18n 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Err "i18n sync failed:"
+            $i18nOut | Select-Object -Last 15 | ForEach-Object { Write-Detail $_ }
+            Fail "Fix i18n sync or run with -SkipI18n"
+        }
+        $i18nOut | Select-Object -Last 6 | ForEach-Object { Write-Info $_ }
+        Write-Ok "Translations up to date"
+    }
+    finally {
+        [Console]::OutputEncoding = $prevOutEnc
+    }
+}
+else {
+    Write-Step "4.5/9 - i18n sync (skipped)"
 }
 
 # ---- 5/9 VERSIONS ----

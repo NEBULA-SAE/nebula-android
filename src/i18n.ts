@@ -1,1485 +1,166 @@
 // ═══════════════════════════════════════════════════════════════
-// NEBULA v2 · I18N
-// Словари RU/EN + tm() + isEN() + setLang()
+// NEBULA v2 · I18N (JSON словари + 0ms DOM-автопереводчик)
 // ═══════════════════════════════════════════════════════════════
 
-export type Lang = 'ru' | 'en';
+import I18N_RU from './locales/ru.json';
+import I18N_EN from './locales/en.json';
+import AUTO_EN from './locales/auto-en.json';
 
+export type Lang = 'ru' | 'en';
 type Dict = Record<string, string>;
 
-const I18N_RU: Dict = {
-  dashboard: 'График', analytics: 'Аналитика', scanner: 'Сканер',
-  oracle: 'Оракул', portfolio: 'Баланс', favorites: 'Избранное',
-  loading: 'Загрузка...', scanning: 'Сканирую топ-200...',
-  no_results: 'Пока никто не на дне', found: 'найдено',
-  rebound: 'Отскок', drop: 'Падение', trend: 'Тренд',
-  plan: 'Торговый план', entry: 'ВХОД', targets: 'ЦЕЛИ', stop: 'СТОП',
-  agent: 'Мнение ИИ', xray: 'Рентген толпы', walls: 'Стенки в стакане',
-  whale: 'Радар крупного капитала',
-  whale_active: 'АКТИВЕН',
-  whale_calm: 'СПОКОЙНО',
-  whale_activity: 'Активность китов',
-  whale_anomaly: 'АНОМАЛИЯ ОБЪЁМА! 🐋',
-  whale_normal: 'В пределах нормы',
-  whale_obv: 'Тренд скрытого объёма (OBV)',
-  whale_spike: 'Всплеск ликвидности',
-  whale_vs_normal: 'от обычного',
-  whale_buying: 'РАСТЕТ 🟢 (Скупают)',
-  whale_selling: 'ПАДАЕТ 🔴 (Сбрасывают)',
-  whale_flat: 'БОКОВИК',
-  whale_no_data: 'Недостаточно данных для анализа',
-  whale_score: 'Whale Score',
-  whale_zscore: 'Z-отклонение',
-  whale_pressure: 'Давление объёма',
-  whale_pressure_buying: 'СКУПАЮТ 🟢',
-  whale_pressure_selling: 'СБРАСЫВАЮТ 🔴',
-  whale_pressure_absorption: 'НАБОР/СБРОС ⚡',
-  whale_pressure_neutral: 'НЕЙТРАЛЬНО',
-  whale_futures: 'Фьючерсные метрики',
-  whale_oi: 'Open Interest',
-  whale_oi_change: 'Δ OI 24ч',
-  whale_lsr_top: 'LSR топ-трейдеры',
-  whale_lsr_global: 'LSR толпа',
-  whale_taker: 'Taker Buy/Sell',
-  whale_no_futures: 'Фьючерсы недоступны',
-  whale_not_traded: 'Монета не торгуется на фьючерсах',
-  whale_via: 'через',
-  whale_source_bybit: 'Bybit',
-  whale_source_binance: 'Binance',
-  whale_rising: 'растёт',
-  whale_falling: 'падает',
-  whale_sideways: 'боковик',
-  min: 'Мин', cur: 'Тек', max: 'Макс',
-  sync: '↻ Синхронизировать',
-  port_total: 'Общий баланс', port_pnl: 'PnL 24ч', rate: 'курс',
-  assets: 'Активы',
-  fav_title: 'Избранные монеты',
-  fav_empty: 'Добавляй монеты через ★ в поиске',
-  add_fav: 'добавлено в избранное', del_fav: 'удалено из избранного',
-  orders: 'Ордера · Авто-выход',
-  invested: 'Вложено (RUB)', coins_on_balance: 'Монет на балансе',
-  pair: 'Торговая пара', strategy: 'Стратегия выхода',
-  strat_2: '2 Шага', strat_3: '3 Шага', strat_grid: 'Сетка',
-  api_key: 'API Key', api_secret: 'API Secret',
-  del_keys: '[Удалить ключи]',
-  btn_calc: '1 · Создать сетку', btn_send: '2 · Отправить', btn_find: '3 · Найти ордера',
-  breakeven: 'Безубыток', step: 'Шаг', limit_at: 'лимит',
-  amount: 'Объём', est_profit: 'Ожидаемая прибыль',
-  sending: 'Отправка...', connecting: 'Подключение...',
-  success: 'УСПЕШНО', no_orders: 'Нет открытых ордеров',
-  found_orders: 'Найдено ордеров', backend_unavail: 'Бэкенд недоступен',
-  filled: 'ИСПОЛНЕН', left: 'Осталось',
-  enter_ticker: 'Введи тикер', enter_keys: 'Введите API ключи!',
-  confirm_orders: 'Отправить ордера на биржу?',
-  keys_deleted: 'Ключи удалены',
-  confirm_del_keys: 'Удалить сохранённые ключи?',
-  error: 'Ошибка',
-  monitor: 'Живой мониторинг',
-  oracle_name: 'Оракул',
-  oracle_status: 'онлайн · учится',
-  oracle_profile: 'Твой риск-профиль',
-  oracle_stats: 'Статистика обучения',
-  oracle_recent: 'Последние анализы',
-  oracle_analyze: 'Проанализировать монету',
-  oracle_edit: 'Изменить профиль',
-  oracle_refresh: 'Обновить статистику',
-  oracle_edit_hint: '3 вопроса',
-  oracle_refresh_hint: 'из памяти',
-  profile_not_set: 'Профиль не задан',
-  profile_not_set_hint: 'Пройди 3 вопроса',
-  risk_per_trade: 'Риск на сделку',
-  pos_size: 'Размер позиции',
-  level: 'Уровень',
-  no_recent: 'Пока нет анализов',
-  no_recent_hint: 'Нажми «Проанализировать монету»',
-  win_rate: 'Процент побед', completed: 'Завершено',
-  patterns: 'Паттернов', profit_factor: 'Профит-фактор',
-  pending: 'в ожидании', days: 'дней',
-  market: 'Обзор рынка',
-  mp_mcap: 'Капитализация', mp_btc_dom: 'BTC Доминация',
-  mp_eth_dom: 'ETH Доминация', mp_vol: 'Объём 24ч',
-  mp_fng: 'Индекс страха и жадности', mp_trending: 'Тренды',
-  learning: 'Обучение Оракула',
-  learn_total: 'Всего', learn_avg_win: 'Средний WIN',
-  learn_avg_loss: 'Средний LOSS',
-  learn_best: 'Лучшие паттерны', learn_worst: 'Опасные паттерны',
-  learn_not_enough: 'Нужно 10+ анализов',
-
-  // ─── LEARNING: TABS ───
-  learn_tab_overview: 'Обзор',
-  learn_tab_patterns: 'Паттерны',
-  learn_tab_insights: 'Инсайты',
-
-  // ─── LEARNING: OVERVIEW ───
-  learn_calibration_error: 'Ошибка калибровки',
-  learn_calibration_hint: 'Насколько заявленная уверенность отличается от реальной',
-  learn_drift_title: 'Прогресс за 8 недель',
-  learn_drift_win_rate: 'Win Rate',
-  learn_drift_pf: 'Profit Factor',
-  learn_sample_size: 'Выборка',
-
-  // ─── LEARNING: PATTERNS ───
-  learn_calibration_title: 'Калибровка уверенности',
-  learn_calibration_x_predicted: 'Заявлено',
-  learn_calibration_x_actual: 'Реально',
-  learn_calibration_n: 'Выборка',
-  learn_calibration_empty: 'Нужно 10+ завершённых анализов для калибровки.',
-  learn_pattern_detail_title: 'Разбор паттерна',
-  learn_pattern_desc: 'Описание',
-  learn_pattern_action_label: 'Что делать',
-  learn_pattern_sample: 'Выборка',
-  learn_pattern_avg_return: 'Средняя доходность',
-  learn_pattern_weight: 'Вес в скоринге',
-
-  // ─── LEARNING: INSIGHTS ───
-  learn_insights_empty: 'Пока нет инсайтов. Оракул соберёт их по мере обучения.',
-  learn_insight_new_pattern: 'Новый паттерн',
-  learn_insight_dead_pattern: 'Паттерн перестал работать',
-  learn_insight_calibration: 'Калибровка',
-  learn_insight_win_rate: 'Изменился win rate',
-  learn_insight_milestone: 'Новый рубеж',
-  learn_insight_data_gap: 'Пробел в данных',
-  learn_insight_read_more: 'Подробнее',
-  learn_insight_close: 'Закрыть',
-
-  // ─── LEARNING: DATA ───
-  learn_data_title: 'Что видит Оракул',
-  learn_data_symbols: 'Символы',
-  learn_data_freshness: 'Свежесть данных',
-  learn_data_last: 'Последний анализ',
-  learn_data_fresh: 'свежие',
-  learn_data_stale: 'устарели',
-  quiz_title: 'Настройка профиля',
-  quiz_intro: 'Ответь на 3 вопроса — подберу стратегию под тебя.',
-  quiz_q1: 'Опыт в трейдинге', quiz_q1_a1: 'Новичок', quiz_q1_a2: 'Средний', quiz_q1_a3: 'Опытный',
-  quiz_q2: 'Размер капитала', quiz_q2_a1: 'До 500 USDT', quiz_q2_a2: '500–5000', quiz_q2_a3: '5000+',
-  quiz_q3: 'Допустимая просадка', quiz_q3_a1: 'До 10%', quiz_q3_a2: 'До 25%', quiz_q3_a3: '50%+',
-  quiz_done: 'Профиль настроен!',
-  pro_macd: 'MACD · Куда идёт цена',
-  pro_bb: 'Bollinger · Дорого или дёшево',
-  pro_adx: 'ADX · Сила тренда',
-  pro_stoch: 'Stoch RSI · Перекуплен или перепродан',
-  pro_div: 'Дивергенция · Скрытый разворот',
-  pro_sr: 'Уровни цены',
-  pro_vp: 'Volume Profile',
-  pro_hint: 'Введи тикер и нажми GO на главном экране',
-  acc: 'Накопление', sell: 'Разгрузка', flat: 'Флэт',
-  acc_text: 'Техническое дно. Зона безопасных покупок.',
-  sell_text: 'Технический перегрев. Зона фиксации прибыли.',
-  flat_text: 'Середина диапазона.',
-  agent_perfect: 'Идеальный сетап',
-  agent_perfect_text: 'Цена на дне, объём растёт. Риск минимален.',
-  agent_forbid: 'Запрет на вход',
-  agent_forbid_text: 'Перегрет или стакан завален продажами.',
-  agent_watch: 'Наблюдаем',
-  agent_watch_text: 'Смешанная картина. Жди сигнала.',
-  ai_mentor: 'AI-наставник · разбор для новичка',
-  ai_empty: 'Нажми ASK — ИИ объяснит, что происходит с монетой',
-  ai_thinking: 'ИИ анализирует...',
-  ai_no_key: 'Сначала добавь Groq API-ключ в настройках (⚙️)',
-  ai_key_saved: 'Groq-ключ сохранён',
-  ai_key_deleted: 'Groq-ключ удалён',
-  ai_settings: 'Настройки AI',
-  ai_key_label: 'Groq API Key',
-  ai_key_hint: 'Получи бесплатно: console.groq.com/keys',
-  ai_save: 'Сохранить',
-  ai_delete: 'Удалить',
-  ai_need_analysis: 'Сначала запусти анализ (GO)',
-  ask_ai_short: '🤖 Спросить ИИ-наставника',
-  exchange_count: 'бирж',
-  book_partial: 'часть бирж недоступна',
-  free_usdt: 'Free USDT',
-  assets_count: 'Активов',
-  in_portfolio: 'в портфеле',
-  fear: 'Страх',
-  neutral: 'Нейтрально',
-  greed: 'Жадность',
-  terms_title: '⚠️ Соглашение',
-  about_title: 'О программе',
-  ai_agent_hint: 'Опиши команду простыми словами',
-  ai_run: 'Выполнить',
-  ai_deposit: 'Депозит (USDT)',
-  ai_mode_insight: 'Разбор',
-  ai_mode_agent: 'Команда',
-  twap_title: 'TWAP · Плавный вход',
-  twap_pair: 'Пара',
-  twap_side: 'Сторона',
-  twap_qty: 'Объём (в монете)',
-  twap_slices: 'Слайсов',
-  twap_duration: 'Минут',
-  twap_run: 'Запустить TWAP',
-  twap_desc: 'Разбивает крупный ордер на N частей и исполняет равномерно — меньше проскальзывания.',
-  dash_network: 'Сеть Dash',
-  dash_masternodes: 'Мастерноды',
-  dash_mn_hint: 'Рост = крупные холдеры накапливают DASH',
-  dash_hashrate: 'Хешрейт сети',
-  dash_difficulty: 'Сложность',
-  dash_derivatives: 'Деривативы DASHUSDT',
-  dash_funding_long: 'лонги перегреты ⚠️',
-  dash_funding_short: 'шорты перегреты ⚠️',
-  dash_funding_neutral: 'нейтрально',
-  
-  // ─── RISK CENTER ───
-  risk: 'Риски',
-  nav_risk: 'Риски',
-  risk_title: 'Центр контроля рисков',
-  risk_subtitle: 'Один взгляд — вся картина',
-  risk_overall_low: 'Всё спокойно',
-  risk_overall_medium: 'Есть на что смотреть',
-  risk_overall_high: 'Требует внимания',
-  risk_concentration: 'Концентрация портфеля',
-  risk_concentration_hint: 'Доля крупнейшей монеты',
-  risk_confidence: 'Уверенность Оракула',
-  risk_confidence_hint: 'Текущий анализ',
-  risk_whale: 'Активность китов',
-  risk_whale_hint: 'Аномальные объёмы',
-  risk_funding: 'Funding rate',
-  risk_funding_hint: 'Перегрев лонгов/шортов',
-  risk_fear: 'Fear & Greed',
-  risk_fear_hint: 'Сентимент рынка',
-  risk_no_portfolio: 'Портфель не синхронизирован',
-  risk_whale_active: 'АКТИВНЫ',
-  risk_whale_calm: 'спокойно',
-  risk_funding_neutral: 'нейтрально',
-  risk_funding_overheated: 'перегрев',
-  
-  // ─── ALERTS ───
-  alerts: 'Уведомления',
-  alerts_title: 'Уведомления',
-  alerts_empty: 'Пока нет уведомлений',
-  alerts_add: '+ Добавить уведомление',
-  alert_kind_price_above: 'Цена выше',
-  alert_kind_price_below: 'Цена ниже',
-  alert_kind_whale: 'Кит активен',
-  alert_kind_funding: 'Funding экстрим',
-  alert_ticker: 'Тикер',
-  alert_threshold: 'Порог',
-  alert_save: 'Сохранить',
-  alert_delete: 'Удалить',
-  alert_triggered: 'Сработало',
-  alert_active: 'Активно',
-  alert_enable_notif: 'Разрешить уведомления',
-  alert_notif_denied: 'Уведомления запрещены в браузере',
-  alert_added: 'Уведомление добавлено',
-  alert_removed: 'Уведомление удалено',
-  alert_fired: 'Сработало',
-
-  // ─── JOURNAL ───
-  journal_title: 'Дневник сделки',
-  journal_snapshot: 'Снимок на момент входа',
-  journal_confidence: 'Уверенность',
-  journal_verdict: 'Вердикт Оракула',
-  journal_close: 'Закрыть',
-  journal_whale: 'Киты',
-  journal_whale_act: 'АКТИВНЫ',
-  journal_price: 'Цена',
-
-  // ─── CONFLUENCE HELP ───
-  conf_help_title: 'Мульти-ТФ Анализ',
-  conf_help_desc: 'Мульти-таймфреймный анализ проверяет тренд на <b>трех разных таймфреймах</b> одновременно: 1 Час, 1 День и 1 Неделя.',
-  conf_help_why_title: 'Зачем это нужно?',
-  conf_help_why_desc: 'Сигнал на 15-минутном графике может оказаться ловушкой. Но если графики 1Ч, 1Д и 1Н показывают "Покупку" — вероятность реального тренда крайне высока.',
-  conf_help_how: 'Как это читать:',
-  conf_help_strong: '<b>STRONG BUY</b> — все 3 ТФ говорят ПОКУПАТЬ. Сильнейший сигнал.',
-  conf_help_hold: '<b>HOLD</b> — сигналы разрознены. Жди более четкой картины.',
-  conf_help_avoid: '<b>AVOID</b> — все 3 ТФ медвежьи. Не входи!',
-  conf_help_rsi: 'RSI внутри блоков:',
-  conf_help_rsi_desc: 'Ниже 30 = перепродан (дешево), Выше 70 = перекуплен (дорого).',
-  conf_help_ok: 'Понятно',
-
-  // ─── ORACLE OVERLAY ───
-  overlay_btn_off: '🔮 Логика',
-  overlay_btn_on: '🔮 Логика ВКЛ',
-  overlay_btn_hint_off: 'Показать, что увидел Oracle',
-  overlay_btn_hint_on: 'Скрыть логику Oracle',
-  overlay_legend_whale: 'киты',
-  overlay_legend_bull: 'бычий',
-  overlay_legend_bear: 'медвежий',
-  overlay_legend_bb_low: 'BB низ',
-  overlay_legend_bb_high: 'BB верх',
-  overlay_help_title: 'Расшифровка логики Oracle',
-  overlay_help_desc: 'Oracle показывает маркеры на графике, чтобы вы видели <b>почему</b> он принял то или иное решение. Это не торговый сигнал, а визуальное объяснение механики рынка.',
-  overlay_help_whale: 'Аномальный объём (Киты)',
-  overlay_help_whale_desc: 'Объём торгов в 2 раза выше среднего за 30 свечей. Крупные игроки совершают сделки.',
-  overlay_help_macd_up: 'MACD Бычий сигнал',
-  overlay_help_macd_up_desc: 'Линия MACD пересекла сигнальную снизу вверх. Импульс меняется на восходящий.',
-  overlay_help_macd_down: 'MACD Медвежий сигнал',
-  overlay_help_macd_down_desc: 'Линия MACD пересекла сигнальную сверху вниз. Импульс меняется на нисходящий.',
-  overlay_help_bb_low: 'Касание нижней полосы Боллинджера',
-  overlay_help_bb_low_desc: 'Цена коснулась нижней границы. Актив перепродан и может отскочить вверх.',
-  overlay_help_bb_high: 'Касание верхней полосы Боллинджера',
-  overlay_help_bb_high_desc: 'Цена коснулась верхней границы. Актив перекуплен и может упасть.',
-  overlay_help_funding: 'Экстремальный фандинг',
-  overlay_help_funding_desc: 'Ставка фандинга слишком высокая или низкая. Толпа в одной стороне, высокий риск ликвидаций.',
-  overlay_help_close: 'Понятно',
-
-  // ─── RISK HELP ───
-  risk_help_title: 'Как читать Риски',
-  risk_help_desc: 'Светофор показывает общую безопасность вашего портфеля и текущей ситуации на рынке. Зеленый — всё спокойно, желтый — есть на что посмотреть, красный — требует внимания.',
-  risk_help_conc: 'Концентрация портфеля',
-  risk_help_conc_desc: 'Показывает, какая доля денег вложена в одну монету. Если больше 50% — это опасно. Упадет эта монета, упадет весь ваш баланс.',
-  risk_help_conf: 'Уверенность Оракула',
-  risk_help_conf_desc: 'Насколько ИИ уверен в текущем сигнале. Если уверенность ниже 55% — лучше воздержаться от входа, рынок неопределен.',
-  risk_help_whale: 'Активность китов',
-  risk_help_whale_desc: 'Показывает аномальные всплески объема (в 2-3 раза выше обычного). Если киты активно покупают или продают, цена может резко пойти в их сторону.',
-  risk_help_fund: 'Funding rate',
-  risk_help_fund_desc: 'Ставка фандинга на фьючерсах. Если она слишком высокая (перегрев) — толпа в одной стороне, и скоро может случиться резкая ликвидация.',
-  risk_help_fear: 'Fear & Greed',
-  risk_help_fear_desc: 'Индекс страха и жадности (0-100). Когда рынок в панике (0-30) — хорошее время покупать. Когда все в эйфории (70-100) — пора фиксировать прибыль.',
-  risk_help_close: 'Понятно',
-
-  // ─── MISC ───
-  demo_need_analysis: 'Сначала сделай анализ (GO), чтобы Оракул составил план',
-  usdt_rate_loading: 'Получение курса USDT...',
-  pair_placeholder: 'Например DASH/USDT',
-  api_key_placeholder: 'API Key...',
-  api_secret_placeholder: 'Secret Key...',
-  passphrase_placeholder: 'Passphrase...',
-  rub_placeholder: 'Сумма, например 600000',
-  coins_placeholder: 'Кол-во, например 96.5',
-  twap_qty_placeholder: 'Объём',
-  twap_slices_placeholder: 'Например 10',
-  twap_duration_placeholder: 'Мин, например 30',
-  enter_amount_coins: 'Введи сумму и количество монет',
-  kucoin_requires_pass: 'Для KuCoin нужен Passphrase',
-  keys_saved: '✅ Ключи сохранены',
-  keys_save_failed: '❌ Ошибка сохранения',
-  binance_geo_block: 'Binance заблокирован в вашем регионе',
-    // ─── VERDICT 3-SCENARIO ───
-  verdict_base_label: 'База',
-  verdict_bull_label: 'Бычий',
-  verdict_bear_label: 'Медвежий',
-  v_strong_buy: 'strong buy',
-  v_buy: 'buy',
-  v_hold: 'hold',
-  v_avoid: 'avoid',
-
-  // ─── AI TABS ───
-  ai_tab_base: '🧠 База',
-  ai_tab_bull: '🚀 Бычий',
-  ai_tab_bear: '⚠️ Медвежий',
-  ai_empty_response: 'Пустой ответ от AI',
-
-  // ─── WHALE V2 ───
-  whale_signals_label: 'Сигналы',
-  whale_sources_label: 'Источники',
-  whale_verdict_strong: 'Сильный сигнал — крупный капитал активен',
-  whale_verdict_moderate: 'Умеренная активность китов',
-  whale_verdict_calm: 'Киты спят — движения не подтверждены объёмом',
-  whale_footer_warn: '⚠️ Whale Score — это вероятность активности крупных, а не сигнал к покупке. Всегда проверяй funding и стакан перед входом.',
-  whale_sig_volume: 'Аномалия объёма',
-  whale_sig_obv: 'OBV (накопление)',
-  whale_sig_oi: 'Открытый интерес (OI)',
-  whale_sig_lsr: 'LSR (топ vs толпа)',
-  whale_sig_taker: 'Taker Buy/Sell',
-
-  // ─── WHITE PAPER ───
-  wp_title: 'Белая Книга',
-  wp_mission: 'Наша Миссия',
-  wp_creators: 'Создатели проекта',
-  wp_partners: 'Партнеры и Поддержка',
-  wp_investors: 'Инвесторы',
-  wp_close: 'Закрыть',
-  wp_no_partners: 'Пока нет партнеров.',
-  wp_open_invest: 'Открыты для стратегических инвестиций.',
-  wp_footer_btn: 'White Paper & Partners',
-  wp_footer_copy: 'NEBULA © 2026 · Powered by VELOX',
-  wp_built_with: 'Создано с 🖤 для крипто-сообщества',
-
-  // ─── CRYPTO HUB ───
-  hub_title: 'Крипто-Хаб',
-  hub_tab_exchanges: 'Биржи',
-  hub_tab_learning: 'Обучение',
-  hub_tab_tools: 'Инструменты',
-  hub_status_ru: 'Доступно',
-  hub_status_vpn: 'Нужен VPN',
-  hub_status_no: 'Недоступно',
-  hub_status_global: 'Глобально',
-  hub_details_title: 'Детали',
-  hub_back: 'Назад к списку',
-  hub_close: 'Закрыть',
-  hub_access: 'Доступ',
-  hub_kyc: 'KYC',
-  hub_p2p: 'P2P',
-  hub_fees: 'Комиссии',
-  hub_pros: 'Плюсы',
-  hub_cons: 'Минусы',
-  hub_summary: 'Вывод',
-  hub_footer_warn: 'Доступность может меняться. Всегда проверяйте местные законы.',
-  nav_hub: 'Крипто-Хаб',
-
-  // ─── DEMO MODE ───
-  demo_leave: 'Покинуть',
-  demo_reset: 'Сброс',
-  demo_free: 'Свободно',
-  demo_invested: 'В сделках',
-  demo_pnl: 'PnL',
-  demo_oracle_plan: 'План Оракула',
-  demo_virtual_trades: 'Виртуальные сделки',
-  demo_no_active: 'Нет активных сделок',
-  demo_enter_coin: 'Введи монету и нажми GO, чтобы Оракул составил план',
-  demo_strat_2: '2 шага',
-  demo_strat_3: '3 шага',
-  demo_entry_market: 'Вход (Market)',
-  demo_step: 'Шаг',
-  demo_stop_loss: 'Стоп-лосс',
-  demo_entry_amount: 'Сумма входа (USDT)',
-  demo_of_balance: 'от баланса',
-  demo_execute: 'Выполнить план Оракула',
-  demo_max_available: 'Максимум доступно',
-  demo_insufficient: 'Недостаточно виртуальных средств',
-  demo_opened: 'Открыто',
-  demo_orders: 'виртуальных ордеров на',
-  demo_memorized: 'Оракул запомнил',
-  demo_cancelled: 'Ордер отменён',
-  demo_returned: 'Возвращено',
-  demo_reset_done: 'Демо-режим сброшен',
-  demo_volume: 'Объём',
-
-  // ─── ORACLE ANALOGIES ───
-  oracle_analogs_empty: 'Нужно проанализировать монету на главном экране, чтобы найти аналоги',
-  oracle_found_matches: 'Найдено совпадений',
-  oracle_prob_growth: 'Вероятность роста',
-  oracle_analogs_bull: 'В большинстве случаев цена росла.',
-  oracle_analogs_bear: 'В большинстве случаев цена падала. Будьте осторожны.',
-  oracle_analogs_mixed: 'Результаты смешанные. Лучше подождать.',
-  oracle_avg_return: 'Средняя доходность',
-  oracle_recent_analogs: 'Последние аналоги',
-  oracle_analogs_title: 'Зеркало истории',
-
-  // ─── PRO LOCKS ───
-  pro_lock_analytics_title: 'Продвинутая аналитика (PRO)',
-  pro_lock_analytics_desc: 'Детальный разбор MACD, Bollinger Bands, Volume Profile и дивергенций доступен только в PRO версии.',
-  pro_lock_risk_title: 'Центр Рисков (PRO)',
-  pro_lock_risk_desc: 'Анализ 5 индикаторов риска (Концентрация, Уверенность Оракула, Киты, Funding, Fear&Greed) доступен только в PRO версии.',
-  pro_lock_btn: '💎 Открыть в PRO',
-
-  // ─── ABOUT MODAL ───
-  about_what: 'Что такое NEBULA',
-  about_what_desc: 'Персональный торговый терминал для криптовалютного рынка. Задуман как инструмент, который даёт обычному трейдеру то, что обычно доступно только профессионалам: глубокий анализ рынка, метрики крупных игроков и AI-наставника в одном окне.',
-  about_who: 'Кто создал',
-  about_who_desc: 'Проект сделан <strong>одним человеком</strong> — трейдером-энтузиастом — в сотрудничестве с AI-помощником. Без команды, без инвесторов, без офиса. Просто идея и желание сделать удобный инструмент для себя и других.',
-  about_can: 'Что умеет',
-  about_platforms: 'Платформы',
-  about_security: 'Безопасность',
-  about_security_desc: 'API-ключи MEXC и Groq-ключ хранятся <strong>только локально</strong> на вашем устройстве. Шифрование — <b>AES-256-GCM + PBKDF2</b> (150 000 итераций). Мастер-пароль не сохраняется ни на сервере, ни в облаке и не покидает устройство. Даже автор программы не имеет к нему доступа.',
-  about_tech: 'Технологии',
-  about_version: 'Версия и сборка',
-  about_build: 'Сборка: Tauri (Windows) + Capacitor (Android) + Web',
-  about_feedback: 'Обратная связь',
-  about_feedback_desc: 'Нашли баг, есть идея или хотите предложить улучшение — пишите автору. Каждое сообщение читается лично, а не ботом.',
-  about_warn: '⚠️ NEBULA — это <strong>инструмент анализа</strong>, а не финансовый советник. Все торговые решения вы принимаете самостоятельно и под свою ответственность. Рынок волатилен, прогнозы не гарантированы. <strong>Не торгуйте на средства, потерю которых не можете себе позволить.</strong>',
-  about_plat_web: '🌐 <b>Web</b> — работает в любом современном браузере;',
-  about_plat_win: '💻 <b>Windows</b> — нативное приложение через Tauri 2 (Rust + WebView2);',
-  about_plat_and: '📱 <b>Android</b> — APK через Capacitor 8 (без Google Play).',
-  
-  about_features_html: `
-    <li><b>Анализ с 5 бирж</b> — Gate.io, Binance, Bybit, OKX, MEXC одновременно;</li>
-    <li><b>Whale-радар</b> — Z-score объёмов, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
-    <li><b>Risk Command Center</b> — 5 индикаторов риска в едином светофоре;</li>
-    <li><b>Уведомления</b> — Price / Whale / Funding алерты с push;</li>
-    <li><b>AI-наставник</b> — объясняет простым языком, что происходит с монетой (Groq API);</li>
-    <li><b>AI-Агент</b> — принимает торговые команды на естественном языке («Купи DASH на 10% депо»);</li>
-    <li><b>Сканер дна</b> — по топ-200 монетам находит точки входа по алгоритму;</li>
-    <li><b>Технический анализ</b> — MACD, Bollinger, ADX, Stoch RSI, дивергенции, S/R уровни, Volume Profile;</li>
-    <li><b>Торговый план</b> — автоматический расчёт TP/SL и калькулятор сетки;</li>
-    <li><b>Таймфреймы</b> — 1m / 15m / 1h / 1d / 7d / 1M / ALL + WebSocket real-time;</li>
-    <li><b>TWAP</b> — плавное исполнение крупных ордеров без проскальзывания;</li>
-    <li><b>Портфель</b> — синхронизация через API биржи + курс USDT/RUB;</li>
-    <li><b>Демо-режим</b> — виртуальная торговля на $10 000 без риска потери реальных средств;</li>
-    <li><b>Тактический радар</b> — быстрое радиальное меню на смартфоне (нажми и веди палец).</li>
-  `,
-
-  // ─── DIAGNOSTICS ───
-  diag_title: '🩺 Диагностика',
-
-  // ─── DONATE ───
-  donate_title: '💎 Поддержать проект',
-  donate_support: 'Поддержать NEBULA',
-  donate_desc: 'NEBULA — бесплатный проект одного разработчика.<br>Если приложение полезно — можешь поддержать разработку.',
-  donate_copy: '📋 Скопировать адрес',
-  donate_warn: '⚠️ Отправляй только USDT в сети Tron (TRC-20).<br>Другая сеть = потеря средств.',
-  donate_thanks: 'Спасибо за поддержку ❤️',
-  donate_copied: '✅ USDT-адрес скопирован',
-  donate_copy_err: 'Не удалось скопировать',
-
-  // ─── RADAR ───
-  radar_market: 'Рынок',
-
-  // ─── CONFLUENCE TITLE ───
-  conf_title_short: 'Мульти-ТФ',
-
-  // ─── AUTH ───
-  auth_create_title: '🔐 Создать пароль',
-  auth_create_desc: 'Придумай пароль. Он будет использоваться для шифрования API-ключей.',
-  auth_login_title: '🔐 Вход в NEBULA',
-  auth_login_desc: 'Введи пароль для разблокировки.',
-  auth_enter_first: 'Сначала войдите в приложение',
-  auth_bio_not_supported: 'Биометрия не поддерживается на этом устройстве',
-  auth_bio_enabled: 'Вход по отпечатку включен',
-  auth_bio_failed: 'Не удалось настроить биометрию: ',
-  auth_bio_disabled: 'Вход по отпечатку отключен',
-  auth_bio_reason: 'Вход в NEBULA',
-  auth_bio_subtitle: 'Подтвердите личность',
-  auth_bio_description: 'Приложите палец или посмотрите в камеру',
-  auth_reset_confirm: 'Сбросить пароль? ВСЕ сохраненные API-ключи будут удалены навсегда.',
-  auth_reset_done: 'Пароль сброшен',
-  auth_min_4: 'Минимум 4 символа',
-  auth_passwords_differ: 'Пароли не совпадают',
-  auth_enable_bio_confirm: 'Включить вход по отпечатку пальца / Face ID?',
-  auth_wrong_password: 'Неверный пароль',
-  auth_check_error: 'Ошибка проверки',
-  auth_bio_failed_enter: 'Биометрия не пройдена. Введите пароль.',
-
-  // ─── ALERTS ───
-  alert_type: 'Тип',
-  alert_enter_ticker: 'Введи тикер',
-  alert_enter_threshold: 'Введи порог',
-
-  // ─── PULL REFRESH ───
-  ptr_pull: 'Потяни вниз',
-  ptr_release: 'Отпусти',
-  ptr_refresh: 'Обновление...',
-
-  // ─── INIT DIAG TOAST ───
-  diag_toast_errors: 'Диагностика: {n} ошибок. Открой отчёт через ⚙️ → Диагностика.',
-
-  // ─── DEMO MISC ───
-  demo_take: '✅ Тейк',
-  demo_stop: '❌ Стоп',
-  demo_cancel_order: 'Отменить ордер',
-
-  // ─── WHALE PRO ───
-  whale_pro_xray: 'Рентген толпы и Плиты в стакане доступны в PRO.',
-  whale_pro_btn: 'Открыть PRO',
-
-  // ─── ORACLE ENGINE ───
-  oracle_step_tech: 'Технический анализ',
-  oracle_step_div: 'Дивергенция',
-  oracle_step_whales: 'Киты',
-  oracle_step_orderbook: 'Стакан',
-  oracle_v_strong_buy: '🟢 СИЛЬНЫЙ СИГНАЛ',
-  oracle_v_buy: '🟢 УМЕРЕННЫЙ СИГНАЛ',
-  oracle_v_hold: '⚖️ ЖДАТЬ',
-  oracle_v_avoid: '🔴 ИЗБЕГАТЬ',
-  oracle_conf_conservative: '🛡️ Консервативный',
-  oracle_conf_balanced: '⚖️ Сбалансированный',
-  oracle_conf_aggressive: '🔥 Агрессивный',
-  oracle_conf_conservative_desc: 'Консервативный профиль. Оракул будет предлагать только сильнейшие сигналы и маленькие позиции.',
-  oracle_conf_balanced_desc: 'Сбалансированный профиль. Оракул будет искать баланс между риском и доходностью.',
-  oracle_conf_aggressive_desc: 'Агрессивный профиль. Оракул готов к более высоким рискам.',
-  oracle_score_lbl: 'Скор',
-  oracle_memory_lbl: 'Память',
-  oracle_context_lbl: 'Контекст',
-  oracle_enter_pos: 'Войти на {n}% депозита.',
-  oracle_recommends_buy: 'Оракул подтверждает вход. Сигнал трендовый.',
-  oracle_hold_mixed: 'Сигнал смешанный.',
-  oracle_risk_high: 'Риск превышает потенциал.',
-  oracle_learn_insufficient: 'Нужно минимум 10 завершённых. Есть: {n}',
-  oracle_analogs_need_more: 'Мало данных (нужно 5+)',
-  oracle_analogs_no_matches: 'Схожих ситуаций не найдено',
-  oracle_ai_limit: 'Лимит 3 запроса в день. Купи PRO для безлимита!',
-  oracle_step_thinking_price: 'Проверяю цену {p}...',
-  oracle_step_macd_thinking: 'Анализирую EMA...',
-  oracle_step_bb_thinking: 'Канал волатильности...',
-  oracle_step_adx_thinking: 'Сила тренда...',
-  oracle_step_stoch_thinking: 'Точность...',
-  oracle_step_div_thinking: 'Сравниваю...',
-  oracle_step_sr_thinking: 'Уровни...',
-  oracle_step_whales_thinking: 'OBV...',
-  oracle_step_ob_thinking: 'Bids/Asks + funding...',
-  oracle_macd_bullish: 'MACD бычий',
-  oracle_macd_bearish: 'MACD медвежий',
-  oracle_bb_low: 'Bollinger: цена внизу',
-  oracle_bb_high: 'Bollinger: цена вверху',
-  oracle_adx_strong_up: 'ADX {v}: сильный тренд вверх',
-  oracle_stoch_oversold: 'Stoch RSI перепродан',
-  oracle_stoch_overbought: 'Stoch RSI перекуплен',
-  oracle_div_bull: '🐂 БЫЧЬЯ ДИВЕРГЕНЦИЯ ({n}%)',
-  oracle_div_bear: '🐻 МЕДВЕЖЬЯ ДИВЕРГЕНЦИЯ ({n}%)',
-  oracle_near_support: 'Близко к поддержке ({n}%)',
-  oracle_whales_buying: 'Киты скупают',
-  oracle_whales_distribution: 'Возможно распределение',
-  oracle_ob_protected: 'Стакан защищён',
-  oracle_ob_pressure: 'Давят сверху',
-  oracle_funding_squeeze: 'Short squeeze потенциал',
-  oracle_funding_euphoria: 'Эйфория',
-  oracle_man_dump: 'Искусственный сброс',
-  oracle_man_distribution: 'Реальное распределение',
-  oracle_onchain_active: 'Активная торговля',
-  oracle_onchain_low: 'Низкая активность',
-
-  // ─── INDICATORS / REGIME ───
-  regime_bull_btc: '🐂 Сильный бычий рынок. BTC доминирует, деньги идут в крупные монеты.',
-  regime_bull_mild: '📈 Умеренно бычий рынок. Есть аппетит к риску.',
-  regime_bear: '🔻 Сильный медвежий рынок. Лучше держать кэш.',
-  regime_bear_mild: '📉 Умеренное снижение. Возможна коррекция.',
-  regime_altseason: '🚀 Альтсезон! Деньги перетекают в альткоины.',
-  regime_neutral: '⚖️ Рынок консолидируется.',
-
-  // ─── MARKET ADVICE ───
-  advice_btc_bottom: '🟢 BTC на дне 120-дневного диапазона. Отличная зона для накопления.',
-  advice_btc_overheat: '🔴 BTC перегрет. Вероятна коррекция.',
-  advice_btc_uptrend: '📈 BTC в здоровом восходящем тренде.',
-  advice_btc_downtrend: '📉 BTC в нисходящем тренде. Подожди разворота.',
-  advice_btc_flat: '⚖️ BTC консолидируется.',
-  sentiment_extreme_greed: '⚠️ Extreme Greed — рынок перегрет',
-  sentiment_extreme_fear: '💎 Extreme Fear — потенциально хорошее время для покупок',
-  market_dexpaprika_down: 'DexPaprika недоступен',
-  market_token_not_found: 'Токен не найден в DEX',
-
-  // ─── THEMES ───
-  theme_not_found: 'Тема не найдена',
-  theme_group_accents: 'Акценты',
-  theme_group_bg: 'Фон',
-  theme_group_text: 'Текст',
-  theme_group_gradient: 'Градиент',
-
-  // ─── INFO / WHITE PAPER ───
-  wp_mission_text: 'Дать розничному трейдеру доступ к институциональной аналитике. Мы объединили машинное обучение, потоковые данные с 6 бирж и алгоритмы оценки рисков в одном терминале.',
-  wp_release_date: '01 Ноября 2026',
-    // ─── TOOLS / MINING ───
-  exchange_menu_title: '💱 Обмен и Инструменты',
-  exchange_menu_desc: 'Выбери инструмент, который откроется внутри терминала.',
-  xgram_desc: 'Анонимный обмен крипты. 590+ монет. Без KYC.',
-  xgram_btn: 'Открыть Xgram',
-  p2p_desc: 'Покупка/продажа за фиат. Защита эскроу.',
-  p2p_btn: 'Открыть Binance P2P',
-  
-  mining_title: '⛏️ Майнинг',
-  mining_calc_title: 'Калькулятор майнинга',
-  mining_coin: 'Монета',
-  mining_hash: 'Хешрейт (GH/s)',
-  mining_power: 'Потребление (Ватт)',
-  mining_elec: 'Цена электричества ($/кВт·ч)',
-  mining_btn_calc: 'Рассчитать доход',
-  mining_btn_loading: 'Загружаю данные...',
-  mining_err_hash: 'Введи хешрейт',
-  mining_err_api: 'Ошибка получения данных',
-  mining_res_daily_coins: 'В день монет:',
-  mining_res_revenue: 'Доход в день:',
-  mining_res_power: 'Электричество:',
-  mining_res_net: 'Чистая прибыль:',
-  mining_btn_open: 'Открыть калькулятор',
-  mining_desc: 'Посчитай чистую прибыль с учётом хешрейта и электричества.',
-  
-  tools_close: 'Закрыть',
-  fs_btn_title: 'На весь экран',
-    // ─── PATTERNS ───
-  pat_bull_btc: 'Бычий BTC', pat_altseason: 'Альтсезон', pat_bearish: 'Медвежий рынок',
-  pat_bull_mild: 'Умеренный рост', pat_bear_mild: 'Умеренное падение', pat_neutral: 'Консолидация',
-  pat_rsi_oversold: 'RSI перепродан', pat_rsi_low: 'RSI низкий', pat_rsi_mid: 'RSI средний',
-  pat_rsi_high: 'RSI высокий', pat_rsi_overbought: 'RSI перекуплен',
-  pat_whale_buying: 'киты покупают', pat_whale_selling: 'киты продают',
-  pat_whale_active_unknown: 'аномалия объёма', pat_no_whale: 'без китов',
-  pat_fund_neg: 'шорты доминируют', pat_fund_overlong: 'перегрев лонгов',
-  pat_fund_pos: 'лонги преобладают', pat_fund_neutral: 'нейтральный funding',
-  pat_ob_bull: 'стакан бычий', pat_ob_bear: 'стакан медвежий', pat_ob_neutral: 'стакан нейтральный',
-
-  // ─── LEARNING HELP ───
-  learn_help_title: 'Как читать эту статистику?',
-  learn_help_btn: '❓ Как это понимать?',
-  learn_help_pf: 'Профит-фактор (Profit Factor)',
-  learn_help_pf_desc: 'Показывает, сколько вы зарабатываете на каждый потерянный доллар. <b>1.5</b> — это значит, что на каждый $1 убытка приходится $1.5 прибыли. <b>Больше 1.0 — хорошо</b>. Если 0.8 — стратегия теряет деньги.',
-  learn_help_cal: 'Калибровка уверенности (Ошибка калибровки)',
-  learn_help_cal_desc: 'Оракул оценивает сигнал и говорит: "Я уверен на 80%". Калибровка проверяет, насколько он честен. Если ошибка <b>33%</b> — значит, когда он говорит "80%", реально он угадывает только в 47% случаев. <b>Чем меньше ошибка, тем точнее Оракул</b>. Ошибка > 20% — повод не доверять высоким сигналам.',
-  learn_help_pat: 'Паттерны',
-  learn_help_pat_desc: 'Оракул ищет повторяющиеся ситуации (например, "RSI упал, киты скупают"). Он запоминает их. Если Процент Побед паттерна <b>выше 60%</b> — это отличный сигнал. Если <b>ниже 40%</b> — Оракул видит, что ситуация перестала работать, и снижает свой кредит доверия к ней.',
-  learn_help_ins: 'Инсайты',
-  learn_help_ins_desc: 'Это "записки в дневнике" Оракула. Он сам анализирует свою историю и делает выводы: "Я выучил новый паттерн", "Этот перестал работать", "Я переоцениваю свои силы". Читай их, чтобы понимать, как меняется его "мозг".',
-  // ─── BTC OUTLOOK ───
-  btc_outlook_btn: 'История и прогноз',
-  btc_outlook_pro_only: '💎 BTC Outlook доступен только по подписке PRO',
-  btc_tab_snap: 'Снимок',
-  btc_tab_break: 'Пробой ATH',
-  btc_tab_cal: 'Этот день',
-  btc_tab_cyc: 'Циклы',
-  btc_rsi: 'RSI',
-  btc_ath: 'ATH',
-  btc_to_ath: 'До ATH',
-  btc_days: 'Дней с ATH',
-  btc_at_ath: 'BTC на историческом максимуме!',
-  btc_below: 'BTC ниже ATH на',
-  btc_below_short: 'ниже',
-  btc_heat: 'Интенсивность движения',
-  btc_prob_title: 'Вероятность пробоя ATH',
-  btc_analogs: 'аналогов',
-  btc_h7: '7 дней', btc_h30: '30 дней', btc_h90: '90 дней', btc_h365: '365 дней',
-  btc_similar: 'Похожие периоды в истории',
-  btc_method: 'Метод: kNN по историческим неделям с похожим drawdown от ATH (±5%). Честная статистика, не прогноз.',
-  btc_cal_title: 'Этот день в истории BTC',
-  btc_years: 'лет',
-  btc_cal_foot: 'Из {n} лет в {ath} случаях рядом с этой датой был установлен исторический максимум.',
-  btc_avg: 'Среднее между ATH',
-  btc_median: 'Медиана',
-  btc_gain: 'Средний прирост',
-  btc_cycle_now: 'С прошлого ATH прошло {d} дней, цена на {p}% ниже исторического максимума.',
-  btc_foot_warn: '⚠️ Это статистика, а не финансовый совет. Прошлые результаты не гарантируют будущих.',
-
-  // ─── FAVORITES TAB ───
-  fav_tab_chart: '📈 График',
-  fav_tab_favorites: '⭐ Избранное',
-  fav_market_cap: 'Капитализация',
-  fav_cmc20: 'CMC20',
-  fav_altcoin_index: 'Индекс альткоинов',
-  fav_fear_greed: 'Страх и жадность',
-  fav_altseason: 'Альтсезон',
-  fav_btc_season: 'Сезон BTC',
-  fav_neutral: 'Нейтрально',
-  fav_loading_data: 'Загрузка данных...',
-  fav_moneta: 'Монета',
-  fav_cena: 'Цена',
-  fav_grafik_24h: 'График 24ч',
-  fav_24h: '24ч %',
+const DICTS: Record<Lang, Dict> = {
+  ru: I18N_RU as Dict,
+  en: I18N_EN as Dict,
 };
 
-const I18N_EN: Dict = {
-  dashboard: 'Chart', analytics: 'Analytics', scanner: 'Scanner',
-  oracle: 'Oracle', portfolio: 'Wallet', favorites: 'Favorites',
-  loading: 'Loading...', scanning: 'Scanning top 200...',
-  no_results: 'Nobody at bottom yet', found: 'found',
-  rebound: 'Rebound', drop: 'Drop', trend: 'Trend',
-  plan: 'Trade plan', entry: 'ENTRY', targets: 'TARGETS', stop: 'STOP',
-  agent: 'AI opinion', xray: 'Crowd x-ray', walls: 'Order book walls',
-  whale: 'Whale radar',
-  whale_active: 'ACTIVE',
-  whale_calm: 'CALM',
-  whale_activity: 'Whale activity',
-  whale_anomaly: 'VOLUME ANOMALY! 🐋',
-  whale_normal: 'Within normal',
-  whale_obv: 'Hidden volume trend (OBV)',
-  whale_spike: 'Liquidity spike',
-  whale_vs_normal: 'vs usual',
-  whale_buying: 'RISING 🟢 (Buying)',
-  whale_selling: 'FALLING 🔴 (Selling)',
-  whale_flat: 'FLAT',
-  whale_no_data: 'Not enough data to analyze',
-  whale_score: 'Whale Score',
-  whale_zscore: 'Z-score',
-  whale_pressure: 'Volume pressure',
-  whale_pressure_buying: 'BUYING 🟢',
-  whale_pressure_selling: 'SELLING 🔴',
-  whale_pressure_absorption: 'ABSORPTION ⚡',
-  whale_pressure_neutral: 'NEUTRAL',
-  whale_futures: 'Futures metrics',
-  whale_oi: 'Open Interest',
-  whale_oi_change: 'Δ OI 24h',
-  whale_lsr_top: 'LSR top traders',
-  whale_lsr_global: 'LSR crowd',
-  whale_taker: 'Taker Buy/Sell',
-  whale_no_futures: 'Futures unavailable',
-  whale_not_traded: 'Not traded on futures',
-  whale_via: 'via',
-  whale_source_bybit: 'Bybit',
-  whale_source_binance: 'Binance',
-  whale_rising: 'rising',
-  whale_falling: 'falling',
-  whale_sideways: 'flat',
-  min: 'Min', cur: 'Now', max: 'Max',
-  sync: '↻ Sync',
-  port_total: 'Total balance', port_pnl: 'PnL 24h', rate: 'rate',
-  assets: 'Assets',
-  fav_title: 'Favorite coins',
-  fav_empty: 'Add coins via ★ in search',
-  add_fav: 'added to favorites', del_fav: 'removed from favorites',
-  orders: 'Orders · Auto-exit',
-  invested: 'Invested (RUB)', coins_on_balance: 'Coins on balance',
-  pair: 'Trading pair', strategy: 'Exit strategy',
-  strat_2: '2 Steps', strat_3: '3 Steps', strat_grid: 'Grid',
-  api_key: 'API Key', api_secret: 'API Secret',
-  del_keys: '[Delete keys]',
-  btn_calc: '1 · Build grid', btn_send: '2 · Send', btn_find: '3 · Find orders',
-  breakeven: 'Breakeven', step: 'Step', limit_at: 'limit at',
-  amount: 'amount', est_profit: 'Expected profit',
-  sending: 'Sending...', connecting: 'Connecting...',
-  success: 'SUCCESS', no_orders: 'No open orders',
-  found_orders: 'Found orders', backend_unavail: 'Backend unavailable',
-  filled: 'FILLED', left: 'Left',
-  enter_ticker: 'Enter ticker', enter_keys: 'Enter API keys!',
-  confirm_orders: 'Send orders?',
-  keys_deleted: 'Keys deleted',
-  confirm_del_keys: 'Delete saved keys?',
-  error: 'Error',
-  monitor: 'Live monitoring',
-  oracle_name: 'Oracle',
-  oracle_status: 'online · learning',
-  oracle_profile: 'Your risk profile',
-  oracle_stats: 'Learning stats',
-  oracle_recent: 'Recent analyses',
-  oracle_analyze: 'Analyze a coin',
-  oracle_edit: 'Edit profile',
-  oracle_refresh: 'Refresh stats',
-  oracle_edit_hint: '3 questions',
-  oracle_refresh_hint: 'from memory',
-  profile_not_set: 'Profile not set',
-  profile_not_set_hint: 'Complete 3 questions',
-  risk_per_trade: 'Risk per trade',
-  pos_size: 'Position size',
-  level: 'Level',
-  no_recent: 'No analyses yet',
-  no_recent_hint: 'Tap "Analyze a coin"',
-  win_rate: 'Win Rate', completed: 'Completed',
-  patterns: 'Patterns', profit_factor: 'Profit Factor',
-  pending: 'pending', days: 'days',
-  market: 'Market overview',
-  mp_mcap: 'Market Cap', mp_btc_dom: 'BTC Dominance',
-  mp_eth_dom: 'ETH Dominance', mp_vol: 'Volume 24h',
-  mp_fng: 'Fear & Greed', mp_trending: 'Trending',
-  learning: 'Oracle learning',
-  learn_total: 'Total', learn_avg_win: 'Avg WIN',
-  learn_avg_loss: 'Avg LOSS',
-  learn_best: 'Best patterns', learn_worst: 'Dangerous patterns',
-  learn_not_enough: 'Need 10+ analyses',
+const AUTO_DICT: Dict = AUTO_EN as Dict;
+const HAS_CYRILLIC = /[А-Яа-яЁё]/;
+const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA']);
 
-  // ─── LEARNING: TABS ───
-  learn_tab_overview: 'Overview',
-  learn_tab_patterns: 'Patterns',
-  learn_tab_insights: 'Insights',
-
-  // ─── LEARNING: OVERVIEW ───
-  learn_calibration_error: 'Calibration error',
-  learn_calibration_hint: 'How much claimed confidence differs from actual',
-  learn_drift_title: '8-week progress',
-  learn_drift_win_rate: 'Win Rate',
-  learn_drift_pf: 'Profit Factor',
-  learn_sample_size: 'Sample',
-
-  // ─── LEARNING: PATTERNS ───
-  learn_calibration_title: 'Confidence calibration',
-  learn_calibration_x_predicted: 'Claimed',
-  learn_calibration_x_actual: 'Actual',
-  learn_calibration_n: 'Sample',
-  learn_calibration_empty: 'Need 10+ completed analyses for calibration.',
-  learn_pattern_detail_title: 'Pattern breakdown',
-  learn_pattern_desc: 'Description',
-  learn_pattern_action_label: 'What to do',
-  learn_pattern_sample: 'Sample',
-  learn_pattern_avg_return: 'Avg return',
-  learn_pattern_weight: 'Scoring weight',
-
-  // ─── LEARNING: INSIGHTS ───
-  learn_insights_empty: 'No insights yet. Oracle will collect them as it learns.',
-  learn_insight_new_pattern: 'New pattern',
-  learn_insight_dead_pattern: 'Pattern stopped working',
-  learn_insight_calibration: 'Calibration',
-  learn_insight_win_rate: 'Win rate changed',
-  learn_insight_milestone: 'New milestone',
-  learn_insight_data_gap: 'Data gap',
-  learn_insight_read_more: 'Read more',
-  learn_insight_close: 'Close',
-
-  // ─── LEARNING: DATA ───
-  learn_data_title: 'What Oracle sees',
-  learn_data_symbols: 'Symbols',
-  learn_data_freshness: 'Data freshness',
-  learn_data_last: 'Last analysis',
-  learn_data_fresh: 'fresh',
-  learn_data_stale: 'stale',
-  quiz_title: 'Profile setup',
-  quiz_intro: 'Answer 3 questions — I will tune strategy for you.',
-  quiz_q1: 'Trading experience', quiz_q1_a1: 'Beginner', quiz_q1_a2: 'Mid', quiz_q1_a3: 'Pro',
-  quiz_q2: 'Capital size', quiz_q2_a1: 'Under 500 USDT', quiz_q2_a2: '500–5000', quiz_q2_a3: '5000+',
-  quiz_q3: 'Allowed drawdown', quiz_q3_a1: 'Up to 10%', quiz_q3_a2: 'Up to 25%', quiz_q3_a3: '50%+',
-  quiz_done: 'Profile saved!',
-  pro_macd: 'MACD · Where price goes',
-  pro_bb: 'Bollinger · Cheap or expensive',
-  pro_adx: 'ADX · Trend strength',
-  pro_stoch: 'Stoch RSI · Overbought/Oversold',
-  pro_div: 'Divergence · Hidden reversal',
-  pro_sr: 'Price levels',
-  pro_vp: 'Volume Profile',
-  pro_hint: 'Enter ticker and press GO on main screen',
-  acc: 'Accumulation', sell: 'Distribution', flat: 'Flat',
-  acc_text: 'Technical bottom. Safe buy zone.',
-  sell_text: 'Technical overheat. Take profit zone.',
-  flat_text: 'Middle of the range.',
-  agent_perfect: 'Perfect setup',
-  agent_perfect_text: 'Price at bottom, volume growing. Risk minimal.',
-  agent_forbid: 'Do not enter',
-  agent_forbid_text: 'Overheated or book flooded with sells.',
-  agent_watch: 'Watching',
-  agent_watch_text: 'Mixed picture. Wait for signal.',
-  ai_mentor: 'AI mentor · beginner-friendly breakdown',
-  ai_empty: 'Press ASK — AI will explain what is happening',
-  ai_thinking: 'AI is analyzing...',
-  ai_no_key: 'First add Groq API key in settings (⚙️)',
-  ai_key_saved: 'Groq key saved',
-  ai_key_deleted: 'Groq key deleted',
-  ai_settings: 'AI Settings',
-  ai_key_label: 'Groq API Key',
-  ai_key_hint: 'Get free: console.groq.com/keys',
-  ai_save: 'Save',
-  ai_delete: 'Delete',
-  ai_need_analysis: 'Run analysis first (GO)',
-  ask_ai_short: '🤖 Ask AI mentor',
-  exchange_count: 'exchanges',
-  book_partial: 'some exchanges unavailable',
-  free_usdt: 'Free USDT',
-  assets_count: 'Assets',
-  in_portfolio: 'in portfolio',
-  fear: 'Fear',
-  neutral: 'Neutral',
-  greed: 'Greed',
-  terms_title: '⚠️ Agreement',
-  about_title: 'About',
-  ai_agent_hint: 'Describe command in plain language',
-  ai_run: 'Execute',
-  ai_deposit: 'Deposit (USDT)',
-  ai_mode_insight: 'Insight',
-  ai_mode_agent: 'Command',
-  twap_title: 'TWAP · Smooth entry',
-  twap_pair: 'Pair',
-  twap_side: 'Side',
-  twap_qty: 'Volume (in coin)',
-  twap_slices: 'Slices',
-  twap_duration: 'Minutes',
-  twap_run: 'Start TWAP',
-  twap_desc: 'Splits a large order into N parts and executes evenly — less slippage.',
-  dash_network: 'Dash Network',
-  dash_masternodes: 'Masternodes',
-  dash_mn_hint: 'Growth = big holders are accumulating DASH',
-  dash_hashrate: 'Network hashrate',
-  dash_difficulty: 'Difficulty',
-  dash_derivatives: 'DASHUSDT Derivatives',
-  dash_funding_long: 'longs overheated ⚠️',
-  dash_funding_short: 'shorts overheated ⚠️',
-  dash_funding_neutral: 'neutral',
-  
-  // ─── RISK CENTER ───
-  risk: 'Risks',
-  nav_risk: 'Risks',
-  risk_title: 'Risk Command Center',
-  risk_subtitle: 'One glance — full picture',
-  risk_overall_low: 'All calm',
-  risk_overall_medium: 'Worth watching',
-  risk_overall_high: 'Needs attention',
-  risk_concentration: 'Portfolio concentration',
-  risk_concentration_hint: 'Largest coin share',
-  risk_confidence: 'Oracle confidence',
-  risk_confidence_hint: 'Current analysis',
-  risk_whale: 'Whale activity',
-  risk_whale_hint: 'Volume anomalies',
-  risk_funding: 'Funding rate',
-  risk_funding_hint: 'Longs/shorts overheat',
-  risk_fear: 'Fear & Greed',
-  risk_fear_hint: 'Market sentiment',
-  risk_no_portfolio: 'Portfolio not synced',
-  risk_whale_active: 'ACTIVE',
-  risk_whale_calm: 'calm',
-  risk_funding_neutral: 'neutral',
-  risk_funding_overheated: 'overheated',
-  
-  // ─── ALERTS ───
-  alerts: 'Alerts',
-  alerts_title: 'Alerts',
-  alerts_empty: 'No alerts yet',
-  alerts_add: '+ Add alert',
-  alert_kind_price_above: 'Price above',
-  alert_kind_price_below: 'Price below',
-  alert_kind_whale: 'Whale active',
-  alert_kind_funding: 'Funding extreme',
-  alert_ticker: 'Ticker',
-  alert_threshold: 'Threshold',
-  alert_save: 'Save',
-  alert_delete: 'Delete',
-  alert_triggered: 'Triggered',
-  alert_active: 'Active',
-  alert_enable_notif: 'Allow notifications',
-  alert_notif_denied: 'Notifications blocked in browser',
-  alert_added: 'Alert added',
-  alert_removed: 'Alert removed',
-  alert_fired: 'Fired',
-
-  // ─── JOURNAL ───
-  journal_title: 'Trade Journal',
-  journal_snapshot: 'Entry Snapshot',
-  journal_confidence: 'Confidence',
-  journal_verdict: 'Oracle Verdict',
-  journal_close: 'Close',
-  journal_whale: 'Whale',
-  journal_whale_act: 'ACTIVE',
-  journal_price: 'Price',
-
-  // ─── CONFLUENCE HELP ───
-  conf_help_title: 'Multi-TF Analysis',
-  conf_help_desc: 'Multi-Timeframe (Multi-TF) analysis checks the trend on <b>three different timeframes</b> simultaneously: 1 Hour, 1 Day, and 1 Week.',
-  conf_help_why_title: 'Why do we need this?',
-  conf_help_why_desc: 'A signal on a 15-minute chart might be a false trap. But if the 1H, 1D, and 1W charts all point to "Buy" — the probability of a real trend is extremely high.',
-  conf_help_how: 'How to read it:',
-  conf_help_strong: '<b>STRONG BUY</b> — all 3 TFs say BUY. The strongest signal.',
-  conf_help_hold: '<b>HOLD</b> — signals are mixed. Wait for a clearer picture.',
-  conf_help_avoid: '<b>AVOID</b> — all 3 TFs are bearish. Do not enter!',
-  conf_help_rsi: 'RSI inside blocks:',
-  conf_help_rsi_desc: 'Below 30 = oversold (cheap), Above 70 = overbought (expensive).',
-  conf_help_ok: 'Got it',
-
-  // ─── ORACLE OVERLAY ───
-  overlay_btn_off: '🔮 Logic',
-  overlay_btn_on: '🔮 Logic ON',
-  overlay_btn_hint_off: 'Show what Oracle saw',
-  overlay_btn_hint_on: 'Hide Oracle logic',
-  overlay_legend_whale: 'whale',
-  overlay_legend_bull: 'bull',
-  overlay_legend_bear: 'bear',
-  overlay_legend_bb_low: 'BB low',
-  overlay_legend_bb_high: 'BB hi',
-  overlay_help_title: 'Oracle Logic Explained',
-  overlay_help_desc: 'Oracle shows markers on the chart so you can see <b>why</b> it made a decision. It is not a trading signal, but a visual explanation of market mechanics.',
-  overlay_help_whale: 'Whale Volume',
-  overlay_help_whale_desc: 'Volume is 2x higher than the 30-period average. Big players are buying or selling.',
-  overlay_help_macd_up: 'MACD Bullish Cross',
-  overlay_help_macd_up_desc: 'MACD line crossed the signal line from below. Momentum is shifting upward.',
-  overlay_help_macd_down: 'MACD Bearish Cross',
-  overlay_help_macd_down_desc: 'MACD line crossed the signal line from above. Momentum is shifting downward.',
-  overlay_help_bb_low: 'Bollinger Lower Band',
-  overlay_help_bb_low_desc: 'Price touched the lower band. The asset is oversold and may bounce.',
-  overlay_help_bb_high: 'Bollinger Upper Band',
-  overlay_help_bb_high_desc: 'Price touched the upper band. The asset is overbought and may drop.',
-  overlay_help_funding: 'Extreme Funding',
-  overlay_help_funding_desc: 'Funding rate is too high or too low. One side is crowded, high risk of liquidations.',
-  overlay_help_close: 'Got it',
-
-  // ─── RISK HELP ───
-  risk_help_title: 'How to read Risks',
-  risk_help_desc: 'The traffic light shows the overall safety of your portfolio and current market conditions. Green — all calm, yellow — worth watching, red — needs attention.',
-  risk_help_conc: 'Portfolio concentration',
-  risk_help_conc_desc: 'Shows how much of your money is invested in a single coin. If it is over 50%, it is dangerous. If that coin drops, your whole balance drops.',
-  risk_help_conf: 'Oracle Confidence',
-  risk_help_conf_desc: 'How confident the AI is in the current signal. If confidence is below 55%, it is better to skip this trade as the market is uncertain.',
-  risk_help_whale: 'Whale Activity',
-  risk_help_whale_desc: 'Shows anomalous volume spikes (2-3x higher than usual). If whales are actively buying or selling, the price may move sharply in their direction.',
-  risk_help_fund: 'Funding rate',
-  risk_help_fund_desc: 'Futures funding rate. If it is too high (overheated), the crowd is on one side, and a sharp liquidation cascade may happen soon.',
-  risk_help_fear: 'Fear & Greed',
-  risk_help_fear_desc: 'Fear & Greed Index (0-100). When the market is panicking (0-30) — it is a good time to buy. When everyone is euphoric (70-100) — it is time to take profit.',
-  risk_help_close: 'Got it',
-
-  // ─── MISC ───
-  demo_need_analysis: 'Run analysis (GO) first so Oracle can build a plan',
-  usdt_rate_loading: 'Getting USDT rate...',
-  pair_placeholder: 'e.g. DASH/USDT',
-  api_key_placeholder: 'API Key...',
-  api_secret_placeholder: 'Secret Key...',
-  passphrase_placeholder: 'Passphrase...',
-  rub_placeholder: 'Amount, e.g. 600000',
-  coins_placeholder: 'Qty, e.g. 96.5',
-  twap_qty_placeholder: 'Volume',
-  twap_slices_placeholder: 'e.g. 10',
-  twap_duration_placeholder: 'Min, e.g. 30',
-  enter_amount_coins: 'Enter amount and coins',
-  kucoin_requires_pass: 'KuCoin requires Passphrase',
-  keys_saved: '✅ Keys saved',
-  keys_save_failed: '❌ Save failed',
-  binance_geo_block: 'Binance is blocked in your region',
-    // ─── VERDICT 3-SCENARIO ───
-  verdict_base_label: 'Base',
-  verdict_bull_label: 'Bull',
-  verdict_bear_label: 'Bear',
-  v_strong_buy: 'strong buy',
-  v_buy: 'buy',
-  v_hold: 'hold',
-  v_avoid: 'avoid',
-
-  // ─── AI TABS ───
-  ai_tab_base: '🧠 Base',
-  ai_tab_bull: '🚀 Bull',
-  ai_tab_bear: '⚠️ Bear',
-  ai_empty_response: 'Empty AI response',
-
-  // ─── WHALE V2 ───
-  whale_signals_label: 'Signals',
-  whale_sources_label: 'Sources',
-  whale_verdict_strong: 'Strong signal — big capital active',
-  whale_verdict_moderate: 'Moderate whale activity',
-  whale_verdict_calm: 'Whales are asleep — moves not confirmed by volume',
-  whale_footer_warn: '⚠️ Whale Score is a probability of big-player activity, not a buy signal. Always check funding and order book before entering.',
-  whale_sig_volume: 'Volume anomaly',
-  whale_sig_obv: 'OBV (accumulation)',
-  whale_sig_oi: 'Open Interest (OI)',
-  whale_sig_lsr: 'LSR (top vs crowd)',
-  whale_sig_taker: 'Taker Buy/Sell',
-
-  // ─── WHITE PAPER ───
-  wp_title: 'White Paper',
-  wp_mission: 'Our Mission',
-  wp_creators: 'Project Creators',
-  wp_partners: 'Partners & Support',
-  wp_investors: 'Investors',
-  wp_close: 'Close',
-  wp_no_partners: 'No partners yet.',
-  wp_open_invest: 'Open for strategic investments.',
-  wp_footer_btn: 'White Paper & Partners',
-  wp_footer_copy: 'NEBULA © 2026 · Powered by VELOX',
-  wp_built_with: 'Designed & Built with 🖤 for the Crypto Community',
-
-  // ─── CRYPTO HUB ───
-  hub_title: 'Crypto Hub',
-  hub_tab_exchanges: 'Exchanges',
-  hub_tab_learning: 'Education',
-  hub_tab_tools: 'Tools',
-  hub_status_ru: 'RU OK',
-  hub_status_vpn: 'VPN',
-  hub_status_no: 'NOT AVAILABLE',
-  hub_status_global: 'Global',
-  hub_details_title: 'Details',
-  hub_back: 'Back to list',
-  hub_close: 'Close',
-  hub_access: 'Access',
-  hub_kyc: 'KYC',
-  hub_p2p: 'P2P',
-  hub_fees: 'Fees',
-  hub_pros: 'Pros',
-  hub_cons: 'Cons',
-  hub_summary: 'Summary',
-  hub_footer_warn: 'Availability may change. Always check local laws.',
-  nav_hub: 'Crypto Hub',
-
-  // ─── DEMO MODE ───
-  demo_leave: 'Leave',
-  demo_reset: 'Reset',
-  demo_free: 'Free',
-  demo_invested: 'In trades',
-  demo_pnl: 'PnL',
-  demo_oracle_plan: 'Oracle plan',
-  demo_virtual_trades: 'Virtual trades',
-  demo_no_active: 'No active trades',
-  demo_enter_coin: 'Enter coin and press GO so Oracle can build a plan',
-  demo_strat_2: '2 steps',
-  demo_strat_3: '3 steps',
-  demo_entry_market: 'Entry (Market)',
-  demo_step: 'Step',
-  demo_stop_loss: 'Stop-loss',
-  demo_entry_amount: 'Entry amount (USDT)',
-  demo_of_balance: 'of balance',
-  demo_execute: 'Execute Oracle plan',
-  demo_max_available: 'Max available',
-  demo_insufficient: 'Insufficient virtual funds',
-  demo_opened: 'Opened',
-  demo_orders: 'virtual orders for',
-  demo_memorized: 'Oracle memorized',
-  demo_cancelled: 'Order cancelled',
-  demo_returned: 'Returned',
-  demo_reset_done: 'Demo mode reset',
-  demo_volume: 'Volume',
-
-  // ─── ORACLE ANALOGIES ───
-  oracle_analogs_empty: 'Need to analyze a coin on the home screen to find analogies',
-  oracle_found_matches: 'Found matches',
-  oracle_prob_growth: 'Probability of growth',
-  oracle_analogs_bull: 'In most cases, the price grew.',
-  oracle_analogs_bear: 'In most cases, the price fell. Be careful.',
-  oracle_analogs_mixed: 'Mixed results. Better to wait.',
-  oracle_avg_return: 'Average return',
-  oracle_recent_analogs: 'Recent analogies',
-  oracle_analogs_title: 'Mirror of history',
-
-  // ─── PRO LOCKS ───
-  pro_lock_analytics_title: 'Advanced Analytics (PRO)',
-  pro_lock_analytics_desc: 'Detailed breakdown of MACD, Bollinger Bands, Volume Profile, and divergences is available only in the PRO version.',
-  pro_lock_risk_title: 'Risk Center (PRO)',
-  pro_lock_risk_desc: 'Analysis of 5 risk indicators (Concentration, Oracle Confidence, Whales, Funding, Fear&Greed) is available only in the PRO version.',
-  pro_lock_btn: '💎 Open in PRO',
-
-  // ─── ABOUT MODAL ───
-  about_what: 'What is NEBULA',
-  about_what_desc: 'A personal trading terminal for the crypto market. Designed as a tool that gives an ordinary trader what is usually available only to professionals: deep market analysis, big player metrics, and an AI mentor in one window.',
-  about_who: 'Who created it',
-  about_who_desc: 'The project is made by <strong>one person</strong> — an enthusiast trader — in collaboration with an AI assistant. No team, no investors, no office. Just an idea and a desire to make a convenient tool for myself and others.',
-  about_can: 'What it can do',
-  about_platforms: 'Platforms',
-  about_security: 'Security',
-  about_security_desc: 'MEXC API keys and Groq key are stored <strong>only locally</strong> on your device. Encryption — <b>AES-256-GCM + PBKDF2</b> (150,000 iterations). The master password is not saved on the server, in the cloud, and does not leave the device. Even the author of the program does not have access to it.',
-  about_tech: 'Technologies',
-  about_version: 'Version and build',
-  about_build: 'Build: Tauri (Windows) + Capacitor (Android) + Web',
-  about_feedback: 'Feedback',
-  about_feedback_desc: 'Found a bug, have an idea, or want to suggest an improvement — write to the author. Every message is read personally, not by a bot.',
-  about_warn: '⚠️ NEBULA is an <strong>analysis tool</strong>, not a financial advisor. You make all trading decisions yourself and at your own risk. The market is volatile, forecasts are not guaranteed. <strong>Do not trade with funds you cannot afford to lose.</strong>',
-  about_plat_web: '🌐 <b>Web</b> — works in any modern browser;',
-  about_plat_win: '💻 <b>Windows</b> — native app via Tauri 2 (Rust + WebView2);',
-  about_plat_and: '📱 <b>Android</b> — APK via Capacitor 8 (without Google Play).',
-  
-  about_features_html: `
-    <li><b>Analysis from 5 exchanges</b> — Gate.io, Binance, Bybit, OKX, MEXC simultaneously;</li>
-    <li><b>Whale radar</b> — volume Z-score, OBV, Open Interest, Long/Short Ratio, Taker Buy/Sell;</li>
-    <li><b>Risk Command Center</b> — 5 risk indicators in a single traffic light;</li>
-    <li><b>Notifications</b> — Price / Whale / Funding alerts with push;</li>
-    <li><b>AI mentor</b> — explains in plain language what is happening with the coin (Groq API);</li>
-    <li><b>AI Agent</b> — accepts trading commands in natural language ("Buy DASH for 10% depo");</li>
-    <li><b>Bottom scanner</b> — finds entry points across top-200 coins using an algorithm;</li>
-    <li><b>Technical analysis</b> — MACD, Bollinger, ADX, Stoch RSI, divergences, S/R levels, Volume Profile;</li>
-    <li><b>Trade plan</b> — automatic TP/SL calculation and grid calculator;</li>
-    <li><b>Timeframes</b> — 1m / 15m / 1h / 1d / 7d / 1M / ALL + WebSocket real-time;</li>
-    <li><b>TWAP</b> — smooth execution of large orders without slippage;</li>
-    <li><b>Portfolio</b> — synchronization via exchange API + USDT/RUB rate;</li>
-    <li><b>Demo mode</b> — virtual trading on $10,000 without risking real funds;</li>
-    <li><b>Tactical radar</b> — quick radial menu on smartphone (press and drag).</li>
-  `,
-
-  // ─── DIAGNOSTICS ───
-  diag_title: '🩺 Diagnostics',
-
-  // ─── DONATE ───
-  donate_title: '💎 Support project',
-  donate_support: 'Support NEBULA',
-  donate_desc: 'NEBULA is a free project by a single developer.<br>If the app is useful — you can support development.',
-  donate_copy: '📋 Copy address',
-  donate_warn: '⚠️ Send only USDT on Tron (TRC-20) network.<br>Another network = loss of funds.',
-  donate_thanks: 'Thank you for your support ❤️',
-  donate_copied: '✅ USDT address copied',
-  donate_copy_err: 'Failed to copy',
-
-  // ─── RADAR ───
-  radar_market: 'Market',
-
-  // ─── CONFLUENCE TITLE ───
-  conf_title_short: 'Multi-TF',
-
-  // ─── AUTH ───
-  auth_create_title: '🔐 Create password',
-  auth_create_desc: 'Create a password. It will be used to encrypt API keys.',
-  auth_login_title: '🔐 Login to NEBULA',
-  auth_login_desc: 'Enter password to unlock.',
-  auth_enter_first: 'Please log in first',
-  auth_bio_not_supported: 'Biometrics not supported on this device',
-  auth_bio_enabled: 'Biometric login enabled',
-  auth_bio_failed: 'Failed to setup biometrics: ',
-  auth_bio_disabled: 'Biometric login disabled',
-  auth_bio_reason: 'Login to NEBULA',
-  auth_bio_subtitle: 'Confirm your identity',
-  auth_bio_description: 'Place your finger or look at the camera',
-  auth_reset_confirm: 'Reset password? ALL saved API keys will be deleted forever.',
-  auth_reset_done: 'Password reset',
-  auth_min_4: 'Minimum 4 characters',
-  auth_passwords_differ: 'Passwords do not match',
-  auth_enable_bio_confirm: 'Enable fingerprint / Face ID login?',
-  auth_wrong_password: 'Wrong password',
-  auth_check_error: 'Verification error',
-  auth_bio_failed_enter: 'Biometrics failed. Enter password.',
-
-  // ─── ALERTS ───
-  alert_type: 'Type',
-  alert_enter_ticker: 'Enter ticker',
-  alert_enter_threshold: 'Enter threshold',
-
-  // ─── PULL REFRESH ───
-  ptr_pull: 'Pull down',
-  ptr_release: 'Release',
-  ptr_refresh: 'Refreshing...',
-
-  // ─── INIT DIAG TOAST ───
-  diag_toast_errors: 'Diagnostics: {n} errors. Open report via ⚙️ → Diagnostics.',
-
-  // ─── DEMO MISC ───
-  demo_take: '✅ Take',
-  demo_stop: '❌ Stop',
-  demo_cancel_order: 'Cancel order',
-
-  // ─── WHALE PRO ───
-  whale_pro_xray: 'Crowd x-ray and Order book walls are available in PRO.',
-  whale_pro_btn: 'Open PRO',
-
-  // ─── ORACLE ENGINE ───
-  oracle_step_tech: 'Technical analysis',
-  oracle_step_div: 'Divergence',
-  oracle_step_whales: 'Whales',
-  oracle_step_orderbook: 'Order book',
-  oracle_v_strong_buy: '🟢 STRONG SIGNAL',
-  oracle_v_buy: '🟢 MODERATE SIGNAL',
-  oracle_v_hold: '⚖️ HOLD',
-  oracle_v_avoid: '🔴 AVOID',
-  oracle_conf_conservative: '🛡️ Conservative',
-  oracle_conf_balanced: '⚖️ Balanced',
-  oracle_conf_aggressive: '🔥 Aggressive',
-  oracle_conf_conservative_desc: 'Conservative profile. Oracle will offer only the strongest signals and small positions.',
-  oracle_conf_balanced_desc: 'Balanced profile. Oracle will look for a balance between risk and reward.',
-  oracle_conf_aggressive_desc: 'Aggressive profile. Oracle is ready for higher risks.',
-  oracle_score_lbl: 'Score',
-  oracle_memory_lbl: 'Memory',
-  oracle_context_lbl: 'Context',
-  oracle_enter_pos: 'Enter with {n}% of deposit.',
-  oracle_recommends_buy: 'Oracle confirms entry. Trend signal.',
-  oracle_hold_mixed: 'Signal is mixed.',
-  oracle_risk_high: 'Risk exceeds potential.',
-  oracle_learn_insufficient: 'Need at least 10 completed. Have: {n}',
-  oracle_analogs_need_more: 'Not enough data (need 5+)',
-  oracle_analogs_no_matches: 'No similar situations found',
-  oracle_ai_limit: 'Daily limit: 3 requests. Buy PRO for unlimited!',
-  oracle_step_thinking_price: 'Checking price {p}...',
-  oracle_step_macd_thinking: 'Analyzing EMA...',
-  oracle_step_bb_thinking: 'Volatility channel...',
-  oracle_step_adx_thinking: 'Trend strength...',
-  oracle_step_stoch_thinking: 'Precision...',
-  oracle_step_div_thinking: 'Comparing...',
-  oracle_step_sr_thinking: 'Levels...',
-  oracle_step_whales_thinking: 'OBV...',
-  oracle_step_ob_thinking: 'Bids/Asks + funding...',
-  oracle_macd_bullish: 'MACD bullish',
-  oracle_macd_bearish: 'MACD bearish',
-  oracle_bb_low: 'Bollinger: price at bottom',
-  oracle_bb_high: 'Bollinger: price at top',
-  oracle_adx_strong_up: 'ADX {v}: strong uptrend',
-  oracle_stoch_oversold: 'Stoch RSI oversold',
-  oracle_stoch_overbought: 'Stoch RSI overbought',
-  oracle_div_bull: '🐂 BULLISH DIVERGENCE ({n}%)',
-  oracle_div_bear: '🐻 BEARISH DIVERGENCE ({n}%)',
-  oracle_near_support: 'Close to support ({n}%)',
-  oracle_whales_buying: 'Whales buying',
-  oracle_whales_distribution: 'Distribution possible',
-  oracle_ob_protected: 'Book protected',
-  oracle_ob_pressure: 'Pressure from above',
-  oracle_funding_squeeze: 'Short squeeze potential',
-  oracle_funding_euphoria: 'Euphoria',
-  oracle_man_dump: 'Artificial dump',
-  oracle_man_distribution: 'Real distribution',
-  oracle_onchain_active: 'Active trading',
-  oracle_onchain_low: 'Low activity',
-
-  // ─── INDICATORS / REGIME ───
-  regime_bull_btc: '🐂 Strong bull market. BTC dominates, money flows into large coins.',
-  regime_bull_mild: '📈 Moderately bullish market. There is an appetite for risk.',
-  regime_bear: '🔻 Strong bear market. Better to hold cash.',
-  regime_bear_mild: '📉 Moderate decline. Correction possible.',
-  regime_altseason: '🚀 Altseason! Money flows into altcoins.',
-  regime_neutral: '⚖️ Market is consolidating.',
-
-  // ─── MARKET ADVICE ───
-  advice_btc_bottom: '🟢 BTC at the bottom of the 120-day range. Excellent accumulation zone.',
-  advice_btc_overheat: '🔴 BTC is overheated. Correction likely.',
-  advice_btc_uptrend: '📈 BTC in a healthy uptrend.',
-  advice_btc_downtrend: '📉 BTC in a downtrend. Wait for reversal.',
-  advice_btc_flat: '⚖️ BTC is consolidating.',
-  sentiment_extreme_greed: '⚠️ Extreme Greed — market is overheated',
-  sentiment_extreme_fear: '💎 Extreme Fear — potentially good time to buy',
-  market_dexpaprika_down: 'DexPaprika unavailable',
-  market_token_not_found: 'Token not found in DEX',
-
-  // ─── THEMES ───
-  theme_not_found: 'Theme not found',
-  theme_group_accents: 'Accents',
-  theme_group_bg: 'Background',
-  theme_group_text: 'Text',
-  theme_group_gradient: 'Gradient',
-
-  // ─── INFO / WHITE PAPER ───
-  wp_mission_text: 'Give retail traders access to institutional analytics. We combined machine learning, streaming data from 6 exchanges, and risk assessment algorithms in one terminal.',
-  wp_release_date: 'November 01, 2026',
-    // ─── TOOLS / MINING ───
-  exchange_menu_title: '💱 Exchange & Tools',
-  exchange_menu_desc: 'Choose a tool to open inside the terminal.',
-  xgram_desc: 'Anonymous crypto swap. 590+ coins. No KYC.',
-  xgram_btn: 'Open Xgram',
-  p2p_desc: 'Buy/sell crypto with fiat. Escrow protected.',
-  p2p_btn: 'Open Binance P2P',
-  
-  mining_title: '⛏️ Mining',
-  mining_calc_title: 'Mining Profit Calculator',
-  mining_coin: 'Coin',
-  mining_hash: 'Hashrate (GH/s)',
-  mining_power: 'Power (Watts)',
-  mining_elec: 'Electricity Cost ($/kWh)',
-  mining_btn_calc: 'Calculate Profit',
-  mining_btn_loading: 'Loading data...',
-  mining_err_hash: 'Enter hashrate',
-  mining_err_api: 'Failed to fetch data',
-  mining_res_daily_coins: 'Daily Coins:',
-  mining_res_revenue: 'Daily Revenue:',
-  mining_res_power: 'Power Cost:',
-  mining_res_net: 'Net Profit:',
-  mining_btn_open: 'Open Calculator',
-  mining_desc: 'Calculate daily profit based on hashrate and electricity.',
-  
-  tools_close: 'Close',
-  fs_btn_title: 'Fullscreen',
-    // ─── PATTERNS ───
-  pat_bull_btc: 'Bullish BTC', pat_altseason: 'Altseason', pat_bearish: 'Bear market',
-  pat_bull_mild: 'Mild growth', pat_bear_mild: 'Mild decline', pat_neutral: 'Consolidation',
-  pat_rsi_oversold: 'RSI oversold', pat_rsi_low: 'RSI low', pat_rsi_mid: 'RSI mid',
-  pat_rsi_high: 'RSI high', pat_rsi_overbought: 'RSI overbought',
-  pat_whale_buying: 'whales buying', pat_whale_selling: 'whales selling',
-  pat_whale_active_unknown: 'volume anomaly', pat_no_whale: 'no whales',
-  pat_fund_neg: 'shorts dominate', pat_fund_overlong: 'longs overheated',
-  pat_fund_pos: 'longs dominate', pat_fund_neutral: 'neutral funding',
-  pat_ob_bull: 'orderbook bullish', pat_ob_bear: 'orderbook bearish', pat_ob_neutral: 'orderbook neutral',
-
-  // ─── LEARNING HELP ───
-  learn_help_title: 'How to read this stats?',
-  learn_help_btn: '❓ How to understand?',
-  learn_help_pf: 'Profit Factor',
-  learn_help_pf_desc: 'Shows how much you earn for every dollar lost. <b>1.5</b> means for every $1 loss, you make $1.5 profit. <b>Above 1.0 is good</b>. Below 0.8 means losing money.',
-  learn_help_cal: 'Confidence Calibration (Calibration Error)',
-  learn_help_cal_desc: 'Oracle rates a signal: "I am 80% confident." Calibration checks if it is honest. If error is <b>33%</b>, it means when it says 80%, it actually wins only 47% of the time. <b>Lower error is better</b>. Error > 20% means don\'t trust high confidence signals.',
-  learn_help_pat: 'Patterns',
-  learn_help_pat_desc: 'Oracle finds repeating situations (e.g., "RSI dropped, whales buying"). It remembers them. If Win Rate <b>above 60%</b>, it is a great signal. If <b>below 40%</b>, Oracle sees it stopped working and lowers its weight.',
-  learn_help_ins: 'Insights',
-  learn_help_ins_desc: 'This is Oracle\'s "diary". It analyzes its own history: "I learned a new pattern", "This one stopped working", "I overestimate my confidence". Read them to understand how its "brain" evolves.',
-    // ─── FAVORITES TAB ───
-  // ─── BTC OUTLOOK ───
-  btc_outlook_btn: 'History & outlook',
-  btc_outlook_pro_only: '💎 BTC Outlook is available only with a PRO subscription',
-  btc_tab_snap: 'Snapshot',
-  btc_tab_break: 'ATH breakout',
-  btc_tab_cal: 'This day',
-  btc_tab_cyc: 'Cycles',
-  btc_rsi: 'RSI', btc_ath: 'ATH', btc_to_ath: 'To ATH', btc_days: 'Days since ATH',
-  btc_at_ath: 'BTC at all-time high!',
-  btc_below: 'BTC is below ATH by', btc_below_short: 'below',
-  btc_heat: 'Move intensity',
-  btc_prob_title: 'ATH breakout probability',
-  btc_analogs: 'analogs',
-  btc_h7: '7 days', btc_h30: '30 days', btc_h90: '90 days', btc_h365: '365 days',
-  btc_similar: 'Similar periods in history',
-  btc_method: 'Method: kNN over historical weeks with similar drawdown from ATH (±5%). Honest statistics, not a prediction.',
-  btc_cal_title: 'This day in BTC history',
-  btc_years: 'years',
-  btc_cal_foot: 'In {ath} of {n} years, an all-time high was set near this date.',
-  btc_avg: 'Avg between ATHs', btc_median: 'Median', btc_gain: 'Avg gain',
-  btc_cycle_now: '{d} days since last ATH, price is {p}% below ATH.',
-  btc_foot_warn: '⚠️ This is statistics, not financial advice. Past performance does not guarantee future results.',
-
-  // ─── FAVORITES TAB ───
-  fav_tab_chart: '📈 Chart',
-  fav_tab_favorites: '⭐ Favorites',
-  fav_market_cap: 'Market Cap',
-  fav_cmc20: 'CMC20',
-  fav_altcoin_index: 'Altcoin Index',
-  fav_fear_greed: 'Fear & Greed',
-  fav_altseason: 'Altseason',
-  fav_btc_season: 'BTC Season',
-  fav_neutral: 'Neutral',
-  fav_loading_data: 'Loading data...',
-  fav_moneta: 'Coin',
-  fav_cena: 'Price',
-  fav_grafik_24h: '24h Chart',
-  fav_24h: '24h %',
-};
-
-// ─── СОСТОЯНИЕ ───
+// Храним оригинальный русский текст, чтобы при возврате на RU всё восстанавливалось идеально
+const origTextNodes = new WeakMap<Text, string>();
+const origAttrs = new WeakMap<Element, { placeholder?: string; title?: string }>();
+let _observer: MutationObserver | null = null;
+let _isTranslating = false;
 
 let _lang: Lang = (() => {
-  const saved = localStorage.getItem('nebulaLang');
-  return saved === 'en' ? 'en' : 'ru';
+  try {
+    return localStorage.getItem('nebulaLang') === 'en' ? 'en' : 'ru';
+  } catch {
+    return 'ru';
+  }
 })();
+
+function normText(s: string): string {
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+function translateTextNode(node: Text): void {
+  const parentTag = node.parentElement?.tagName;
+  if (parentTag && SKIP_TAGS.has(parentTag)) return;
+
+  if (_lang === 'ru') {
+    const orig = origTextNodes.get(node);
+    if (orig !== undefined && node.nodeValue !== orig) {
+      node.nodeValue = orig;
+    }
+    return;
+  }
+
+  const raw = node.nodeValue || '';
+  if (!HAS_CYRILLIC.test(raw)) return;
+
+  const key = normText(raw);
+  const translated = AUTO_DICT[key];
+  if (!translated) return;
+
+  if (!origTextNodes.has(node)) origTextNodes.set(node, raw);
+  const lead = raw.match(/^\s*/)?.[0] || '';
+  const trail = raw.match(/\s*$/)?.[0] || '';
+  const nextVal = lead + translated + trail;
+  if (node.nodeValue !== nextVal) node.nodeValue = nextVal;
+}
+
+function translateElementAttrs(el: Element): void {
+  if (SKIP_TAGS.has(el.tagName)) return;
+
+  if (_lang === 'ru') {
+    const saved = origAttrs.get(el);
+    if (saved) {
+      if (saved.placeholder !== undefined) el.setAttribute('placeholder', saved.placeholder);
+      if (saved.title !== undefined) el.setAttribute('title', saved.title);
+    }
+    return;
+  }
+
+  for (const attr of ['placeholder', 'title'] as const) {
+    const val = el.getAttribute(attr);
+    if (!val || !HAS_CYRILLIC.test(val)) continue;
+    const tr = AUTO_DICT[normText(val)];
+    if (!tr) continue;
+
+    const saved = origAttrs.get(el) || {};
+    if (saved[attr] === undefined) {
+      saved[attr] = val;
+      origAttrs.set(el, saved);
+    }
+    if (val !== tr) el.setAttribute(attr, tr);
+  }
+}
+
+export function applyAutoDomTranslation(root: Node = document.body): void {
+  if (typeof document === 'undefined' || !root || _isTranslating) return;
+  _isTranslating = true;
+  try {
+    if (root.nodeType === Node.TEXT_NODE) {
+      translateTextNode(root as Text);
+      return;
+    }
+    if (root.nodeType === Node.ELEMENT_NODE) {
+      translateElementAttrs(root as Element);
+    }
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    let cur: Node | null;
+    while ((cur = walker.nextNode())) {
+      if (cur.nodeType === Node.TEXT_NODE) {
+        translateTextNode(cur as Text);
+      } else if (cur.nodeType === Node.ELEMENT_NODE) {
+        translateElementAttrs(cur as Element);
+      }
+    }
+  } finally {
+    _isTranslating = false;
+  }
+}
+
+function initAutoTranslator(): void {
+  if (typeof window === 'undefined' || typeof MutationObserver === 'undefined' || _observer) return;
+
+  const start = () => {
+    if (!document.body) return;
+    if (_lang === 'en') applyAutoDomTranslation(document.body);
+
+    _observer = new MutationObserver((mutations) => {
+      if (_lang !== 'en' || _isTranslating) return;
+      for (const m of mutations) {
+        if (m.type === 'characterData' && m.target) {
+          applyAutoDomTranslation(m.target);
+        } else if (m.type === 'childList') {
+          m.addedNodes.forEach((n) => applyAutoDomTranslation(n));
+        }
+      }
+    });
+
+    _observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+}
 
 // ─── ПУБЛИЧНОЕ API ───
 
-/** Перевод по ключу. Если ключ не найден — возвращает сам ключ. */
 export function tm(key: string): string {
-  const dict = _lang === 'en' ? I18N_EN : I18N_RU;
-  return dict[key] ?? key;
+  return DICTS[_lang][key] ?? DICTS.ru[key] ?? key;
 }
 
-/** Проверка: сейчас английский? */
 export function isEN(): boolean {
   return _lang === 'en';
 }
 
-/** Текущий язык */
 export function getLang(): Lang {
   return _lang;
 }
 
-/** Установить язык (сохраняет в localStorage) */
 export function setLang(lang: Lang): void {
   if (lang !== 'ru' && lang !== 'en') return;
   _lang = lang;
@@ -1488,13 +169,13 @@ export function setLang(lang: Lang): void {
   } catch (e) {
     console.warn('[i18n] setLang save failed:', e);
   }
+  applyAutoDomTranslation(document.body);
 }
 
-/** Хелпер: все ключи языка (для отладки) */
 export function getAllKeys(): string[] {
-  return Object.keys(_lang === 'en' ? I18N_EN : I18N_RU);
+  return Object.keys(DICTS[_lang]);
 }
-// ─── Экспорт в window для inline-обработчиков ───
+
 if (typeof window !== 'undefined') {
   Object.assign(window as any, {
     tm,
@@ -1503,4 +184,5 @@ if (typeof window !== 'undefined') {
     getLang,
     getAllKeys,
   });
+  initAutoTranslator();
 }

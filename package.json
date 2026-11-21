@@ -1,9 +1,10 @@
 {
   "name": "nebula-oracle-v2",
-  "version": "2.0.43",
+  "version": "2.0.44",
   "description": "NEBULA Oracle Terminal · Capacitor + Tauri + TypeScript",
   "type": "module",
   "scripts": {
+    "i18n": "node scripts/i18n-sync.mjs",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
