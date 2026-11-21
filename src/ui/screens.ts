@@ -14,6 +14,7 @@ import { renderOracleDashboard } from './oracle';
 import { cancelDemoOrder, resetDemo } from '../demo';
 import { openBtcOutlook, closeBtcOutlook, applyBtcGlow } from './btc-outlook';
 import { calcRsiSimple, calcAtr, calcAdx } from '../indicators';
+import { runBacktest } from '../backtest/engine';
 
 // ═══ ВКЛАДКИ ГЛАВНОГО ЭКРАНА (СВАЙП) ═══
 export function switchHomeTab(tab: 'main' | 'fav'): void {
@@ -529,6 +530,9 @@ export function renderDemoPlan() {
     <button class="btn-primary btn-mint" onclick="executeDemoTrade()" style="margin-top:12px;">
       🤖 ${tm('demo_execute')}
     </button>
+    <button class="btn-primary" onclick="openBacktestSheet()" style="margin-top:8px;border-color:rgba(94,203,255,.35);color:var(--cyan);">
+      🧪 ${isEN() ? 'Backtest on history' : 'Бэктест на истории'}
+    </button>
   `;
 }
 
@@ -838,6 +842,150 @@ window.addEventListener('resize', () => {
   });
 }
 
+// ═══ МИНИ-БЭКТЕСТЕР (ШТОРКА) ═══
+export function openBacktestSheet(): void {
+  const en = isEN();
+  const ticker = (state.currentTicker || 'DASH').toUpperCase();
+
+  const html = `
+    <div style="font-size:11.5px;color:var(--mut);margin-bottom:12px;line-height:1.5;">
+      ${en
+        ? `Historical simulation for <b style="color:var(--hi)">${ticker}</b> using real exchange fees & slippage (TradingCosts).`
+        : `Прогон стратегии по истории <b style="color:var(--hi)">${ticker}</b> с учётом комиссий и проскальзывания (TradingCosts).`}
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label class="form-lbl">${en ? 'Timeframe' : 'Таймфрейм'}</label>
+        <select class="form-input" id="bt-tf">
+          <option value="1h">1h (300 bars)</option>
+          <option value="1d" selected>1d (300 bars)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-lbl">${en ? 'Entry RSI <=' : 'Вход RSI <='}</label>
+        <input class="form-input" type="number" id="bt-rsi" value="35" min="15" max="65">
+      </div>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label class="form-lbl">Take Profit (%)</label>
+        <input class="form-input" type="number" id="bt-tp" value="10" min="1" max="100" step="0.5">
+      </div>
+      <div class="form-row">
+        <label class="form-lbl">Stop Loss (%)</label>
+        <input class="form-input" type="number" id="bt-sl" value="5" min="1" max="50" step="0.5">
+      </div>
+    </div>
+
+    <button class="btn-primary btn-mint" onclick="runBacktestUI()" style="margin-bottom:12px;">
+      ▶ ${en ? 'Run Backtest' : 'Запустить бэктест'}
+    </button>
+
+    <div id="bt-results"></div>
+  `;
+
+  openSheet(`🧪 ${en ? 'Backtest' : 'Бэктест'} · ${ticker}`, html);
+  void runBacktestUI();
+}
+
+export async function runBacktestUI(): Promise<void> {
+  const box = document.getElementById('bt-results');
+  if (!box) return;
+
+  const en = isEN();
+  const ticker = (state.currentTicker || 'DASH').toUpperCase();
+  const tf = ((document.getElementById('bt-tf') as HTMLSelectElement | null)?.value || '1d') as '1h' | '1d';
+  const rsiBuyBelow = parseFloat((document.getElementById('bt-rsi') as HTMLInputElement | null)?.value || '35');
+  const takeProfitPct = parseFloat((document.getElementById('bt-tp') as HTMLInputElement | null)?.value || '10');
+  const stopLossPct = parseFloat((document.getElementById('bt-sl') as HTMLInputElement | null)?.value || '5');
+
+  box.innerHTML = `<div class="empty-msg" style="padding:16px 0;">⏳ ${en ? 'Loading candles...' : 'Загружаю свечи...'}</div>`;
+
+  try {
+    const { data, source } = await fetchCandlesWithSource(ticker, tf);
+    const res = runBacktest(data, { rsiBuyBelow, takeProfitPct, stopLossPct });
+
+    // SVG-график кривой капитала (Equity Curve)
+    let curveSvg = '';
+    if (res.equityCurve.length > 1) {
+      const w = 320, h = 76, pad = 4;
+      const mn = Math.min(...res.equityCurve);
+      const mx = Math.max(...res.equityCurve);
+      const rng = mx - mn || 1;
+      const pts = res.equityCurve.map((v, i) => {
+        const x = pad + (i / (res.equityCurve.length - 1)) * (w - pad * 2);
+        const y = h - pad - ((v - mn) / rng) * (h - pad * 2);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' L ');
+      const stroke = res.totalReturnPct >= 0 ? '#45e0a8' : '#ff6584';
+      curveSvg = `
+        <div style="background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:10px;padding:8px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mut);margin-bottom:4px;">
+            <span>Equity Curve (${res.candlesCount} bars · ${source})</span>
+            <span style="color:${stroke}">$${res.finalCapital.toFixed(0)}</span>
+          </div>
+          <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:76px;display:block;">
+            <path d="M ${pts}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>`;
+    }
+
+    const retColor = res.totalReturnPct >= 0 ? 'var(--mint)' : 'var(--coral)';
+    const bhColor = res.buyAndHoldPct >= 0 ? 'var(--mint)' : 'var(--coral)';
+
+    const tradesHtml = res.trades.length === 0
+      ? `<div class="empty-msg" style="padding:10px 0;">${en ? 'No signals for these settings. Try raising RSI.' : 'Сделок не найдено. Попробуй поднять порог RSI.'}</div>`
+      : res.trades.slice(-8).reverse().map(t => {
+          const d = new Date(t.entryTime * 1000).toLocaleDateString();
+          const c = t.pnlUsdt >= 0 ? 'var(--mint)' : 'var(--coral)';
+          const tag = t.reason === 'TP' ? '✅ TP' : t.reason === 'SL' ? '🛑 SL' : '⏳ END';
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06);font-family:'JetBrains Mono',monospace;font-size:11px;">
+              <span style="color:var(--mut)">${d} · ${tag}</span>
+              <span style="color:${c};font-weight:700">${t.pnlUsdt >= 0 ? '+' : ''}$${t.pnlUsdt.toFixed(1)} (${t.pnlPct >= 0 ? '+' : ''}${t.pnlPct.toFixed(1)}%)</span>
+            </div>`;
+        }).join('');
+
+    box.innerHTML = `
+      ${curveSvg}
+      <div class="oracle-stats-grid" style="margin-bottom:12px;">
+        <div class="oracle-stat-cell">
+          <div class="oracle-stat-lbl">${en ? 'Net Return' : 'Доходность'}</div>
+          <div class="oracle-stat-val" style="color:${retColor}">${res.totalReturnPct >= 0 ? '+' : ''}${res.totalReturnPct.toFixed(1)}%</div>
+        </div>
+        <div class="oracle-stat-cell">
+          <div class="oracle-stat-lbl">Buy & Hold</div>
+          <div class="oracle-stat-val" style="color:${bhColor}">${res.buyAndHoldPct >= 0 ? '+' : ''}${res.buyAndHoldPct.toFixed(1)}%</div>
+        </div>
+        <div class="oracle-stat-cell">
+          <div class="oracle-stat-lbl">Win Rate</div>
+          <div class="oracle-stat-val cyan">${res.winRate.toFixed(0)}%</div>
+        </div>
+        <div class="oracle-stat-cell">
+          <div class="oracle-stat-lbl">Profit Factor</div>
+          <div class="oracle-stat-val amber">${res.profitFactor.toFixed(2)}</div>
+        </div>
+        <div class="oracle-stat-cell">
+          <div class="oracle-stat-lbl">Max DD</div>
+          <div class="oracle-stat-val" style="color:var(--coral)">-${res.maxDrawdownPct.toFixed(1)}%</div>
+        </div>
+        <div class="oracle-stat-cell">
+          <div class="oracle-stat-lbl">${en ? 'Trades / Fees' : 'Сделки / Ком.'}</div>
+          <div class="oracle-stat-val" style="font-size:13px;">${res.trades.length} / $${res.totalFeesUsdt.toFixed(0)}</div>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+        ${en ? 'Recent trades' : 'Последние сделки'}
+      </div>
+      ${tradesHtml}
+    `;
+  } catch (e: any) {
+    box.innerHTML = `<div class="empty-msg" style="color:var(--coral)">${tm('error')}: ${e?.message || e}</div>`;
+  }
+}
+
 export const loadBTC = loadActiveCoinCard;
 
 if (typeof window !== 'undefined') {
@@ -859,6 +1007,8 @@ if (typeof window !== 'undefined') {
     initRadarMenu,
     openBtcOutlook,
     closeBtcOutlook,
+    openBacktestSheet,
+    runBacktestUI,
   });
 
   setTimeout(initRadarMenu, 500);

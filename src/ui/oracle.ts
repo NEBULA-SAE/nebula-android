@@ -27,6 +27,7 @@ import {
   oracleGetAnalogies,
 } from '../oracle';
 import { getAiMentor } from '../ai';
+import { audioService } from '../services/audio';
 import {
   calculateVolumeAnomalies,
   mergeWhaleMetrics,
@@ -43,7 +44,7 @@ let _analyzeGen = 0;
 export async function loadChartOnly(ticker: string, tf: string): Promise<void> {
   (state as any).chartLoading = true;
   try {
-    const { data } = await fetchCandlesWithSource(ticker, tf as any, undefined, true);
+    const { data } = await fetchCandlesWithSource(ticker, tf as any);
     
     // Защита от гонки
     if (state.currentTicker !== ticker) return;
@@ -316,7 +317,11 @@ export async function mobileAnalyze(): Promise<void> {
         }
         vd2.appendChild(oracleDiv);
       }
-      state.lastOracleResult = oracleResult;
+    state.lastOracleResult = oracleResult;
+
+      if (oracleResult.verdict === 'strong_buy' || oracleResult.verdict === 'avoid') {
+        audioService.playOracleAlert(oracleResult.verdict, `oracle:${raw}:${oracleResult.verdict}`);
+      }
 
       // Для Risk Center — контекст рынка (Fear & Greed, regime)
       if (oracleResult.market_context) {

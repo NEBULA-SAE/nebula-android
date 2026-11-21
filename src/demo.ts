@@ -2,6 +2,7 @@ import { state, toast, setText } from './utils';
 import { tm } from './i18n';
 import { getCurrentPrice } from './sources/mexc';
 import { oracleSaveAnalysis } from './oracle';
+import { tradingCosts } from './trading/costs';
 
 let _demoInterval: any = null;
 const INITIAL_BALANCE = 10000;
@@ -65,7 +66,15 @@ async function tick() {
   await Promise.all(symbols.map(async (s) => {
     try {
       const p = await getCurrentPrice(s);
-      if (p > 0) prices[s] = p;
+      if (p > 0) { prices[s] = p; return; }
+    } catch { /* MEXC CORS fallback */ }
+    try {
+      const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${s}USDT`);
+      if (r.ok) {
+        const j = await r.json();
+        const p = parseFloat(j.price);
+        if (p > 0) prices[s] = p;
+      }
     } catch { /* silent */ }
   }));
 
@@ -104,7 +113,8 @@ export async function executeDemoPlan(entryPrice: number, plan: any, steps: numb
     : [{ tp: plan.tp1, pct: 0.34 }, { tp: plan.tp2, pct: 0.33 }, { tp: plan.tp3, pct: 0.33 }];
 
   const amountPerStep = capital / steps;
-  const coinAmountPerStep = amountPerStep / entryPrice;
+  const entryFill = tradingCosts.calcBuy(entryPrice, amountPerStep, 'market');
+  const totalEntryFee = entryFill.feeUsdt * steps;
 
   state.demoBalance -= capital;
 
@@ -112,17 +122,21 @@ export async function executeDemoPlan(entryPrice: number, plan: any, steps: numb
     state.demoActiveOrders.push({
       id: Math.random().toString(36).slice(2, 8),
       symbol: base,
-      entryPrice,
+      entryPrice: entryFill.fillPrice,
       targetPrice: t.tp,
       stopLoss: plan.stop,
       amountUsdt: amountPerStep,
-      amountCoin: coinAmountPerStep,
+      amountCoin: entryFill.coinQty,
+      entryFee: entryFill.feeUsdt,
       status: 'open',
       step: i + 1,
     });
   });
 
-  toast(`${tm('demo_opened')} ${steps} ${tm('demo_orders')} $${capital.toFixed(2)}`, 'success');
+  toast(
+    `${tm('demo_opened')} ${steps} ${tm('demo_orders')} $${capital.toFixed(2)} (fee $${totalEntryFee.toFixed(2)})`,
+    'success'
+  );
 
   const prices: Record<string, number> = { [base]: entryPrice };
   renderDemoOrders(prices);
@@ -155,14 +169,25 @@ function checkDemoOrders(prices: Record<string, number>) {
   if (closedOrders.length === 0) return;
 
   for (const order of closedOrders) {
-    const returnedUsdt = order.amountCoin * order.closePrice;
+    const isWin = order.status === 'win';
+    const exitFill = tradingCosts.calcSell(
+      order.closePrice,
+      order.amountCoin,
+      isWin ? 'limit' : 'market'
+    );
+    const returnedUsdt = exitFill.netUsdt;
+    order.closePrice = exitFill.fillPrice;
+    order.exitFee = exitFill.feeUsdt;
+    order.totalFees = (order.entryFee || 0) + exitFill.feeUsdt;
+
     state.demoBalance += returnedUsdt;
 
     state.demoHistory.push(order);
     state.demoActiveOrders = state.demoActiveOrders.filter(o => o.id !== order.id);
 
-    const isWin = order.status === 'win';
-    const pnlPct = ((order.closePrice - order.entryPrice) / order.entryPrice) * 100;
+    const pnlPct = order.amountUsdt > 0
+      ? ((returnedUsdt - order.amountUsdt) / order.amountUsdt) * 100
+      : 0;
 
     try {
       const fakeMarketData = {
@@ -189,14 +214,17 @@ export async function cancelDemoOrder(id: string) {
   try {
     const currentPrice = await getCurrentPrice(order.symbol);
     const priceToUse = currentPrice > 0 ? currentPrice : order.entryPrice;
-    const returnedUsdt = order.amountCoin * priceToUse;
+    const exitFill = tradingCosts.calcSell(priceToUse, order.amountCoin, 'market');
+    const returnedUsdt = exitFill.netUsdt;
 
-    // Возвращаем средства
+    // Возвращаем средства за вычетом комиссии и спреда
     state.demoBalance += returnedUsdt;
 
     // Помечаем как отмененный и кидаем в историю
     order.status = 'cancelled';
-    order.closePrice = priceToUse;
+    order.closePrice = exitFill.fillPrice;
+    order.exitFee = exitFill.feeUsdt;
+    order.totalFees = (order.entryFee || 0) + exitFill.feeUsdt;
     state.demoHistory.push(order);
 
     // Удаляем из активных
@@ -229,8 +257,9 @@ function renderDemoOrders(prices: Record<string, number>) {
 
   box.innerHTML = state.demoActiveOrders.map(o => {
     const currentPrice = prices[o.symbol] || o.entryPrice;
-    const pnlPct = ((currentPrice - o.entryPrice) / o.entryPrice) * 100;
-    const pnlUsdt = (currentPrice - o.entryPrice) * o.amountCoin;
+    const estExit = tradingCosts.calcSell(currentPrice, o.amountCoin, 'market');
+    const pnlUsdt = estExit.netUsdt - o.amountUsdt;
+    const pnlPct = o.amountUsdt > 0 ? (pnlUsdt / o.amountUsdt) * 100 : 0;
     const colorCls = pnlPct >= 0 ? 'mint' : 'coral';
 
     return `

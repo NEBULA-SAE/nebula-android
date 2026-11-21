@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { P } from '../config';
+import { db } from '../db';
 
 export interface Candle {
   time: number; open: number; high: number; low: number; close: number; volume: number;
@@ -37,7 +38,22 @@ export function getTfConfig(tf: Timeframe = '1d'): TfConfig {
 }
 
 const TIMEOUT = 8000;
-const CACHE_TTL_MS = 15_000;
+const MAX_RAM_CACHE = 40;
+const MAX_IDB_CACHE = 100;
+
+const TF_TTL_MS: Record<Timeframe, number> = {
+  '1m':  15_000,   // 15 сек
+  '15m': 45_000,   // 45 сек
+  '1h':  120_000,  // 2 мин
+  '1d':  300_000,  // 5 мин
+  '1w':  900_000,  // 15 мин
+  '1M':  900_000,  // 15 мин
+  'max': 900_000,  // 15 мин
+};
+
+function getCacheTtl(tf: Timeframe): number {
+  return TF_TTL_MS[tf] || 60_000;
+}
 
 // Универсальный парсер времени: понимает и секунды, и миллисекунды
 function toSeconds(ts: string | number): number {
@@ -228,11 +244,45 @@ async function trySources(
     throw new Error(`Все источники упали (tf=${tf})`);
   }
 }
+    
+// ─── ДВУХУРОВНЕВЫЙ КЭШ (RAM + IndexedDB + фоновое обновление) ───
 
-// ─── КЭШ (15 сек) ───
+interface CachedEntry {
+  value: { data: Candle[]; source: string };
+  ts: number;
+}
 
-const _candleCache = new Map<string, { value: { data: Candle[]; source: string }; ts: number }>();
-const _candlePendingCache = new Map<string, Promise<{ data: Candle[]; source: string }>>(); // <-- НОВОЕ
+const _candleCache = new Map<string, CachedEntry>();
+const _candlePendingCache = new Map<string, Promise<{ data: Candle[]; source: string }>>();
+let _idbWrites = 0;
+
+async function readPersistCache(key: string): Promise<CachedEntry | null> {
+  try {
+    const entry = await db.get<CachedEntry>(key, 'candlesCache');
+    if (!entry?.value?.data?.length) return null;
+    return entry;
+  } catch {
+    return null;
+  }
+}
+
+function writePersistCache(key: string, entry: CachedEntry): void {
+  db.set(key, entry, 'candlesCache')
+    .then(() => {
+      if (++_idbWrites % 10 === 0) {
+        db.prune('candlesCache', MAX_IDB_CACHE).catch(() => {});
+      }
+    })
+    .catch(() => {});
+}
+
+function setRamCache(key: string, entry: CachedEntry): void {
+  if (_candleCache.size >= MAX_RAM_CACHE) {
+    const oldestKey = _candleCache.keys().next().value;
+    if (oldestKey) _candleCache.delete(oldestKey);
+  }
+  _candleCache.set(key, entry);
+}
 
 export async function fetchCandlesWithSource(
   ticker: string,
@@ -250,38 +300,55 @@ export async function fetchCandlesWithSource(
   }
 
   const key = `${ticker.toUpperCase()}:${tf}`;
-  
+  const ttl = getCacheTtl(tf);
+  const now = Date.now();
+
+  const startNetworkFetch = () => {
+    const p = (async () => {
+      const value = await trySources(ticker, tf);
+      value.data = sortAndDedupe(value.data);
+      const entry: CachedEntry = { value, ts: Date.now() };
+      setRamCache(key, entry);
+      writePersistCache(key, entry);
+      return value;
+    })();
+    _candlePendingCache.set(key, p);
+    p.finally(() => _candlePendingCache.delete(key)).catch(() => {});
+    return p;
+  };
+
   if (!force) {
-    const cached = _candleCache.get(key);
-    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-      return cached.value;
+    let cached = _candleCache.get(key);
+    if (!cached) {
+      const persisted = await readPersistCache(key);
+      if (persisted) {
+        setRamCache(key, persisted);
+        cached = persisted;
+      }
+    }
+
+    if (cached) {
+      const age = now - cached.ts;
+      // Свежий кэш — отдаём мгновенно (0ms)
+      if (age < ttl) {
+        return cached.value;
+      }
+      // Слегка устарел (до 4x TTL) — отдаём мгновенно, но тихо обновляем в фоне
+      if (age < ttl * 4) {
+        if (!_candlePendingCache.has(key)) {
+          startNetworkFetch().catch(() => {});
+        }
+        return cached.value;
+      }
     }
 
     const pending = _candlePendingCache.get(key);
     if (pending) {
-      // Если запрос уже в процессе, возвращаем тот же Promise (склеиваем запросы)
       return pending;
     }
   }
 
-  const fetchPromise = (async () => {
-    const value = await trySources(ticker, tf);
-    value.data = sortAndDedupe(value.data);
-    _candleCache.set(key, { value, ts: Date.now() });
-    return value;
-  })();
-
-  if (!force) {
-    _candlePendingCache.set(key, fetchPromise);
-  }
-
-  try {
-    return await fetchPromise;
-  } finally {
-    if (!force) {
-      _candlePendingCache.delete(key);
-    }
-  }
+  return startNetworkFetch();
 }
 
 export async function fetchCandles(ticker: string, tf: Timeframe = '1d'): Promise<Candle[]> {

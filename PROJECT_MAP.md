@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.42** | Branch: `main` | Commit: `9c9eb58`
-> Generated: 2026-11-20 13:16
+> Version: **2.0.43** | Branch: `main` | Commit: `1324cfa`
+> Generated: 2026-11-21 11:44
 
 ---
 
@@ -37,17 +37,31 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Stats
 
-- TypeScript files in `src/`: 57
-- Total LOC in `src/`: 19277
-- Bundle (`dist/`): 61 files, 838.5 KB
+- TypeScript files in `src/`: 60
+- Total LOC in `src/`: 20274
+- Bundle (`dist/`): 62 files, 855.6 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.42**
-- Last git tag: `v2.0.41`
+- `package.json` version: **2.0.43**
+- Last git tag: `v2.0.42`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `1324cfa` - 2026-11-20 - chore(release): v2.0.42
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/pro.ts`
 
 ### `9c9eb58` - 2026-11-20 - chore(release): v2.0.41
 
@@ -132,33 +146,13 @@ Files:
 - `src/ui/pull-refresh.ts`
 - `src/ui/screens.ts`
 
-### `baad85d` - 2026-11-07 - chore(release): v2.0.37
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `b4-exports.txt`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/ic_launcher-playstore.png`
-- `public/styles/btc-outlook.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/btc/outlook-engine.ts`
-- `src/i18n.ts`
-- `src/ui/btc-outlook.ts`
-- `src/ui/screens.ts`
-
 ## Last release diff
 
-No changes since `v2.0.41`
+No changes since `v2.0.42`
 
 ## Recent tags
 
+- `v2.0.42`
 - `v2.0.41`
 - `v2.0.40`
 - `v2.0.39`
@@ -168,12 +162,13 @@ No changes since `v2.0.41`
 - `v2.0.35`
 - `v2.0.34`
 - `v2.0.33`
-- `v2.0.32`
 
 ## File tree (src/)
 
 ```
 src/
++-- backtest/
+|   +--   247 engine.ts
 +-- btc/
 |   +--   166 outlook-engine.ts
 +-- data/
@@ -183,8 +178,10 @@ src/
 |   +--    58 browser.ts
 |   +--   103 http.ts
 |   +--    29 index.ts
++-- services/
+|   +--   152 audio.ts
 +-- sources/
-|   +--   289 candles.ts
+|   +--   356 candles.ts
 |   +--   140 confluence.ts
 |   +--   158 dash.ts
 |   +--    95 funding.ts
@@ -195,6 +192,8 @@ src/
 |   +--   248 whale-futures.ts
 +-- styles/
 |   +--   136 main.css
++-- trading/
+|   +--   103 costs.ts
 +-- ui/
 |   +--   415 btc-outlook.ts
 |   +--   510 chart-overlay.ts
@@ -205,37 +204,37 @@ src/
 |   +--   247 learning.ts
 |   +--    76 market.ts
 |   +--   115 mining.ts
-|   +--  1213 oracle.ts
+|   +--  1218 oracle.ts
 |   +--   435 pull-refresh.ts
 |   +--   331 risk.ts
 |   +--   458 scanner.ts
-|   +--   865 screens.ts
+|   +--  1015 screens.ts
 |   +--   632 settings.ts
 |   +--   292 splash.ts
 |   +--   149 terms.ts
 |   +--   383 themes.ts
 |   +--   272 timeframes.ts
 |   +--   113 tooltip.ts
-|   +--   738 whale.ts
+|   +--   762 whale.ts
 |   +--    92 white-paper.ts
-+--   483 ai.ts
++--   554 ai.ts
 +--   277 alerts.ts
 +--   280 auth.ts
 +--   363 chart.ts
 +--    33 config.ts
 +--   210 crypto.ts
-+--    52 db.ts
-+--   330 demo.ts
++--   174 db.ts
++--   359 demo.ts
 +--  1506 i18n.ts
 +--   411 indicators.ts
 +--   249 learning-core.ts
 +--   265 main.ts
 +--   482 market.ts
-+--   971 oracle.ts
++--   975 oracle.ts
 +--   236 patterns.ts
 +--   279 pro.ts
 +--   282 themes.ts
-+--   700 trading.ts
++--   723 trading.ts
 +--   228 utils.ts
 +--   229 worker.ts
 ```
@@ -281,6 +280,13 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - enableBiometrics()
 - disableBiometrics()
 - initAuth()
+
+### `src/backtest/engine.ts`
+- runBacktest()
+- DEFAULT_BACKTEST_PARAMS (const)
+- BacktestParams (iface)
+- BacktestTrade (iface)
+- BacktestResult (iface)
 
 ### `src/btc/outlook-engine.ts`
 - computeBreakoutStats()
@@ -330,6 +336,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 
 ### `src/db.ts`
 - db (const)
+- StoreName (type)
 
 ### `src/demo.ts`
 - startDemoEngine()
@@ -440,6 +447,9 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - deleteProLicense()
 - ProStatus (iface)
 
+### `src/services/audio.ts`
+- audioService (const)
+
 ### `src/sources/candles.ts`
 - getTfConfig()
 - fetchCandlesWithSource()
@@ -541,6 +551,14 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - mobileAiCommand()
 - mobileTwapStart()
 
+### `src/trading/costs.ts`
+- DEFAULT_COSTS (const)
+- tradingCosts (const)
+- CostsConfig (iface)
+- EntryFill (iface)
+- ExitFill (iface)
+- TradingCosts (class)
+
 ### `src/ui/btc-outlook.ts`
 - openBtcOutlook()
 - closeBtcOutlook()
@@ -637,6 +655,8 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - setDemoAmount()
 - renderDemoPlan()
 - initRadarMenu()
+- openBacktestSheet()
+- runBacktestUI()
 - loadBTC (const)
 
 ### `src/ui/settings.ts`
@@ -818,9 +838,9 @@ computeRiskSnapshot, injectRiskHelpBtn, renderRiskCenter, showRiskHelp
 
 initAutocomplete, pickCoin, removeFav, renderFavorites, runScanner, suggestPick, toggleFavCurrent, updateStarButton
 
-### `src/ui/screens.ts` (18)
+### `src/ui/screens.ts` (20)
 
-_currentDemoPlan, applyStaticTranslations, cancelDemoOrder, closeBtcOutlook, closeSheet, enterDemoMode, exitDemoMode, initRadarMenu, loadActiveCoinCard, loadBTC, openBtcOutlook, openSheet, renderDemoPlan, resetDemo, setDemoAmount, setLanguage, switchHomeTab, switchTab
+_currentDemoPlan, applyStaticTranslations, cancelDemoOrder, closeBtcOutlook, closeSheet, enterDemoMode, exitDemoMode, initRadarMenu, loadActiveCoinCard, loadBTC, openBacktestSheet, openBtcOutlook, openSheet, renderDemoPlan, resetDemo, runBacktestUI, setDemoAmount, setLanguage, switchHomeTab, switchTab
 
 ### `src/ui/settings.ts` (17)
 
@@ -866,7 +886,7 @@ wCall
 
 - `academy.binance.com` (in `hub.ts`)
 - `api.alternative.me` (in `market.ts`)
-- `api.binance.com` (in `trading.ts`)
+- `api.binance.com` (in `demo.ts`)
 - `api.blockchair.com` (in `dash.ts`)
 - `api.bybit.com` (in `candles.ts`)
 - `api.coingecko.com` (in `btc-outlook.ts`)
@@ -884,6 +904,7 @@ wCall
 - `dash-rpc.publicnode.com` (in `dash.ts`)
 - `essamamdani.github.io` (in `screens.ts`)
 - `fapi.binance.com` (in `whale-futures.ts`)
+- `generativelanguage.googleapis.com` (in `ai.ts`)
 - `github.com` (in `themes.ts`)
 - `learn.bybit.com` (in `hub.ts`)
 - `nebula-oracle.duckdns.org` (in `config.ts`)
@@ -971,6 +992,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- 1324cfa  2026-11-20  chore(release): v2.0.42
 - 9c9eb58  2026-11-20  chore(release): v2.0.41
 - 904606c  2026-11-20  chore(release): v2.0.40
 - 3d5b255  2026-11-20  chore(release): v2.0.39
@@ -985,7 +1007,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 5b7bfc0  2026-11-02  before i18n fix
 - 5e5791c  2026-11-01  chore(release): v2.0.30
 - 6f7a1b1  2026-11-01  chore(release): v2.0.29
-- 1d8acd6  2026-11-01  chore(release): v2.0.28
 
 ---
 

@@ -9,6 +9,160 @@ import { matchPatterns } from './patterns';
 import { esc } from './utils';
 
 // ═══════════════════════════════════════════════════════════════
+// LLM CLIENT + AUTO-FALLBACK (Groq chain → Gemini backup)
+// ═══════════════════════════════════════════════════════════════
+
+const GROQ_MODELS = [
+  'openai/gpt-oss-120b',
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+];
+
+interface LLMRequest {
+  system: string;
+  user: string;
+  temperature: number;
+  maxTokens: number;
+  jsonMode?: boolean;
+  onStream?: (escapedText: string) => void;
+  timeoutMs?: number;
+}
+
+async function callGroqModel(apiKey: string, model: string, req: LLMRequest): Promise<string> {
+  const body: Record<string, any> = {
+    model,
+    messages: [
+      { role: 'system', content: req.system },
+      { role: 'user', content: req.user },
+    ],
+    temperature: req.temperature,
+    max_tokens: req.maxTokens,
+  };
+  if (req.jsonMode) body.response_format = { type: 'json_object' };
+  if (req.onStream) body.stream = true;
+
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(req.timeoutMs ?? 60000),
+  });
+
+  if (!r.ok) {
+    let msg = r.statusText;
+    try { const e = await r.json(); msg = e?.error?.message || msg; } catch { /* silent */ }
+    const err: any = new Error(`[${model}] ${msg}`);
+    err.status = r.status;
+    throw err;
+  }
+
+  if (req.onStream && r.body) {
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
+          try {
+            const data = JSON.parse(trimmed.slice(6));
+            const delta = data.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              fullText += delta;
+              req.onStream(esc(fullText));
+            }
+          } catch { /* неполный чанк */ }
+        }
+      }
+    }
+    return fullText;
+  }
+
+  const data = await r.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+async function callGeminiBackup(geminiKey: string, req: LLMRequest): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
+  const body: Record<string, any> = {
+    systemInstruction: { parts: [{ text: req.system }] },
+    contents: [{ role: 'user', parts: [{ text: req.user }] }],
+    generationConfig: {
+      temperature: req.temperature,
+      maxOutputTokens: req.maxTokens,
+      ...(req.jsonMode ? { responseMimeType: 'application/json' } : {}),
+    },
+  };
+
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(req.timeoutMs ?? 60000),
+  });
+
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(`[gemini] ${e?.error?.message || r.statusText}`);
+  }
+
+  const data = await r.json();
+  const text = data.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('\n') || '';
+  if (req.onStream && text) req.onStream(esc(text));
+  return text;
+}
+
+async function callLLMWithFallback(req: LLMRequest): Promise<string> {
+  const groqKey = await loadGroqKey();
+  const geminiKey = (typeof localStorage !== 'undefined' ? localStorage.getItem('nebulaGeminiKey') : '')?.trim() || '';
+
+  if (!groqKey && !geminiKey) {
+    const err: any = new Error('no_key');
+    err.code = 'no_key';
+    throw err;
+  }
+
+  let lastError: any = null;
+
+  if (groqKey) {
+    for (const model of GROQ_MODELS) {
+      try {
+        const text = await callGroqModel(groqKey, model, req);
+        if (text) return text;
+      } catch (e: any) {
+        lastError = e;
+        const st = e?.status;
+        // 401/403 — битый ключ, нет смысла перебирать модели Groq
+        if (st === 401 || st === 403) break;
+        console.warn(`[ai] fallback from ${model}:`, e?.message || e);
+      }
+    }
+  }
+
+  if (geminiKey) {
+    try {
+      return await callGeminiBackup(geminiKey, req);
+    } catch (e: any) {
+      lastError = e;
+    }
+  }
+
+  throw lastError || new Error('Все LLM-провайдеры недоступны');
+}
+
+// ═══════════════════════════════════════════════════════════════
 // СИСТЕМНЫЙ ПРОМПТ
 // ═══════════════════════════════════════════════════════════════
 
@@ -252,81 +406,16 @@ ${patternsText}
 Отвечай сразу блоками, без вступлений.`;
 
   try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-oss-120b',
-        messages: [
-          { role: 'system', content: ORACLE_AI_SYSTEM_PROMPT },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.55,
-        max_tokens: 2500,
-        stream: !!onStream, // Включаем стриминг, если есть коллбэк
-      }),
-      signal: AbortSignal.timeout(60000),
+    const rawText = await callLLMWithFallback({
+      system: ORACLE_AI_SYSTEM_PROMPT,
+      user: userPrompt,
+      temperature: 0.55,
+      maxTokens: 2500,
+      onStream,
+      timeoutMs: 60000,
     });
 
-    if (r.status !== 200) {
-      let err = r.statusText;
-      try { const e = await r.json(); err = e?.error?.message || err; } catch { /* silent */ }
-      return { status: 'error', message: err };
-    }
-
-    // ─── РЕЖИМ СТРИМИНГА ───
-    if (onStream && r.body) {
-      const reader = r.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let fullText = '';
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Оставляем недописанную строку в буфере
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              const delta = data.choices[0]?.delta?.content || '';
-              if (delta) {
-                fullText += delta;
-                onStream(esc(fullText)); // Отдаем ЭКРАНИРОВАННЫЙ текст в UI
-              }
-            } catch { /* Игнорируем неполные JSON чанки */ }
-          }
-        }
-      }
-
-      const advice = esc(fullText);
-      const parsed = parseScenarios(advice);
-      return {
-        status: 'success',
-        base: parsed.base,
-        bull: parsed.bull,
-        bear: parsed.bear,
-        verdictLine: parsed.verdictLine,
-        bullProb: parsed.bullProb,
-        bearProb: parsed.bearProb,
-        raw: advice,
-        advice,
-      };
-    } 
-    
-    // ─── ОБЫЧНЫЙ РЕЖИМ (если стриминг не запрошен) ───
-    const data = await r.json();
-    let advice = data.choices?.[0]?.message?.content || '';
-    advice = esc(advice);
-
+    const advice = esc(rawText);
     const parsed = parseScenarios(advice);
     return {
       status: 'success',
@@ -340,6 +429,7 @@ ${patternsText}
       advice,
     };
   } catch (e: any) {
+    if (e?.code === 'no_key') return { status: 'error', message: 'no_key' };
     return { status: 'error', message: String(e?.message || e) };
   }
 }
@@ -395,33 +485,14 @@ export interface TradeIntent {
 }
 
 export async function parseTradeIntent(userPrompt: string): Promise<TradeIntent> {
-  const apiKey = await loadGroqKey();
-  if (!apiKey) throw new Error('Groq API-ключ не найден. Добавь его в настройках.');
-
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'openai/gpt-oss-120b',
-      messages: [
-        { role: 'system', content: TRADE_INTENT_SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.1,
-      max_tokens: 400,
-      response_format: { type: 'json_object' },
-    }),
-    signal: AbortSignal.timeout(30000),
-  });
-
-  if (r.status !== 200) {
-    throw new Error(`Groq API вернул ${r.status}: ${(await r.text()).slice(0, 200)}`);
-  }
-
-  let raw = (await r.json()).choices?.[0]?.message?.content?.trim() || '';
+  let raw = (await callLLMWithFallback({
+    system: TRADE_INTENT_SYSTEM_PROMPT,
+    user: userPrompt,
+    temperature: 0.1,
+    maxTokens: 400,
+    jsonMode: true,
+    timeoutMs: 30000,
+  })).trim();
 
   if (raw.startsWith('```')) {
     const firstNl = raw.indexOf('\n');

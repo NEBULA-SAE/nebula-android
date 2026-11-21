@@ -8,6 +8,7 @@ import { fmtP, setHTML } from '../utils';
 import { getAggregatedFunding } from '../sources/funding';
 import { getAggregatedOrderbook } from '../sources/orderbook';
 import { state } from '../utils';
+import { audioService } from '../services/audio';
 
 let _extrasTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -487,6 +488,9 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
     </div>
   `).join('');
 
+const audioOn = audioService.isEnabled();
+  const audioBtnLabel = audioOn ? T('🔊 Звук ВКЛ', '🔊 Sound ON') : T('🔇 Звук ВЫКЛ', '🔇 Sound OFF');
+
   content.innerHTML = `
     <div class="whale-score-block">
       <div class="whale-score-row">
@@ -500,7 +504,10 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
         </div>
       </div>
       <div class="whale-score-bar"><div class="whale-score-fill" style="width:${volData.score}%;background:${scoreColor}"></div></div>
-      <div class="whale-verdict-line" style="color:${verdictColor}">${verdictText}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;">
+        <div class="whale-verdict-line" style="color:${verdictColor};margin:0;">${verdictText}</div>
+        <button id="whale-audio-toggle" type="button" style="cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 9px;border-radius:8px;border:1px solid ${audioOn ? 'rgba(94,203,255,.5)' : 'rgba(255,255,255,.12)'};background:${audioOn ? 'rgba(94,203,255,.14)' : 'rgba(255,255,255,.04)'};color:${audioOn ? 'var(--cyan)' : 'var(--mut)'};white-space:nowrap;">${audioBtnLabel}</button>
+      </div>
       ${srcCov ? `<div class="whale-sources">${tm('whale_sources_label')}: ${srcCov}</div>` : ''}
     </div>
 
@@ -508,6 +515,23 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
 
     <div class="whale-footer-hint">${tm('whale_footer_warn')}</div>
   `;
+
+  const audioBtn = document.getElementById('whale-audio-toggle');
+  if (audioBtn) {
+    audioBtn.addEventListener('click', () => {
+      const nowOn = audioService.toggle();
+      audioBtn.textContent = nowOn ? T('🔊 Звук ВКЛ', '🔊 Sound ON') : T('🔇 Звук ВЫКЛ', '🔇 Sound OFF');
+      audioBtn.style.borderColor = nowOn ? 'rgba(94,203,255,.5)' : 'rgba(255,255,255,.12)';
+      audioBtn.style.background = nowOn ? 'rgba(94,203,255,.14)' : 'rgba(255,255,255,.04)';
+      audioBtn.style.color = nowOn ? 'var(--cyan)' : 'var(--mut)';
+    });
+  }
+
+  if (isActive) {
+    const sym = (state as any).symbol || (state as any).coin || 'active';
+    audioService.playWhaleAlert(volData.pressure, volData.score, `whale:${sym}:${volData.pressure}`);
+  }
+
   card.style.display = 'block';
 }
 

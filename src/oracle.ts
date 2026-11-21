@@ -249,6 +249,7 @@ export function oracleSaveAnalysis(
 // ─── Update outcomes ───
 
 export async function oracleUpdateOutcomes(): Promise<{ updated: number; checked: number }> {
+  if (!_memCache) await initOracleDb();
   const mem = loadMemory();
   const now = Date.now() / 1000;
   let updated = 0;
@@ -264,7 +265,7 @@ export async function oracleUpdateOutcomes(): Promise<{ updated: number; checked
       rec.mae_pct = null;
       resetCount++;
     }
-    if ((rec.outcome === 'win' || rec.outcome === 'win_big') && (rec.outcome_pct == null || rec.outcome_pct <= 0)) {
+  if (rec.verdict !== 'avoid' && (rec.outcome === 'win' || rec.outcome === 'win_big') && (rec.outcome_pct == null || rec.outcome_pct <= 0)) {
       rec.outcome = null;
       rec.outcome_pct = null;
       resetCount++;
@@ -516,8 +517,8 @@ export function oracleGetStats(): any {
   // Берем модуль, так как для шортов (avoid) падение цены - это прибыль (отрицательный outcome_pct)
   const aw = wins.length ? wins.reduce((s, a) => s + Math.abs(a.outcome_pct ?? 0), 0) / wins.length : 0;
   const al = losses.length ? losses.reduce((s, a) => s + Math.abs(a.outcome_pct ?? 0), 0) / losses.length : 0;
-  const tp = wins.reduce((s, a) => s + Math.max(0, a.outcome_pct ?? 0), 0);
-  const tl = Math.abs(losses.reduce((s, a) => s + Math.abs(Math.min(0, a.outcome_pct ?? 0)), 0));
+  const tp = wins.reduce((s, a) => s + Math.abs(a.outcome_pct ?? 0), 0);
+  const tl = losses.reduce((s, a) => s + Math.abs(a.outcome_pct ?? 0), 0);
   let pf = 0;
   if (tl > 0) pf = Math.round((tp / tl) * 100) / 100;
   else if (tp > 0) pf = 99.9;
@@ -661,6 +662,7 @@ export async function oracleAnalyze(
   preCandles?: Candle[]
 ): Promise<OracleAnalyzeResult> {
   try {
+    if (!_memCache) await initOracleDb();
     const steps: any[] = [];
     const reasons: string[] = [];
     const warnings: string[] = [];
@@ -671,6 +673,9 @@ export async function oracleAnalyze(
     const drop = Number(marketData.drop_pct ?? 0);
     const whaleActive = !!marketData.whale_active;
     const whaleTrend = String(marketData.whale_trend || '');
+    const wtUpper = whaleTrend.toUpperCase();
+    const isWhaleRising = wtUpper.includes('РАСТ') || wtUpper.includes('RISING') || wtUpper.includes('BUY');
+    const isWhaleFalling = wtUpper.includes('ПАД') || wtUpper.includes('FALLING') || wtUpper.includes('SELL');
     const funding = Number(marketData.funding_rate ?? 0);
     const bidsPct = Number(marketData.bids_pct ?? 50);
     const profileLevel = riskProfile?.level || 'balanced';
@@ -696,7 +701,7 @@ export async function oracleAnalyze(
     else if (rebound < 30) tech += 10;
     // МАГИЯ ТУТ: Если отскок большой, но есть киты и объем — это не перегрев, а пробой!
     else if (rebound > 50) {
-      if (whaleActive && whaleTrend.toUpperCase().includes('РАСТ')) {
+      if (whaleActive && isWhaleRising) {
         tech += 15; // Даем бонус за тренд, а не штраф
         reasons.push('Сильный отскок подтвержден китами (Трендовый вход)');
       } else {
@@ -776,11 +781,10 @@ export async function oracleAnalyze(
       result: `Аномалия: ${whaleActive ? 'ДА' : 'нет'} | OBV: ${whaleTrend}`,
     });
 
-    let ws = 0;
-    if (whaleActive && whaleTrend.toUpperCase().includes('РАСТ')) { ws = 25; reasons.push('Киты скупают'); }
-    else if (whaleActive && whaleTrend.toUpperCase().includes('ПАД')) { ws = -20; warnings.push('Возможно распределение'); }
-    else if (whaleTrend.toUpperCase().includes('РАСТ')) { ws = 12; }
-
+let ws = 0;
+    if (whaleActive && isWhaleRising) { ws = 25; reasons.push('Киты скупают'); }
+    else if (whaleActive && isWhaleFalling) { ws = -20; warnings.push('Возможно распределение'); }
+    else if (isWhaleRising) { ws = 12; }
     steps.push({
       step: steps.length + 1, title: 'Стакан', icon: '⚖️',
       thinking: 'Bids/Asks + funding...',
@@ -797,9 +801,9 @@ export async function oracleAnalyze(
 
     let man = 0;
     if (drop > 5 || rsi < 50) {
-      if (whaleActive && whaleTrend.toUpperCase().includes('РАСТ') && bidsPct >= 55) {
+      if (whaleActive && isWhaleRising && bidsPct >= 55) {
         man = 25; reasons.push('Искусственный сброс');
-      } else if (whaleActive && whaleTrend.toUpperCase().includes('ПАД') && bidsPct <= 45) {
+      } else if (whaleActive && isWhaleFalling && bidsPct <= 45) {
         man = -30; warnings.push('Реальное распределение');
       }
     }

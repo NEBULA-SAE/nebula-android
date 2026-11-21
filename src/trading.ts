@@ -21,8 +21,17 @@ import {
 } from './sources/kucoin';
 import { getCurrentRate } from './market';
 import { parseTradeIntent } from './ai';
+import { TradingCosts } from './trading/costs';
 
 const CONFIG_STORAGE = 'nebulaConfig';
+
+function getExchangeCosts(exchange: string): TradingCosts {
+  if (exchange === 'kucoin') {
+    return new TradingCosts({ makerFeeRate: 0.001, takerFeeRate: 0.001 });
+  }
+  // MEXC spot
+  return new TradingCosts({ makerFeeRate: 0.0002, takerFeeRate: 0.0005 });
+}
 
 // ─── Хранилище ключей ───
 
@@ -345,9 +354,13 @@ export async function calculateStrategy(
   const breakeven = usdt_invested / coinsAmount;
   const base = symbol.split('/')[0].toUpperCase();
 
-  const current_price = state.currentExchange === 'kucoin'
-    ? (await kucoinGetPrice(base)) || breakeven
-    : (await getCurrentPrice(base)) || breakeven;
+  let current_price = breakeven;
+  try {
+    const fetched = state.currentExchange === 'kucoin'
+      ? await kucoinGetPrice(base)
+      : await getCurrentPrice(base);
+    if (fetched && fetched > 0) current_price = fetched;
+  } catch { /* fallback to breakeven on CORS/network error */ }
 
   let ratios: number[];
   let mults: number[];
@@ -363,19 +376,26 @@ export async function calculateStrategy(
     percents = [34, 33, 33];
   }
 
+  const costs = getExchangeCosts(state.currentExchange);
   const plan: PlanStep[] = [];
   let total_profit = 0;
+  let total_fees = 0;
+
   for (let i = 0; i < ratios.length; i++) {
     const price = breakeven * mults[i];
     const amount = coinsAmount * ratios[i];
-    const profit = (price - breakeven) * amount;
-    total_profit += profit;
+    const exitFill = costs.calcSell(price, amount, 'limit');
+    const netProfit = exitFill.netUsdt - breakeven * amount;
+
+    total_fees += exitFill.feeUsdt;
+    total_profit += netProfit;
+
     plan.push({
       step: i + 1,
       percent: percents[i],
       price: Math.round(price * 1e8) / 1e8,
       amount: Math.round(amount * 1e8) / 1e8,
-      profit_usdt: Math.round(profit * 1e4) / 1e4,
+      profit_usdt: Math.round(netProfit * 1e4) / 1e4,
     });
   }
 
@@ -386,6 +406,7 @@ export async function calculateStrategy(
     current_price: Math.round(current_price * 1e6) / 1e6,
     usdt_invested: Math.round(usdt_invested * 100) / 100,
     plan,
+    fees_usdt: Math.round(total_fees * 100) / 100,
     profit_usdt: Math.round(total_profit * 100) / 100,
     profit_rub: Math.round(total_profit * rate * 100) / 100,
   };
@@ -423,7 +444,9 @@ export async function mobileCalcGrid(): Promise<void> {
       data.plan.forEach((p: PlanStep) => {
         html += `${tm('step')} ${p.step} (${p.percent}%): ${tm('limit_at')} <span class="hlt">${p.price.toFixed(4)}</span> · ${tm('amount')} ${p.amount.toFixed(4)}<br>`;
       });
-      html += `<br>💰 ${tm('est_profit')}: <span class="hlt">+${data.profit_usdt} USDT (~${data.profit_rub} ₽)</span>`;
+      const feeLabel = en ? 'Exchange fee' : 'Комиссия биржи';
+      html += `<br>🧾 ${feeLabel} (${state.currentExchange.toUpperCase()}): <span style="color:var(--mut)">-${data.fees_usdt} USDT</span>`;
+      html += `<br>💰 ${tm('est_profit')} (net): <span class="hlt">+${data.profit_usdt} USDT (~${data.profit_rub} ₽)</span>`;
       box.innerHTML = html;
       if (execBtn) execBtn.style.display = 'block';
     } else {
