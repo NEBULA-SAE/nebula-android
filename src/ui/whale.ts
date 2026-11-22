@@ -647,29 +647,6 @@ async function fetchXray(ticker: string): Promise<XrayData> {
   return { fundingText, obText, mood, pressure };
 }
 
-export interface WallsData {
-  bestBidWall: { price: number; total: number };
-  bestAskWall: { price: number; total: number };
-  sourceCount: number;
-  sourcesFailed: string[];
-}
-
-async function scanWalls(ticker: string): Promise<WallsData | null> {
-  try {
-    const res = await getAggregatedOrderbook(ticker);
-    if (res.status !== 'success' || !res.bestBidWall || !res.bestAskWall) return null;
-    return {
-      bestBidWall: res.bestBidWall,
-      bestAskWall: res.bestAskWall,
-      sourceCount: res.sourceCount,
-      sourcesFailed: res.sourcesFailed || [],
-    };
-  } catch (e) {
-    console.warn('[whale] aggregated walls failed', e);
-    return null;
-  }
-}
-
 function renderXray(x: XrayData): void {
   const card = document.getElementById('xray-card');
   if (!card) return;
@@ -708,6 +685,149 @@ function renderXray(x: XrayData): void {
   `);
 }
 
+export interface WallSideView {
+  price: number;
+  total: number;
+  distPct: number;
+  sharePct: number;
+  exchangeCount: number;
+  exchanges: string[];
+  status: 'new' | 'steady' | 'growing' | 'shrinking' | 'pulled';
+  changePct: number;
+}
+
+export interface WallsData {
+  bestBidWall: WallSideView;
+  bestAskWall: WallSideView;
+  sourceCount: number;
+  sourcesFailed: string[];
+  summary: {
+    dominantSide: 'bid' | 'ask' | 'balanced';
+    ratio: number;
+    closerSide: 'bid' | 'ask' | 'equal';
+    alertNote: string | null;
+  } | null;
+}
+
+async function scanWalls(ticker: string): Promise<WallsData | null> {
+  try {
+    const res = await getAggregatedOrderbook(ticker);
+    if (res.status !== 'success' || !res.bestBidWall || !res.bestAskWall) return null;
+    return {
+      bestBidWall: res.bestBidWall,
+      bestAskWall: res.bestAskWall,
+      sourceCount: res.sourceCount,
+      sourcesFailed: res.sourcesFailed || [],
+      summary: res.wallSummary || null,
+    };
+  } catch (e) {
+    console.warn('[whale] aggregated walls failed', e);
+    return null;
+  }
+}
+
+function formatWallStatusBadge(
+  status: WallSideView['status'],
+  changePct: number,
+  en: boolean
+): { text: string; color: string } | null {
+  if (status === 'pulled') {
+    return {
+      text: en ? `PULLED (${changePct.toFixed(0)}%)` : `СНЯТА (${changePct.toFixed(0)}%)`,
+      color: 'var(--coral)',
+    };
+  }
+  if (status === 'growing') {
+    return {
+      text: en ? `GROWING +${changePct.toFixed(0)}%` : `РАСТЁТ +${changePct.toFixed(0)}%`,
+      color: 'var(--mint)',
+    };
+  }
+  if (status === 'shrinking') {
+    return {
+      text: en ? `FALLING ${changePct.toFixed(0)}%` : `ТАЕТ ${changePct.toFixed(0)}%`,
+      color: 'var(--amber)',
+    };
+  }
+  if (status === 'steady') {
+    return {
+      text: en ? 'STEADY' : 'ДЕРЖИТСЯ',
+      color: 'var(--cyan)',
+    };
+  }
+  return null;
+}
+
+function buildSmartWallsHint(w: WallsData, en: boolean): string {
+  const bid = w.bestBidWall;
+  const ask = w.bestAskWall;
+  const sum = w.summary;
+
+  if (bid.status === 'pulled') {
+    return en
+      ? `Buy wall near ${fmtP(bid.price)} dropped sharply — watch for support weakness below.`
+      : `Плита покупки у ${fmtP(bid.price)} резко просела — возможна слабость поддержки ниже.`;
+  }
+  if (ask.status === 'pulled') {
+    return en
+      ? `Sell wall near ${fmtP(ask.price)} dropped sharply — watch for resistance thinning above.`
+      : `Плита продажи у ${fmtP(ask.price)} резко просела — сопротивление сверху могло ослабнуть.`;
+  }
+
+  const parts: string[] = [];
+
+  if (sum) {
+    if (sum.dominantSide === 'bid') {
+      parts.push(
+        en
+          ? `Buy wall is ${sum.ratio.toFixed(1)}x larger than sell wall.`
+          : `Плита покупки крупнее плиты продажи в ${sum.ratio.toFixed(1)}x.`
+      );
+    } else if (sum.dominantSide === 'ask') {
+      parts.push(
+        en
+          ? `Sell wall is ${(1 / Math.max(sum.ratio, 0.01)).toFixed(1)}x larger than buy wall.`
+          : `Плита продажи крупнее плиты покупки в ${(1 / Math.max(sum.ratio, 0.01)).toFixed(1)}x.`
+      );
+    } else {
+      parts.push(
+        en
+          ? 'Buy and sell walls are fairly balanced in size.'
+          : 'Плиты покупки и продажи сопоставимы по объёму.'
+      );
+    }
+
+    if (sum.closerSide === 'bid') {
+      parts.push(
+        en
+          ? `Support is closer (${bid.distPct.toFixed(2)}% vs ${ask.distPct.toFixed(2)}%).`
+          : `Поддержка ближе к цене (${bid.distPct.toFixed(2)}% против ${ask.distPct.toFixed(2)}%).`
+      );
+    } else if (sum.closerSide === 'ask') {
+      parts.push(
+        en
+          ? `Resistance is closer (${ask.distPct.toFixed(2)}% vs ${bid.distPct.toFixed(2)}%).`
+          : `Сопротивление ближе к цене (${ask.distPct.toFixed(2)}% против ${bid.distPct.toFixed(2)}%).`
+      );
+    }
+
+    if (sum.alertNote === 'single_exchange') {
+      parts.push(
+        en
+          ? 'Both walls sit mostly on 1 exchange — higher spoofing risk.'
+          : 'Обе плиты в основном на 1 бирже — выше риск спуфинга.'
+      );
+    }
+  }
+
+  return parts.join(' ');
+}
+
+function renderBadgePill(badge: { text: string; color: string } | null): string {
+  if (!badge) return '';
+  return `<span style="font-size:8.5px;font-weight:700;letter-spacing:0.6px;padding:2px 7px;border-radius:999px;color:${badge.color};border:1px solid ${badge.color};background:rgba(255,255,255,0.05);white-space:nowrap;">${badge.text}</span>`;
+}
+
 function renderWalls(w: WallsData | null): void {
   const card = document.getElementById('walls-card');
   if (!card) return;
@@ -716,38 +836,108 @@ function renderWalls(w: WallsData | null): void {
     return;
   }
   card.style.display = 'block';
+
   const en = isEN();
-  const srcInfo = w.sourceCount ? ` · ${w.sourceCount} ${tm('exchange_count')}` : '';
   const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  const whatWalls = `
-    <span class="pc-only">${T('Крупный лимитный ордер в стакане. Может быть как реальной защитой уровня, так и манипуляцией (спуфинг — заявку снимают до исполнения).', 'A large limit order in the book. Can be real level defense or manipulation (spoofing — the order is pulled before execution).')}</span>
-    <span class="mobile-only">${T('Крупная заявка. Защита уровня или манипуляция.', 'Large order. Defense or manipulation.')}</span>
-  `;
-  const reactWalls = `
-    <span class="pc-only">${T('Съедят плиту покупки — идём выше. Снимут — слабость, возможен пролив. Не входи против плиты, ставь стоп за неё.', 'If the buy wall is eaten — we go up. If it is pulled — weakness, a dump is possible. Do not trade against a wall, place your stop behind it.')}</span>
-    <span class="mobile-only">${T('Съедят = рост. Снимут = слабость. Ставь стоп за плитой.', 'Eaten = growth. Pulled = weakness. Stop behind the wall.')}</span>
-  `;
+  const totalEx = w.sourceCount || Math.max(w.bestBidWall.exchangeCount, w.bestAskWall.exchangeCount, 1);
+
+  const bid = w.bestBidWall;
+  const ask = w.bestAskWall;
+
+  const bidBadge = formatWallStatusBadge(bid.status, bid.changePct, en);
+  const askBadge = formatWallStatusBadge(ask.status, ask.changePct, en);
+
+  const sumWalls = Math.max(0, bid.total) + Math.max(0, ask.total);
+  const bidShareBarPct = sumWalls > 0
+    ? Math.min(88, Math.max(12, Math.round((Math.max(0, bid.total) / sumWalls) * 100)))
+    : 50;
+  const askShareBarPct = 100 - bidShareBarPct;
+
+  const smartHint = buildSmartWallsHint(w, en);
+  const infoText = T(
+    'VWAP-зона крупного лимитного объёма в стакане. Сравниваем дистанцию до цены, долю в объёме стороны, подтверждение по биржам и изменение между циклами.',
+    'VWAP zone of large limit liquidity in the order book. Compares distance from price, share of side volume, exchange confirmation, and cycle-to-cycle change.'
+  );
 
   setHTML('walls-content', `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--dim); text-transform:uppercase; letter-spacing:1.2px;">📊 ${en ? 'Order book depth' : 'Глубина стакана'}</div>
-      <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--mut);">${en ? 'Updated' : 'Обновлено'}: ${timeStr}</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-family:'JetBrains Mono',monospace">
-      <div>
-        <div style="color:var(--dim);font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:6px">🛡️ ${en ? 'Buy wall' : 'Плита покупки'}</div>
-        <div style="color:var(--mint);font-size:16px;font-weight:800">${fmtP(w.bestBidWall.price)}</div>
-        <div style="font-size:10.5px;color:var(--mut);margin-top:4px">${en ? 'Volume' : 'Объём'}: ${Math.round(w.bestBidWall.total).toLocaleString()} USDT${srcInfo}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;">
+        <span>📊</span>
+        <span>${en ? 'Order book depth' : 'Глубина стакана'}</span>
       </div>
-      <div>
-        <div style="color:var(--dim);font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:6px">🧱 ${en ? 'Sell wall' : 'Плита продажи'}</div>
-        <div style="color:var(--coral);font-size:16px;font-weight:800">${fmtP(w.bestAskWall.price)}</div>
-        <div style="font-size:10.5px;color:var(--mut);margin-top:4px">${en ? 'Volume' : 'Объём'}: ${Math.round(w.bestAskWall.total).toLocaleString()} USDT${srcInfo}</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <details style="font-family:'JetBrains Mono',monospace;">
+          <summary style="list-style:none;cursor:pointer;font-size:9px;color:var(--mut);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:999px;user-select:none;">
+            ℹ️ ${en ? 'How it works' : 'Справка'}
+          </summary>
+          <div style="margin-top:8px;padding:9px 11px;border-radius:10px;background:rgba(15,23,42,0.75);border:1px solid rgba(94,203,255,0.2);font-size:10.5px;line-height:1.45;color:var(--mut);max-width:520px;">
+            ${infoText}
+          </div>
+        </details>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:999px;">
+          ${en ? 'Updated' : 'Обновлено'}: ${timeStr}
+        </div>
       </div>
     </div>
-    <div class="xray-explain" style="margin-top:10px">${whatWalls}</div>
-    <div class="xray-react">💡 ${reactWalls}</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;font-family:'JetBrains Mono',monospace;">
+      <div style="background:linear-gradient(145deg,rgba(45,212,191,0.11),rgba(255,255,255,0.015));border:1px solid rgba(45,212,191,0.3);border-radius:12px;padding:11px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:20px;margin-bottom:6px;">
+          <span style="color:var(--mut);font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;">🛡️ ${en ? 'Buy wall' : 'Плита покупки'}</span>
+          ${renderBadgePill(bidBadge)}
+        </div>
+        <div style="color:var(--mint);font-size:17px;font-weight:800;letter-spacing:0.3px;">${fmtP(bid.price)}</div>
+        <div style="font-size:11px;color:var(--fg, #e6edf3);font-weight:600;margin-top:5px;">
+          ${en ? 'Volume' : 'Объём'}: <span style="color:var(--mint);">${Math.round(bid.total).toLocaleString()}</span> USDT
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:9.5px;color:var(--dim);margin-top:6px;">
+          <span>-${bid.distPct.toFixed(2)}%</span>
+          <span>·</span>
+          <span>${bid.sharePct.toFixed(1)}% ${en ? 'side' : 'стороны'}</span>
+          <span>·</span>
+          <span>${bid.exchangeCount}/${totalEx} ${en ? 'ex' : 'бирж'}</span>
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(145deg,rgba(251,113,133,0.11),rgba(255,255,255,0.015));border:1px solid rgba(251,113,133,0.3);border-radius:12px;padding:11px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:20px;margin-bottom:6px;">
+          <span style="color:var(--mut);font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;">🧱 ${en ? 'Sell wall' : 'Плита продажи'}</span>
+          ${renderBadgePill(askBadge)}
+        </div>
+        <div style="color:var(--coral);font-size:17px;font-weight:800;letter-spacing:0.3px;">${fmtP(ask.price)}</div>
+        <div style="font-size:11px;color:var(--fg, #e6edf3);font-weight:600;margin-top:5px;">
+          ${en ? 'Volume' : 'Объём'}: <span style="color:var(--coral);">${Math.round(ask.total).toLocaleString()}</span> USDT
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:9.5px;color:var(--dim);margin-top:6px;">
+          <span>+${ask.distPct.toFixed(2)}%</span>
+          <span>·</span>
+          <span>${ask.sharePct.toFixed(1)}% ${en ? 'side' : 'стороны'}</span>
+          <span>·</span>
+          <span>${ask.exchangeCount}/${totalEx} ${en ? 'ex' : 'бирж'}</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);font-family:'JetBrains Mono',monospace;">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:9px;font-weight:700;margin-bottom:6px;">
+        <span style="color:var(--mint);">${en ? 'BID WALL' : 'ПЛИТА ПОКУПКИ'} · ${bidShareBarPct}%</span>
+        <span style="color:var(--coral);">${askShareBarPct}% · ${en ? 'ASK WALL' : 'ПЛИТА ПРОДАЖИ'}</span>
+      </div>
+      <div style="display:flex;height:7px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.08);gap:2px;">
+        <div style="width:${bidShareBarPct}%;background:var(--mint);border-radius:999px 0 0 999px;transition:width 0.3s ease;"></div>
+        <div style="width:${askShareBarPct}%;background:var(--coral);border-radius:0 999px 999px 0;transition:width 0.3s ease;"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;padding:10px 12px;border-radius:11px;background:linear-gradient(90deg,rgba(94,203,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(94,203,255,0.22);display:flex;align-items:flex-start;gap:9px;">
+      <span style="font-size:14px;line-height:1.2;flex-shrink:0;">💡</span>
+      <div style="font-size:11.5px;line-height:1.45;color:var(--fg, #e6edf3);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);font-weight:700;margin-bottom:3px;">
+          ${en ? 'LIVE WALL INSIGHT' : 'ИНФО ПО СТАКАНУ'}
+        </div>
+        <div>${smartHint}</div>
+      </div>
+    </div>
   `);
 }
 

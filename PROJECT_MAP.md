@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.48** | Branch: `main` | Commit: `f71b264`
-> Generated: 2026-11-22 15:52
+> Version: **2.0.49** | Branch: `main` | Commit: `add454d`
+> Generated: 2026-11-22 17:10
 
 ---
 
@@ -38,16 +38,35 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 60
-- Total LOC in `src/`: 19098
-- Bundle (`dist/`): 62 files, 910.4 KB
+- Total LOC in `src/`: 19472
+- Bundle (`dist/`): 62 files, 919 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.48**
-- Last git tag: `v2.0.47`
+- `package.json` version: **2.0.49**
+- Last git tag: `v2.0.48`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `add454d` - 2026-11-22 - chore(release): v2.0.48
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/capabilities/default.json`
+- `src-tauri/tauri.conf.json`
+- `src/sources/candles.ts`
+- `src/sources/funding.ts`
+- `src/sources/orderbook.ts`
+- `src/sources/stream.ts`
+- `src/sources/whale-futures.ts`
 
 ### `f71b264` - 2026-11-22 - chore(release): v2.0.47
 
@@ -114,37 +133,13 @@ Files:
 - `src/locales/en.json`
 - `src/locales/ru.json`
 
-### `e180104` - 2026-11-21 - chore(release): v2.0.43
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/ai.ts`
-- `src/backtest/engine.ts`
-- `src/db.ts`
-- `src/demo.ts`
-- `src/oracle.ts`
-- `src/services/audio.ts`
-- `src/sources/candles.ts`
-- `src/trading.ts`
-- `src/trading/costs.ts`
-- `src/ui/oracle.ts`
-- `src/ui/screens.ts`
-- `src/ui/whale.ts`
-
 ## Last release diff
 
-No changes since `v2.0.47`
+No changes since `v2.0.48`
 
 ## Recent tags
 
+- `v2.0.48`
 - `v2.0.47`
 - `v2.0.46`
 - `v2.0.45`
@@ -154,7 +149,6 @@ No changes since `v2.0.47`
 - `v2.0.41`
 - `v2.0.40`
 - `v2.0.39`
-- `v2.0.38`
 
 ## File tree (src/)
 
@@ -169,7 +163,7 @@ src/
 |   +--    42 info.ts
 +-- locales/
 |   +--   697 .i18n-lock.json
-|   +--   505 auto-en.json
+|   +--   509 auto-en.json
 |   +--   697 en.json
 |   +--   697 ru.json
 +-- platform/
@@ -185,7 +179,7 @@ src/
 |   +--   135 funding.ts
 |   +--   351 kucoin.ts
 |   +--   331 mexc.ts
-|   +--   255 orderbook.ts
+|   +--   439 orderbook.ts
 |   +--   253 stream.ts
 |   +--   284 whale-futures.ts
 +-- styles/
@@ -213,7 +207,7 @@ src/
 |   +--   383 themes.ts
 |   +--   272 timeframes.ts
 |   +--   113 tooltip.ts
-|   +--   762 whale.ts
+|   +--   952 whale.ts
 |   +--    92 white-paper.ts
 +--   554 ai.ts
 +--   277 alerts.ts
@@ -502,6 +496,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 
 ### `src/sources/orderbook.ts`
 - getAggregatedOrderbook()
+- WallInfo (iface)
 - OrderbookResult (iface)
 
 ### `src/sources/stream.ts`
@@ -710,6 +705,7 @@ Files that handle secrets, money, or auth. **Do not modify without backup.**
 - WhaleFuturesInput (iface)
 - WhaleMergedData (iface)
 - XrayData (iface)
+- WallSideView (iface)
 - WallsData (iface)
 
 ### `src/ui/white-paper.ts`
@@ -991,6 +987,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- add454d  2026-11-22  chore(release): v2.0.48
 - f71b264  2026-11-22  chore(release): v2.0.47
 - 64e90b3  2026-11-22  chore(release): v2.0.46
 - f36ff8e  2026-11-21  chore(release): v2.0.45
@@ -1005,7 +1002,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 3beab82  2026-11-05  chore(release): v2.0.36
 - 79a0bca  2026-11-04  chore(release): v2.0.35
 - 6e12419  2026-11-03  chore(release): v2.0.34
-- 4b13def  2026-11-03  chore(release): v2.0.33
 
 ---
 

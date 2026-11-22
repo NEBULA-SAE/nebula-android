@@ -501,5 +501,9 @@
   "Давление в стакане": "Pressure in the glass",
   "только что": "just now",
   "мин": "min",
-  "дн": "days"
+  "дн": "days",
+  "Обе плиты в основном на 1 бирже — выше риск спуфинга.": "Both slabs are mainly on 1 exchange - higher risk of spoofing.",
+  "VWAP-зона крупного лимитного объёма в стакане. Сравниваем дистанцию до цены, долю в объёме стороны, подтверждение по биржам и изменение между циклами.": "VWAP zone with a large limit volume in the order book. We compare the distance to the price, the share in the volume of the party, confirmation by exchanges and the change between cycles.",
+  "Плиты покупки и продажи сопоставимы по объёму.": "The purchase and sale slabs are comparable in volume.",
+  "ДЕРЖИТСЯ": "HOLDING ON"
 }
