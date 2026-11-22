@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.46** | Branch: `main` | Commit: `f36ff8e`
-> Generated: 2026-11-22 14:29
+> Version: **2.0.47** | Branch: `main` | Commit: `64e90b3`
+> Generated: 2026-11-22 15:23
 
 ---
 
@@ -38,16 +38,31 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 60
-- Total LOC in `src/`: 18956
-- Bundle (`dist/`): 62 files, 907.6 KB
+- Total LOC in `src/`: 18964
+- Bundle (`dist/`): 62 files, 907.7 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.46**
-- Last git tag: `v2.0.45`
+- `package.json` version: **2.0.47**
+- Last git tag: `v2.0.46`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `64e90b3` - 2026-11-22 - chore(release): v2.0.46
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/ui/diagnostics.ts`
+- `vite.config.ts`
 
 ### `f36ff8e` - 2026-11-21 - chore(release): v2.0.45
 
@@ -123,27 +138,13 @@ Files:
 - `src-tauri/tauri.conf.json`
 - `src/pro.ts`
 
-### `9c9eb58` - 2026-11-20 - chore(release): v2.0.41
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/new-skin.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/ui/screens.ts`
-
 ## Last release diff
 
-No changes since `v2.0.45`
+No changes since `v2.0.46`
 
 ## Recent tags
 
+- `v2.0.46`
 - `v2.0.45`
 - `v2.0.44`
 - `v2.0.43`
@@ -153,7 +154,6 @@ No changes since `v2.0.45`
 - `v2.0.39`
 - `v2.0.38`
 - `v2.0.37`
-- `v2.0.36`
 
 ## File tree (src/)
 
@@ -173,7 +173,7 @@ src/
 |   +--   697 ru.json
 +-- platform/
 |   +--    58 browser.ts
-|   +--   103 http.ts
+|   +--   118 http.ts
 |   +--    29 index.ts
 +-- services/
 |   +--   152 audio.ts
@@ -218,7 +218,7 @@ src/
 +--   277 alerts.ts
 +--   280 auth.ts
 +--   363 chart.ts
-+--    33 config.ts
++--    26 config.ts
 +--   210 crypto.ts
 +--   174 db.ts
 +--   359 demo.ts
@@ -990,6 +990,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- 64e90b3  2026-11-22  chore(release): v2.0.46
 - f36ff8e  2026-11-21  chore(release): v2.0.45
 - a5c5811  2026-11-21  chore(release): v2.0.44
 - e180104  2026-11-21  chore(release): v2.0.43
@@ -1004,7 +1005,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 6e12419  2026-11-03  chore(release): v2.0.34
 - 4b13def  2026-11-03  chore(release): v2.0.33
 - 95f9b76  2026-11-03  chore(release): v2.0.32
-- a2ca92b  2026-11-02  chore(release): v2.0.31
 
 ---
 
