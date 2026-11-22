@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.47** | Branch: `main` | Commit: `64e90b3`
-> Generated: 2026-11-22 15:23
+> Version: **2.0.48** | Branch: `main` | Commit: `f71b264`
+> Generated: 2026-11-22 15:52
 
 ---
 
@@ -38,16 +38,31 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 ## Stats
 
 - TypeScript files in `src/`: 60
-- Total LOC in `src/`: 18964
-- Bundle (`dist/`): 62 files, 907.7 KB
+- Total LOC in `src/`: 19098
+- Bundle (`dist/`): 62 files, 910.4 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.47**
-- Last git tag: `v2.0.46`
+- `package.json` version: **2.0.48**
+- Last git tag: `v2.0.47`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `f71b264` - 2026-11-22 - chore(release): v2.0.47
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/config.ts`
+- `src/platform/http.ts`
 
 ### `64e90b3` - 2026-11-22 - chore(release): v2.0.46
 
@@ -124,26 +139,13 @@ Files:
 - `src/ui/screens.ts`
 - `src/ui/whale.ts`
 
-### `1324cfa` - 2026-11-20 - chore(release): v2.0.42
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/pro.ts`
-
 ## Last release diff
 
-No changes since `v2.0.46`
+No changes since `v2.0.47`
 
 ## Recent tags
 
+- `v2.0.47`
 - `v2.0.46`
 - `v2.0.45`
 - `v2.0.44`
@@ -153,7 +155,6 @@ No changes since `v2.0.46`
 - `v2.0.40`
 - `v2.0.39`
 - `v2.0.38`
-- `v2.0.37`
 
 ## File tree (src/)
 
@@ -178,15 +179,15 @@ src/
 +-- services/
 |   +--   152 audio.ts
 +-- sources/
-|   +--   356 candles.ts
+|   +--   384 candles.ts
 |   +--   140 confluence.ts
 |   +--   158 dash.ts
-|   +--    95 funding.ts
+|   +--   135 funding.ts
 |   +--   351 kucoin.ts
 |   +--   331 mexc.ts
-|   +--   241 orderbook.ts
-|   +--   237 stream.ts
-|   +--   248 whale-futures.ts
+|   +--   255 orderbook.ts
+|   +--   253 stream.ts
+|   +--   284 whale-futures.ts
 +-- styles/
 |   +--   136 main.css
 +-- trading/
@@ -901,7 +902,7 @@ wCall
 - `cointelegraph.com` (in `hub.ts`)
 - `dash-rpc.publicnode.com` (in `dash.ts`)
 - `essamamdani.github.io` (in `screens.ts`)
-- `fapi.binance.com` (in `whale-futures.ts`)
+- `fapi.binance.com` (in `funding.ts`)
 - `generativelanguage.googleapis.com` (in `ai.ts`)
 - `github.com` (in `themes.ts`)
 - `learn.bybit.com` (in `hub.ts`)
@@ -990,6 +991,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- f71b264  2026-11-22  chore(release): v2.0.47
 - 64e90b3  2026-11-22  chore(release): v2.0.46
 - f36ff8e  2026-11-21  chore(release): v2.0.45
 - a5c5811  2026-11-21  chore(release): v2.0.44
@@ -1004,7 +1006,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 79a0bca  2026-11-04  chore(release): v2.0.35
 - 6e12419  2026-11-03  chore(release): v2.0.34
 - 4b13def  2026-11-03  chore(release): v2.0.33
-- 95f9b76  2026-11-03  chore(release): v2.0.32
 
 ---
 

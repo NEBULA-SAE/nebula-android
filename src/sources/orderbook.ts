@@ -15,7 +15,23 @@ export interface OrderbookResult {
 }
 
 const IS_DEV = (import.meta as any).env?.DEV;
-const TIMEOUT = 6000;
+const TIMEOUT = 3500;
+const EXCHANGE_COOLDOWN_MS = 60_000;
+
+const _exchangeCooldownUntil = new Map<string, number>();
+
+function isCoolingDown(name: string): boolean {
+  const until = _exchangeCooldownUntil.get(name) || 0;
+  if (until <= Date.now()) {
+    _exchangeCooldownUntil.delete(name);
+    return false;
+  }
+  return true;
+}
+
+function setExchangeCooldown(name: string): void {
+  _exchangeCooldownUntil.set(name, Date.now() + EXCHANGE_COOLDOWN_MS);
+}
 
 async function getGateio(t: string): Promise<[string[][], string[][]]> {
   const base = IS_DEV ? '/proxy/gateio' : 'https://api.gateio.ws';
@@ -93,10 +109,6 @@ const EXCHANGES = [
 function cleanSpoof(levels: [number, number][], mid: number): [number, number][] {
   const side = levels.filter(([p]) => p > 0 && p < mid * 1.5);
   if (side.length < 3) return side;
-  
-  // Мы убрали жесткое обрезание объема. Теперь мы просто отсеиваем 
-  // совсем уж фейковые заявки, которые стоят в 10 раз дороже рынка.
-  // Реальные "плиты" мы оставляем, чтобы их видел трейдер.
   return side;
 }
 
@@ -118,16 +130,20 @@ const _orderbookPending = new Map<string, Promise<OrderbookResult>>();
 
 export async function getAggregatedOrderbook(ticker: string): Promise<OrderbookResult> {
   const key = ticker.toUpperCase();
-  
-  // Если запрос уже в процессе — возвращаем его же (не создаем новый)
+
   if (_orderbookPending.has(key)) {
     return _orderbookPending.get(key)!;
   }
 
   const fetchPromise = (async (): Promise<OrderbookResult> => {
     const t0 = performance.now();
+
+    const activeExchanges = EXCHANGES.filter(ex => !isCoolingDown(ex.name));
+    const skippedExchanges = EXCHANGES.filter(ex => isCoolingDown(ex.name));
+    const candidates = activeExchanges.length > 0 ? activeExchanges : EXCHANGES;
+
     const results = await Promise.allSettled(
-      EXCHANGES.map(async (ex) => {
+      candidates.map(async (ex) => {
         const [bids, asks] = await ex.fetch(ticker);
         return { name: ex.name, bids, asks };
       })
@@ -136,17 +152,21 @@ export async function getAggregatedOrderbook(ticker: string): Promise<OrderbookR
     const rawBids: [number, number][] = [];
     const rawAsks: [number, number][] = [];
     const sourcesOk: string[] = [];
-    const sourcesFailed: string[] = [];
+    const sourcesFailed: string[] = activeExchanges.length > 0
+      ? skippedExchanges.map(ex => ex.name)
+      : [];
 
     for (let i = 0; i < results.length; i++) {
       const res = results[i];
+      const exName = candidates[i].name;
       if (res.status === 'fulfilled') {
         const { bids, asks } = res.value;
         for (const [p, q] of bids) rawBids.push([parseFloat(p), parseFloat(q)]);
         for (const [p, q] of asks) rawAsks.push([parseFloat(p), parseFloat(q)]);
-        sourcesOk.push(EXCHANGES[i].name);
+        sourcesOk.push(exName);
       } else {
-        sourcesFailed.push(EXCHANGES[i].name);
+        setExchangeCooldown(exName);
+        sourcesFailed.push(exName);
       }
     }
 
@@ -175,40 +195,36 @@ export async function getAggregatedOrderbook(ticker: string): Promise<OrderbookR
     const pressureW = pressureWeighted(bidsClean, asksClean, midPrice);
     const pressureN = pressureNear(bidsClean, asksClean, midPrice);
 
-    // Ищем плиты в диапазоне от 0.5% до 5% от текущей цены
-  const isFar = (p: number) => {
-    const dist = Math.abs(p - midPrice) / midPrice * 100;
-    return dist >= 0.5 && dist <= 5.0;
-  };
-  
-  const farBids = bidsClean.filter(([p]) => isFar(p));
-  const farAsks = asksClean.filter(([p]) => isFar(p));
-  
-  // Функция поиска лучшей плиты (суммирует соседние ордера)
-  const findBestWall = (levels: [number, number][]) => {
-    if (!levels.length) return null;
-    // Сортируем по цене (для бидов от макс к мин, для асков от мин к макс)
-    const sorted = levels.sort((a, b) => b[0] - a[0]); 
-    
-    let bestWall = sorted[0];
-    let maxVolume = bestWall[0] * bestWall[1];
+    const isFar = (p: number) => {
+      const dist = Math.abs(p - midPrice) / midPrice * 100;
+      return dist >= 0.5 && dist <= 5.0;
+    };
 
-    for (let i = 0; i < sorted.length; i++) {
-      const [p, q] = sorted[i];
-      // Суммируем объем с соседними заявками (в радиусе 0.2% от цены)
-      const cluster = sorted.filter(([cp]) => Math.abs(cp - p) / p < 0.002);
-      const clusterVol = cluster.reduce((sum, [, cq]) => sum + cq * p, 0);
-      
-      if (clusterVol > maxVolume) {
-        maxVolume = clusterVol;
-        bestWall = [p, clusterVol / p]; // Возвращаем цену и суммарный объем
+    const farBids = bidsClean.filter(([p]) => isFar(p));
+    const farAsks = asksClean.filter(([p]) => isFar(p));
+
+    const findBestWall = (levels: [number, number][]) => {
+      if (!levels.length) return null;
+      const sorted = levels.sort((a, b) => b[0] - a[0]);
+
+      let bestWall = sorted[0];
+      let maxVolume = bestWall[0] * bestWall[1];
+
+      for (let i = 0; i < sorted.length; i++) {
+        const [p, q] = sorted[i];
+        const cluster = sorted.filter(([cp]) => Math.abs(cp - p) / p < 0.002);
+        const clusterVol = cluster.reduce((sum, [, cq]) => sum + cq * p, 0);
+
+        if (clusterVol > maxVolume) {
+          maxVolume = clusterVol;
+          bestWall = [p, clusterVol / p];
+        }
       }
-    }
-    return bestWall;
-  };
+      return bestWall;
+    };
 
-  const wallBid = findBestWall(farBids);
-  const wallAsk = findBestWall(farAsks);
+    const wallBid = findBestWall(farBids);
+    const wallAsk = findBestWall(farAsks);
 
     const ms = Math.round(performance.now() - t0);
     console.log(`[perf] orderbook ${ticker} in ${ms}ms, sources: ${sourcesOk.join(',')}, pressure: raw=${pressureRaw.toFixed(3)} w=${pressureW.toFixed(3)} near=${pressureN.toFixed(3)}`);
@@ -229,13 +245,11 @@ export async function getAggregatedOrderbook(ticker: string): Promise<OrderbookR
     };
   })();
 
-  // Сохраняем промис в кэш
   _orderbookPending.set(key, fetchPromise);
 
   try {
     return await fetchPromise;
   } finally {
-    // Удаляем из кэша, когда запрос завершился (успешно или с ошибкой)
     _orderbookPending.delete(key);
   }
 }

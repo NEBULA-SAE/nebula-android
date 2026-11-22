@@ -37,9 +37,25 @@ export function getTfConfig(tf: Timeframe = '1d'): TfConfig {
   return TF_CONFIG[tf] || TF_CONFIG['1d'];
 }
 
-const TIMEOUT = 8000;
+const TIMEOUT = 3500;
+const CANDLE_COOLDOWN_MS = 60_000;
 const MAX_RAM_CACHE = 40;
 const MAX_IDB_CACHE = 100;
+
+const _sourceCooldownUntil = new Map<string, number>();
+
+function isSourceCoolingDown(name: string): boolean {
+  const until = _sourceCooldownUntil.get(name) || 0;
+  if (until <= Date.now()) {
+    _sourceCooldownUntil.delete(name);
+    return false;
+  }
+  return true;
+}
+
+function setSourceCooldown(name: string): void {
+  _sourceCooldownUntil.set(name, Date.now() + CANDLE_COOLDOWN_MS);
+}
 
 const TF_TTL_MS: Record<Timeframe, number> = {
   '1m':  15_000,   // 15 сек
@@ -79,8 +95,9 @@ function sortAndDedupe(candles: Candle[]): Candle[] {
 // ─── ИСТОЧНИКИ ───
 
 async function fromGateio(t: string, interval: string, limit: number, signal: AbortSignal): Promise<Candle[]> {
+  const base = P('gateio', 'https://api.gateio.ws');
   const r = await fetch(
-    `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${t}_USDT&interval=${interval}&limit=${limit}`,
+    `${base}/api/v4/spot/candlesticks?currency_pair=${t}_USDT&interval=${interval}&limit=${limit}`,
     { signal }
   );
   if (!r.ok) throw new Error(`gateio ${r.status}`);
@@ -92,8 +109,9 @@ async function fromGateio(t: string, interval: string, limit: number, signal: Ab
 }
 
 async function fromBinance(t: string, interval: string, limit: number, signal: AbortSignal): Promise<Candle[]> {
+  const base = P('binance', 'https://api.binance.com');
   const r = await fetch(
-    `https://api.binance.com/api/v3/klines?symbol=${t}USDT&interval=${interval}&limit=${limit}`,
+    `${base}/api/v3/klines?symbol=${t}USDT&interval=${interval}&limit=${limit}`,
     { signal }
   );
   if (!r.ok) throw new Error(`binance ${r.status}`);
@@ -166,8 +184,6 @@ async function fromKucoin(t: string, interval: string, limit: number, signal: Ab
   const j = await r.json();
   if (j.code !== '200000') throw new Error(`kucoin ${j.msg}`);
 
-  // KuCoin: [time, open, close, high, low, volume, turnover]
-  // Порядок в ответе — от новых к старым. Разворачиваем и обрезаем.
   const mapped: Candle[] = (j.data || []).map((d: any): Candle => ({
     time: toSeconds(d[0]),
     open: parseFloat(d[1]),
@@ -179,6 +195,19 @@ async function fromKucoin(t: string, interval: string, limit: number, signal: Ab
   mapped.sort((a, b) => a.time - b.time);
   return mapped.slice(-limit);
 }
+
+const CANDLE_SOURCES: {
+  name: string;
+  getInterval: (cfg: TfConfig) => string;
+  fn: (t: string, interval: string, limit: number, signal: AbortSignal) => Promise<Candle[]>;
+}[] = [
+  { name: 'gateio',  getInterval: cfg => cfg.gateio,  fn: fromGateio },
+  { name: 'binance', getInterval: cfg => cfg.binance, fn: fromBinance },
+  { name: 'okx',     getInterval: cfg => cfg.okx,     fn: fromOkx },
+  { name: 'bybit',   getInterval: cfg => cfg.bybit,   fn: fromBybit },
+  { name: 'mexc',    getInterval: cfg => cfg.mexc,    fn: fromMexc },
+  { name: 'kucoin',  getInterval: cfg => cfg.kucoin,  fn: fromKucoin },
+];
 
 // ─── ОДИН ИСТОЧНИК С ТАЙМАУТОМ + ВНЕШНЕЙ ОТМЕНОЙ ───
 
@@ -209,6 +238,9 @@ function runSource(
         resolve({ data, source: name });
       } catch (e: any) {
         cleanup();
+        if (!externalSignal.aborted) {
+          setSourceCooldown(name);
+        }
         reject(e);
       }
     })();
@@ -225,14 +257,12 @@ async function trySources(
   const t0 = performance.now();
   const outerCtrl = new AbortController();
 
-  const promises = [
-    runSource('gateio',  fromGateio,  ticker, cfg.gateio,  cfg.limit, outerCtrl.signal),
-    runSource('binance', fromBinance, ticker, cfg.binance, cfg.limit, outerCtrl.signal),
-    runSource('okx',     fromOkx,     ticker, cfg.okx,     cfg.limit, outerCtrl.signal),
-    runSource('bybit',   fromBybit,   ticker, cfg.bybit,   cfg.limit, outerCtrl.signal),
-    runSource('mexc',    fromMexc,    ticker, cfg.mexc,    cfg.limit, outerCtrl.signal),
-    runSource('kucoin',  fromKucoin,  ticker, cfg.kucoin,  cfg.limit, outerCtrl.signal),
-  ];
+  const active = CANDLE_SOURCES.filter(s => !isSourceCoolingDown(s.name));
+  const candidates = active.length > 0 ? active : CANDLE_SOURCES;
+
+  const promises = candidates.map(src =>
+    runSource(src.name, src.fn, ticker, src.getInterval(cfg), cfg.limit, outerCtrl.signal)
+  );
 
   try {
     const winner = await Promise.any(promises);
@@ -244,7 +274,7 @@ async function trySources(
     throw new Error(`Все источники упали (tf=${tf})`);
   }
 }
-    
+
 // ─── ДВУХУРОВНЕВЫЙ КЭШ (RAM + IndexedDB + фоновое обновление) ───
 
 interface CachedEntry {
@@ -329,11 +359,9 @@ export async function fetchCandlesWithSource(
 
     if (cached) {
       const age = now - cached.ts;
-      // Свежий кэш — отдаём мгновенно (0ms)
       if (age < ttl) {
         return cached.value;
       }
-      // Слегка устарел (до 4x TTL) — отдаём мгновенно, но тихо обновляем в фоне
       if (age < ttl * 4) {
         if (!_candlePendingCache.has(key)) {
           startNetworkFetch().catch(() => {});

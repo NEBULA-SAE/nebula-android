@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // NEBULA v2 · WHALE FUTURES
 // Bybit (OI+LSR Global) + OKX (Taker+LSR Top) + Binance (fallback)
-// Binance через VPS-прокси (обход блокировки РФ)
+// Прямые запросы через конфиг P() с быстрым фолбэком
 // ═══════════════════════════════════════════════════════════════
 
 import { P } from '../config';
@@ -10,7 +10,22 @@ const BYBIT_BASE   = P('bybit',           'https://api.bybit.com');
 const OKX_BASE     = P('okx',             'https://www.okx.com');
 const BINANCE_BASE = P('binance_futures', 'https://fapi.binance.com');
 
-const TIMEOUT = 6000;
+const TIMEOUT = 3500;
+const COOLDOWN_MS = 60_000;
+const _exchangeCooldownUntil = new Map<string, number>();
+
+function isCoolingDown(name: string): boolean {
+  const until = _exchangeCooldownUntil.get(name) || 0;
+  if (until <= Date.now()) {
+    _exchangeCooldownUntil.delete(name);
+    return false;
+  }
+  return true;
+}
+
+function setCooldown(name: string): void {
+  _exchangeCooldownUntil.set(name, Date.now() + COOLDOWN_MS);
+}
 
 export interface WhaleFuturesMetrics {
   status: 'success' | 'error';
@@ -69,7 +84,6 @@ async function okxTaker(t: string): Promise<number> {
   if (!lst.length) throw new Error('okx taker empty');
   const [, sell, buy] = lst[0];
   const s = parseFloat(sell), b = parseFloat(buy);
-  // Ограничиваем от 0.1 до 10, чтобы избежать выбросов вроде 300.11
   return s <= 0 ? 1 : Math.max(0.1, Math.min(10, b / s));
 }
 
@@ -85,7 +99,7 @@ async function okxTopLsr(t: string): Promise<number> {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BINANCE FUTURES (через VPS-прокси — обход блокировки РФ)
+// BINANCE FUTURES
 // ═══════════════════════════════════════════════════════════════
 
 async function binanceOI(t: string, limit = 25): Promise<number[]> {
@@ -130,7 +144,7 @@ async function binanceTaker(t: string): Promise<number> {
   const arr = await r.json();
   if (!Array.isArray(arr) || !arr.length) throw new Error('binance taker empty');
   const val = parseFloat(arr[0].buySellRatio);
-  return Math.max(0.1, Math.min(10, val)); // Тоже ограничиваем
+  return Math.max(0.1, Math.min(10, val));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -141,27 +155,50 @@ const _cache = new Map<string, { value: WhaleFuturesMetrics; ts: number }>();
 const CACHE_TTL_MS = 180 * 1000;
 
 export async function getWhaleFuturesMetrics(ticker: string): Promise<WhaleFuturesMetrics> {
-  const key = ticker.toUpperCase();
-  const cached = _cache.get(key);
+  const sym = ticker.toUpperCase();
+  const cached = _cache.get(sym);
   if (cached && Date.now() - cached.ts < CACHE_TTL_MS) return cached.value;
 
-  const result: WhaleFuturesMetrics = { status: 'success', ticker, sources: [] };
+  const allDown = isCoolingDown('bybit') && isCoolingDown('okx') && isCoolingDown('binance');
+  const allowBybit = allDown || !isCoolingDown('bybit');
+  const allowOkx = allDown || !isCoolingDown('okx');
+  const allowBinance = allDown || !isCoolingDown('binance');
 
-  // Все запросы параллельно: Bybit ×2, OKX ×2, Binance ×4
+  const emptyRejected = <T,>(): Promise<PromiseSettledResult<T>> =>
+    Promise.resolve({ status: 'rejected', reason: new Error('cooldown') });
+
   const [
     bybitOiR, bybitLsrR,
     okxTakerR, okxTopLsrR,
     binanceOiR, binanceLsrTopR, binanceLsrGlobalR, binanceTakerR,
-  ] = await Promise.allSettled([
-    bybitOI(ticker, 25),
-    bybitLsrGlobal(ticker),
-    okxTaker(ticker),
-    okxTopLsr(ticker),
-    binanceOI(ticker, 25),
-    binanceLsrTop(ticker),
-    binanceLsrGlobal(ticker),
-    binanceTaker(ticker),
+  ] = await Promise.all([
+    allowBybit ? Promise.allSettled([bybitOI(sym, 25)]).then(a => a[0]) : emptyRejected<number[]>(),
+    allowBybit ? Promise.allSettled([bybitLsrGlobal(sym)]).then(a => a[0]) : emptyRejected<number>(),
+    allowOkx ? Promise.allSettled([okxTaker(sym)]).then(a => a[0]) : emptyRejected<number>(),
+    allowOkx ? Promise.allSettled([okxTopLsr(sym)]).then(a => a[0]) : emptyRejected<number>(),
+    allowBinance ? Promise.allSettled([binanceOI(sym, 25)]).then(a => a[0]) : emptyRejected<number[]>(),
+    allowBinance ? Promise.allSettled([binanceLsrTop(sym)]).then(a => a[0]) : emptyRejected<number>(),
+    allowBinance ? Promise.allSettled([binanceLsrGlobal(sym)]).then(a => a[0]) : emptyRejected<number>(),
+    allowBinance ? Promise.allSettled([binanceTaker(sym)]).then(a => a[0]) : emptyRejected<number>(),
   ]);
+
+  if (allowBybit && bybitOiR.status === 'rejected' && bybitLsrR.status === 'rejected') {
+    setCooldown('bybit');
+  }
+  if (allowOkx && okxTakerR.status === 'rejected' && okxTopLsrR.status === 'rejected') {
+    setCooldown('okx');
+  }
+  if (
+    allowBinance &&
+    binanceOiR.status === 'rejected' &&
+    binanceLsrTopR.status === 'rejected' &&
+    binanceLsrGlobalR.status === 'rejected' &&
+    binanceTakerR.status === 'rejected'
+  ) {
+    setCooldown('binance');
+  }
+
+  const result: WhaleFuturesMetrics = { status: 'success', ticker: sym, sources: [] };
 
   // ─── OI: Bybit → Binance ───
   let oiSeries: number[] | null = null;
@@ -235,14 +272,13 @@ export async function getWhaleFuturesMetrics(ticker: string): Promise<WhaleFutur
     result.sources.push(`taker:${takerSource}`);
   }
 
-  console.log(`[perf] whale ${ticker}: oi=${result.oi_source || '—'} (${result.oi_change_24h_pct ?? '—'}%) lsr=${result.lsr_global ?? '—'} top=${result.lsr_top_positions ?? '—'} taker=${result.taker_ratio ?? '—'} sources=[${result.sources.join(', ')}]`);
+  console.log(`[perf] whale ${sym}: oi=${result.oi_source || '—'} (${result.oi_change_24h_pct ?? '—'}%) lsr=${result.lsr_global ?? '—'} top=${result.lsr_top_positions ?? '—'} taker=${result.taker_ratio ?? '—'} sources=[${result.sources.join(', ')}]`);
 
   if (result.sources.length === 0) {
-    const err: WhaleFuturesMetrics = { status: 'error', ticker, sources: [], message: 'No data' };
-    // НЕ кэшируем ошибки — следующий запрос попробует снова
+    const err: WhaleFuturesMetrics = { status: 'error', ticker: sym, sources: [], message: 'No data' };
     return err;
   }
 
-  _cache.set(key, { value: result, ts: Date.now() });
+  _cache.set(sym, { value: result, ts: Date.now() });
   return result;
 }

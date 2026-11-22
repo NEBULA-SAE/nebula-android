@@ -39,9 +39,11 @@
       "allow": [
         { "url": "https://api.gateio.ws/*" },
         { "url": "https://api.binance.com/*" },
+        { "url": "https://fapi.binance.com/*" },
         { "url": "https://api.bybit.com/*" },
         { "url": "https://www.okx.com/*" },
         { "url": "https://api.mexc.com/*" },
+        { "url": "https://api.kucoin.com/*" },
         { "url": "https://api.coinpaprika.com/*" },
         { "url": "https://api.alternative.me/*" },
         { "url": "https://www.cbr-xml-daily.ru/*" },

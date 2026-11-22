@@ -1,6 +1,6 @@
 // ============================================================
 // NEBULA v2 - PRICE STREAM (WebSocket)
-// Binance + KuCoin real-time candles.
+// Binance + KuCoin real-time candles with adaptive fallback.
 // ============================================================
 
 import type { Candle, Timeframe } from './candles';
@@ -16,6 +16,7 @@ const KUCOIN_INTERVAL: Record<Timeframe, string> = {
 const HEARTBEAT_MS = 30_000;
 const MAX_BACKOFF_MS = 30_000;
 const MAX_ATTEMPTS = 10;
+const SWITCH_AFTER_ATTEMPTS = 3;
 
 export interface PriceStreamOptions {
   ticker: string;
@@ -32,6 +33,8 @@ export class PriceStream {
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
+  private totalAttempts = 0;
+  private switchedExchange = false;
   private destroyed = false;
   private opts: PriceStreamOptions;
   private exchange: 'binance' | 'kucoin';
@@ -59,7 +62,7 @@ export class PriceStream {
       return;
     }
 
-      const raw = this.opts.ticker.replace('/', '').toUpperCase();
+    const raw = this.opts.ticker.replace('/', '').toUpperCase();
     const symbol = raw.endsWith('USDT') ? raw : `${raw}USDT`;
     const url = `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`;
 
@@ -74,6 +77,7 @@ export class PriceStream {
     this.ws.onopen = () => {
       if (this.destroyed) { try { this.ws?.close(); } catch {} return; }
       this.reconnectAttempts = 0;
+      this.totalAttempts = 0;
       this.startHeartbeat();
       this.opts.onOpen?.();
       console.log(`[stream] Binance open ${symbol} ${interval}`);
@@ -116,7 +120,7 @@ export class PriceStream {
       return;
     }
 
-      const raw = this.opts.ticker.replace('/', '-').toUpperCase();
+    const raw = this.opts.ticker.replace('/', '-').toUpperCase();
     const symbol = raw.endsWith('-USDT') ? raw : `${raw}-USDT`;
     const url = `wss://x-push-spot.kucoin.com`;
 
@@ -131,6 +135,7 @@ export class PriceStream {
     this.ws.onopen = () => {
       if (this.destroyed) { try { this.ws?.close(); } catch {} return; }
       this.reconnectAttempts = 0;
+      this.totalAttempts = 0;
       const subMsg = {
         id: String(Date.now()),
         action: 'SUBSCRIBE',
@@ -178,17 +183,30 @@ export class PriceStream {
   private scheduleReconnect(): void {
     if (this.destroyed) return;
     if (this.reconnectTimer) return;
-    if (this.reconnectAttempts >= MAX_ATTEMPTS) {
+    if (this.totalAttempts >= MAX_ATTEMPTS) {
       this.opts.onError?.('max-reconnect-attempts');
       return;
     }
 
+    if (!this.switchedExchange && this.reconnectAttempts >= SWITCH_AFTER_ATTEMPTS) {
+      this.switchedExchange = true;
+      this.exchange = this.exchange === 'binance' ? 'kucoin' : 'binance';
+      this.reconnectAttempts = 0;
+      console.log(`[stream] switching exchange to ${this.exchange}`);
+    }
+
     this.reconnectAttempts++;
+    this.totalAttempts++;
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), MAX_BACKOFF_MS);
 
-    console.log(`[stream] reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
+    console.log(`[stream] reconnect (${this.exchange}) attempt ${this.totalAttempts} in ${delay}ms`);
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
+      if (this.destroyed) return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        this.scheduleReconnect();
+        return;
+      }
       this.connect();
     }, delay);
   }
@@ -198,7 +216,6 @@ export class PriceStream {
     this.heartbeatTimer = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         try {
-          // Отправляем пинг ТОЛЬКО для KuCoin (Binance не требует JSON-пингов)
           if (this.exchange === 'kucoin') {
             this.ws.send(JSON.stringify({ type: 'ping' }));
           }
@@ -226,7 +243,6 @@ export class PriceStream {
       this.reconnectTimer = null;
     }
     if (this.ws) {
-      // Снимаем колбэки до close(), чтобы не получить «последний вздох»
       try { this.ws.onmessage = null; } catch { /* silent */ }
       try { this.ws.onerror = null; } catch { /* silent */ }
       try { this.ws.onclose = null; } catch { /* silent */ }
