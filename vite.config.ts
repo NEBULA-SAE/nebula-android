@@ -1,5 +1,40 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type ProxyOptions } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
+import dns from 'node:dns';
+import https from 'node:https';
+
+// Принудительно используем IPv4, чтобы прокси не зависал на IPv6-маршрутах
+dns.setDefaultResultOrder('ipv4first');
+const ipv4Agent = new https.Agent({ family: 4, keepAlive: true });
+
+function proxyRule(
+  target: string,
+  prefix: string,
+  rewriteTo = '',
+  extra: Partial<ProxyOptions> = {}
+): ProxyOptions {
+  return {
+    target,
+    changeOrigin: true,
+    secure: true,
+    agent: ipv4Agent,
+    cookieDomainRewrite: '',
+    timeout: 10000,
+    proxyTimeout: 10000,
+    rewrite: (p) => p.replace(new RegExp(`^${prefix}`), rewriteTo),
+    configure: (proxy) => {
+      proxy.on('proxyReq', (proxyReq) => {
+        proxyReq.removeHeader('origin');
+        proxyReq.removeHeader('referer');
+        proxyReq.setHeader(
+          'user-agent',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        );
+      });
+    },
+    ...extra,
+  };
+}
 
 export default defineConfig({
   root: '.',
@@ -19,65 +54,20 @@ export default defineConfig({
     open: false,
     proxy: {
       // ─── GetBlock ───
-      '/proxy/getblock': {
-        target: 'https://dash.getblock.io',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/getblock/, ''),
-      },
-      '/proxy/gb-go': {
-        target: 'https://go.getblock.io',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/gb-go/, ''),
-      },
-      '/proxy/gb-shared': {
-        target: 'https://shared.eu-central-1.getblock.io',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/gb-shared/, ''),
-      },
+      '/proxy/getblock': proxyRule('https://dash.getblock.io', '/proxy/getblock'),
+      '/proxy/gb-go': proxyRule('https://go.getblock.io', '/proxy/gb-go'),
+      '/proxy/gb-shared': proxyRule('https://shared.eu-central-1.getblock.io', '/proxy/gb-shared'),
 
       // ─── Биржи (spot) ───
-      '/proxy/mexc': {
-        target: 'https://api.mexc.com',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/mexc/, ''),
-      },
-      '/proxy/binance-spot': {
-        target: 'https://api.binance.com',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/binance-spot/, ''),
-      },
-      '/proxy/okx': {
-        target: 'https://www.okx.com',
-        changeOrigin: true,
-        secure: true,
-        cookieDomainRewrite: '',
-        rewrite: (p) => p.replace(/^\/proxy\/okx/, ''),
-      },
-      '/proxy/gateio': {
-        target: 'https://api.gateio.ws',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/gateio/, ''),
-      },
-      '/proxy/bybit': {
-        target: 'https://api.bybit.com',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/bybit/, ''),
-      },
+      '/proxy/mexc': proxyRule('https://api.mexc.com', '/proxy/mexc'),
+      '/proxy/binance-spot': proxyRule('https://api.binance.com', '/proxy/binance-spot'),
+      '/proxy/okx': proxyRule('https://www.okx.com', '/proxy/okx'),
+      '/proxy/gateio': proxyRule('https://api.gateio.ws', '/proxy/gateio'),
+      '/proxy/bybit': proxyRule('https://api.bybit.com', '/proxy/bybit'),
 
       // ─── KuCoin ───
-      '/proxy/kucoin': {
-        target: 'https://api.kucoin.com',
-        changeOrigin: true,
-        secure: true,
-        cookieDomainRewrite: '', // ← ДОБАВИТЬ ЭТО: убирает ошибку Cookie __cf_bm
-        rewrite: (path: string) => path.replace(/^\/proxy\/kucoin/, ''),
-      },
-      '/proxy/kucoin-futures': {
-        target: 'https://api-futures.kucoin.com',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path: string) => path.replace(/^\/proxy\/kucoin-futures/, ''),
-      },
+      '/proxy/kucoin': proxyRule('https://api.kucoin.com', '/proxy/kucoin'),
+      '/proxy/kucoin-futures': proxyRule('https://api-futures.kucoin.com', '/proxy/kucoin-futures'),
       '/proxy/ws-kucoin': {
         target: 'wss://x-push-spot.kucoin.com',
         ws: true,
@@ -85,44 +75,20 @@ export default defineConfig({
       },
 
       // ─── Market data ───
-      '/proxy/coinpaprika': {
-        target: 'https://api.coinpaprika.com',
-        changeOrigin: true,
-        secure: true,
-        cookieDomainRewrite: '',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json',
-        },
-        rewrite: (p) => p.replace(/^\/proxy\/coinpaprika/, ''),
-      },
-      '/proxy/fng': {
-        target: 'https://api.alternative.me',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/fng/, ''),
-      },
-      '/proxy/cbr': {
-        target: 'https://www.cbr-xml-daily.ru',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/cbr/, ''),
-      },
-      '/proxy/dashcentral': {
-        target: 'https://www.dashcentral.org',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/dashcentral/, ''),
-      },
-      '/proxy/blockchair': {
-        target: 'https://api.blockchair.com',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/blockchair/, ''),
-      },
+      '/proxy/coinpaprika': proxyRule('https://api.coinpaprika.com', '/proxy/coinpaprika', '', {
+        headers: { Accept: 'application/json' },
+      }),
+      '/proxy/fng': proxyRule('https://api.alternative.me', '/proxy/fng'),
+      '/proxy/cbr': proxyRule('https://www.cbr-xml-daily.ru', '/proxy/cbr'),
+      '/proxy/dashcentral': proxyRule('https://www.dashcentral.org', '/proxy/dashcentral'),
+      '/proxy/blockchair': proxyRule('https://api.blockchair.com', '/proxy/blockchair'),
 
       // ─── VPS-прокси ───
-      '/proxy/binance-futures': {
-        target: 'https://nebula-oracle.duckdns.org:8443',
-        changeOrigin: true, secure: true,
-        rewrite: (p) => p.replace(/^\/proxy\/binance-futures/, '/binance-futures'),
-      },
+      '/proxy/binance-futures': proxyRule(
+        'https://nebula-oracle.duckdns.org:8443',
+        '/proxy/binance-futures',
+        '/binance-futures'
+      ),
     },
   },
 

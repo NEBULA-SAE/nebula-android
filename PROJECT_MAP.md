@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.45** | Branch: `main` | Commit: `a5c5811`
-> Generated: 2026-11-21 15:33
+> Version: **2.0.46** | Branch: `main` | Commit: `f36ff8e`
+> Generated: 2026-11-22 14:29
 
 ---
 
@@ -43,11 +43,26 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 ## Consistency check
 
-- `package.json` version: **2.0.45**
-- Last git tag: `v2.0.44`
+- `package.json` version: **2.0.46**
+- Last git tag: `v2.0.45`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `f36ff8e` - 2026-11-21 - chore(release): v2.0.45
+
+Files:
+- `.gitignore`
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `repomix.config.json`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
 
 ### `a5c5811` - 2026-11-21 - chore(release): v2.0.44
 
@@ -123,27 +138,13 @@ Files:
 - `src-tauri/tauri.conf.json`
 - `src/ui/screens.ts`
 
-### `904606c` - 2026-11-20 - chore(release): v2.0.40
-
-Files:
-- `AI_CONTEXT.md`
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `public/styles/new-skin.css`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-
 ## Last release diff
 
-No changes since `v2.0.44`
+No changes since `v2.0.45`
 
 ## Recent tags
 
+- `v2.0.45`
 - `v2.0.44`
 - `v2.0.43`
 - `v2.0.42`
@@ -153,7 +154,6 @@ No changes since `v2.0.44`
 - `v2.0.38`
 - `v2.0.37`
 - `v2.0.36`
-- `v2.0.35`
 
 ## File tree (src/)
 
@@ -990,6 +990,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- f36ff8e  2026-11-21  chore(release): v2.0.45
 - a5c5811  2026-11-21  chore(release): v2.0.44
 - e180104  2026-11-21  chore(release): v2.0.43
 - 1324cfa  2026-11-20  chore(release): v2.0.42
@@ -1004,7 +1005,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 4b13def  2026-11-03  chore(release): v2.0.33
 - 95f9b76  2026-11-03  chore(release): v2.0.32
 - a2ca92b  2026-11-02  chore(release): v2.0.31
-- 5b7bfc0  2026-11-02  before i18n fix
 
 ---
 

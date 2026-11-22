@@ -24,7 +24,7 @@ const REQUIRED_FUNCTIONS: Record<string, string[]> = {
 };
 
 const REQUIRED_DOM: string[] = [
-  'ticker', 'ticker-suggest', 'star-btn', 'chart-container',
+  'ticker', 'ticker-suggest', 'chart-container',
   'verdict', 'plan-card', 'agent-card', 'whale-card',
   'xray-card', 'walls-card', 'monitor-panel',
   'screen-home', 'screen-pro', 'screen-scanner',
