@@ -486,11 +486,44 @@
       <div class="card-body" id="monitor-content"></div>
     </div>
 
-    <!-- ═══ APP FOOTER (ПАРТНЕРЫ И БЕЛАЯ КНИГА) ═══ -->
+    <!-- ═══ APP FOOTER (РЕКЛАМНЫЙ СТЕНД + БЕЛАЯ КНИГА) ═══ -->
     <div class="app-footer">
-      <!-- Твоя картинка-баннер -->
-      <img src="/images/partners-main.jpg" class="footer-partner-img" onerror="this.style.display='none'">
-      
+      <div class="nebula-ad-stand" id="nebula-ad-stand">
+        <div class="nebula-ad-track" id="nebula-ad-track">
+          <!-- Слайд 1: NEBULA PRO -->
+          <div class="nebula-ad-slide" onclick="window.__nebulaAdSlideClick?.(0)">
+            <img src="/images/banner-1.jpg" alt="NEBULA PRO" class="nebula-ad-img" loading="lazy">
+            <span class="nebula-ad-tag">NEBULA</span>
+          </div>
+
+          <!-- Слайд 2: Радар китов и стенки -->
+          <div class="nebula-ad-slide" onclick="window.__nebulaAdSlideClick?.(1)">
+            <img src="/images/banner-2.jpg" alt="Радар китов и стенки" class="nebula-ad-img" loading="lazy">
+            <span class="nebula-ad-tag">PRO</span>
+          </div>
+
+          <!-- Слайд 3: Партнёрам + нажимаемая зона «РАЗМЕСТИТЬ РЕКЛАМУ» -->
+          <div class="nebula-ad-slide" onclick="window.__nebulaAdSlideClick?.(2)">
+            <img src="/images/banner-3.jpg" alt="NEBULA Партнёрам" class="nebula-ad-img" loading="lazy">
+            <span class="nebula-ad-tag">AD SLOT</span>
+            <a
+              href="https://t.me/VELOX_DEPIN"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="nebula-ad-cta-hit"
+              aria-label="Разместить рекламу в Telegram"
+              onclick="event.stopPropagation()"
+            ></a>
+          </div>
+        </div>
+
+        <div class="nebula-ad-dots" id="nebula-ad-dots">
+          <button type="button" class="nebula-ad-dot active" aria-label="Слайд 1" onclick="window.__nebulaAdGoTo?.(0)"></button>
+          <button type="button" class="nebula-ad-dot" aria-label="Слайд 2" onclick="window.__nebulaAdGoTo?.(1)"></button>
+          <button type="button" class="nebula-ad-dot" aria-label="Слайд 3" onclick="window.__nebulaAdGoTo?.(2)"></button>
+        </div>
+      </div>
+
       <button class="footer-btn" onclick="openWhitePaper()">
         <svg style="width:14px;height:14px;margin-right:6px;"><use href="#i-info"/></svg>
         <span id="lbl-white-paper">White Paper & Partners</span>
@@ -856,7 +889,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.50</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.51</div>
     </div>
 
     <div class="terms-body">
@@ -892,7 +925,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.50</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.51</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>

@@ -293,3 +293,100 @@ if (typeof document !== 'undefined') {
     initCollapsibleCards();
   }
 }
+
+// ─── РЕКЛАМНЫЙ СТЕНД В ФУТЕРЕ (АВТОЛИСТАНИЕ + СВАЙП + КЛИКИ) ───
+
+const AD_TOTAL_SLIDES = 3;
+const AD_INTERVAL_MS = 6000;
+let _adIndex = 0;
+let _adTimer: ReturnType<typeof setInterval> | null = null;
+let _adPaused = false;
+
+function renderAdPosition(index: number): void {
+  _adIndex = ((index % AD_TOTAL_SLIDES) + AD_TOTAL_SLIDES) % AD_TOTAL_SLIDES;
+  const track = document.getElementById('nebula-ad-track') as HTMLElement | null;
+  if (track) {
+    track.style.transform = `translateX(-${_adIndex * 100}%)`;
+  }
+  const dots = document.querySelectorAll('#nebula-ad-dots .nebula-ad-dot');
+  dots.forEach((dot, idx) => {
+    dot.classList.toggle('active', idx === _adIndex);
+  });
+}
+
+function restartAdTimer(): void {
+  if (_adTimer) clearInterval(_adTimer);
+  _adTimer = setInterval(() => {
+    if (!_adPaused && !document.hidden) {
+      renderAdPosition(_adIndex + 1);
+    }
+  }, AD_INTERVAL_MS);
+}
+
+function initFooterAdStand(): void {
+  const stand = document.getElementById('nebula-ad-stand');
+  if (!stand || stand.dataset.adInit === '1') return;
+  stand.dataset.adInit = '1';
+
+  stand.addEventListener('mouseenter', () => { _adPaused = true; });
+  stand.addEventListener('mouseleave', () => { _adPaused = false; });
+
+  let startX = 0;
+  let moved = false;
+
+  stand.addEventListener('touchstart', (e) => {
+    _adPaused = true;
+    startX = e.touches[0]?.clientX ?? 0;
+    moved = false;
+  }, { passive: true });
+
+  stand.addEventListener('touchmove', (e) => {
+    const dx = (e.touches[0]?.clientX ?? 0) - startX;
+    if (Math.abs(dx) > 12) moved = true;
+  }, { passive: true });
+
+  stand.addEventListener('touchend', (e) => {
+    const endX = e.changedTouches[0]?.clientX ?? startX;
+    const dx = endX - startX;
+    if (Math.abs(dx) > 40) {
+      renderAdPosition(dx < 0 ? _adIndex + 1 : _adIndex - 1);
+      restartAdTimer();
+    }
+    setTimeout(() => {
+      _adPaused = false;
+      moved = false;
+    }, 120);
+  });
+
+  (window as any).__nebulaAdGoTo = (idx: number) => {
+    renderAdPosition(idx);
+    restartAdTimer();
+  };
+
+  (window as any).__nebulaAdSlideClick = (idx: number) => {
+    if (moved) return;
+    if (idx === 0) {
+      (window as any).openProModal?.();
+    } else if (idx === 1) {
+      document.getElementById('whale-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (idx === 2) {
+      const cta = stand.querySelector('.nebula-ad-cta-hit') as HTMLAnchorElement | null;
+      if (cta?.href && !cta.href.includes('твой_ник')) {
+        window.open(cta.href, '_blank', 'noopener,noreferrer');
+      } else {
+        (window as any).openWhitePaper?.();
+      }
+    }
+  };
+
+  renderAdPosition(0);
+  restartAdTimer();
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFooterAdStand, { once: true });
+  } else {
+    initFooterAdStand();
+  }
+}

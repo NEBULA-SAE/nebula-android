@@ -2897,3 +2897,146 @@ body.skin-active #whale-status-badge.whale-badge-active {
   box-shadow: 0 0 16px rgba(34, 197, 94, 0.45), inset 0 0 8px rgba(34, 197, 94, 0.18) !important;
   text-shadow: 0 0 8px rgba(34, 197, 94, 0.65) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   РЕКЛАМНЫЙ СТЕНД В ФУТЕРЕ (КАРУСЕЛЬ + TELEGRAM CTA)
+   ═══════════════════════════════════════════════════════════════ */
+body.skin-active .footer-partner-img {
+  display: none !important;
+}
+
+body.skin-active .nebula-ad-stand {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto 14px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--skin-surface, #18181B);
+  user-select: none;
+}
+
+body.skin-active .nebula-ad-track {
+  display: flex;
+  width: 100%;
+  transform: translateX(0%);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+body.skin-active .nebula-ad-slide {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  min-height: 82px;
+  max-height: 220px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+body.skin-active .nebula-ad-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+body.skin-active .nebula-ad-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(10, 12, 16, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.72);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Кликабельная зона ровно по кнопке «РАЗМЕСТИТЬ РЕКЛАМУ» на 3-м баннере */
+body.skin-active .nebula-ad-cta-hit {
+  position: absolute;
+  left: 69%;
+  top: 39%;
+  width: 26%;
+  height: 29%;
+  border-radius: 10px;
+  z-index: 4;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+body.skin-active .nebula-ad-cta-hit:hover,
+body.skin-active .nebula-ad-cta-hit:active {
+  background: rgba(94, 203, 255, 0.14);
+  box-shadow: 0 0 0 1.5px rgba(94, 203, 255, 0.7);
+}
+
+/* Точки переключения внизу стенда */
+body.skin-active .nebula-ad-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(10, 12, 16, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 5;
+}
+
+body.skin-active .nebula-ad-dot {
+  width: 7px !important;
+  height: 7px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  cursor: pointer;
+  transition: width 0.25s ease, background 0.25s ease !important;
+}
+
+body.skin-active .nebula-ad-dot.active {
+  width: 20px !important;
+  background: var(--skin-accent, #1DB954) !important;
+}
+
+@media (max-width: 767px) {
+  body.skin-active .nebula-ad-stand {
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+  body.skin-active .nebula-ad-slide {
+    aspect-ratio: 3.2 / 1;
+    min-height: 76px;
+    max-height: 120px;
+  }
+  body.skin-active .nebula-ad-cta-hit {
+    left: 66%;
+    top: 36%;
+    width: 30%;
+    height: 34%;
+  }
+  body.skin-active .nebula-ad-dots {
+    bottom: 4px;
+    gap: 5px;
+    padding: 2px 6px;
+  }
+  body.skin-active .nebula-ad-dot {
+    width: 6px !important;
+    height: 6px !important;
+  }
+  body.skin-active .nebula-ad-dot.active {
+    width: 15px !important;
+  }
+}
