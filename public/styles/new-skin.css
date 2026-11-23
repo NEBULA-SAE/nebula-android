@@ -3015,17 +3015,24 @@ body.skin-active .nebula-ad-dot.active {
   body.skin-active .nebula-ad-stand {
     margin-bottom: 10px;
     border-radius: 10px;
+    background: #0E0E10;
   }
   body.skin-active .nebula-ad-slide {
-    aspect-ratio: 3.2 / 1;
-    min-height: 76px;
-    max-height: 120px;
+    aspect-ratio: 4 / 1;
+    min-height: 0;
+    max-height: none;
+    height: auto;
+  }
+  body.skin-active .nebula-ad-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
   body.skin-active .nebula-ad-cta-hit {
-    left: 66%;
-    top: 36%;
-    width: 30%;
-    height: 34%;
+    left: 69%;
+    top: 39%;
+    width: 26%;
+    height: 29%;
   }
   body.skin-active .nebula-ad-dots {
     bottom: 4px;

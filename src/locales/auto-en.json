@@ -407,6 +407,7 @@
   "ОСТОРОЖНО · ПРЕОБЛАДАЮТ РИСКИ": "CAUTION · RISKS ARE PREVIOUS",
   "УМЕРЕННО БЫЧИЙ ФОН": "MODERATELY BULLSHIP BACKGROUND",
   "УМЕРЕННО МЕДВЕЖИЙ ФОН": "MODERATELY BEARISH BACKGROUND",
+  "твой_ник": "your_nickname",
   "Лесенка из 3 входов распределяет риск по поддержкам (показана средняя цена). Стоп стоит на 8% ниже минимума диапазона. TP1–TP3 — поэтапная фиксация к верхней границе.": "A ladder of 3 inputs distributes the risk across supports (average price shown). The stop is 8% below the low of the range. TP1–TP3 - gradual fixation to the upper border.",
   "НАБЛЮДЕНИЕ": "OBSERVATION",
   "ЗЕЛЁНАЯ ЗОНА": "GREEN ZONE",
@@ -554,6 +555,5 @@
   "VWAP-зона крупного лимитного объёма в стакане. Сравниваем дистанцию до цены, долю в объёме стороны, подтверждение по биржам и изменение между циклами.": "VWAP zone with a large limit volume in the order book. We compare the distance to the price, the share in the volume of the party, confirmation by exchanges and the change between cycles.",
   "только что": "just now",
   "мин": "min",
-  "дн": "days",
-  "твой_ник": "your_nickname"
+  "дн": "days"
 }
