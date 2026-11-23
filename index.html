@@ -344,33 +344,49 @@
       <div id="chart-container"></div>
     </div>
 
-        <!-- ═══ MULTI-TF CONFLUENCE ═══ -->
+        <!-- ═══ 1. ГЛАВНЫЙ ИНДИКАТОР (СВОДКА ПО ВСЕМ МОДУЛЯМ) ═══ -->
+    <div class="card" id="master-signal-card" style="display:none;border-color:rgba(94,203,255,.28);">
+      <div class="card-body" id="master-signal-content" style="padding:12px 14px;"></div>
+    </div>
+
+    <!-- ═══ 2. ВЕРДИКТ ОРАКУЛА ═══ -->
+    <div class="verdict" id="verdict" style="display:none;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="mod-lamp lamp-off" id="lamp-oracle"></span>
+        <div class="verdict-title" id="verdict-title" style="margin:0;">—</div>
+      </div>
+      <div class="verdict-text" id="verdict-text">—</div>
+    </div>
+
+    <!-- ═══ 3. МУЛЬТИ-ТФ CONFLUENCE ═══ -->
     <div class="card" id="confluence-card" style="display:none;border-color:rgba(94,203,255,.2);">
       <div class="card-head" style="padding:10px 14px;">
         <div class="card-head-icon">
+          <span class="mod-lamp lamp-off" id="lamp-tf"></span>
           <svg style="color:var(--cyan);"><use href="#i-pulse"/></svg>
           <span id="lbl-confluence">Мульти-ТФ</span>
-          <!-- НОВАЯ КНОПКА ВОПРОСА -->
-          <button onclick="showConfluenceHelp()" style="background:none;border:none;color:var(--mut);font-size:16px;cursor:pointer;padding:0 0 0 6px;display:flex;align-items:center;" title="Что это?">❓</button>
         </div>
-        <span id="confluence-badge" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;"></span>
       </div>
       <div class="card-body" id="confluence-content" style="padding:10px 14px;"></div>
     </div>
 
-    <div class="verdict" id="verdict" style="display:none;">
-      <div class="verdict-title" id="verdict-title">—</div>
-      <div class="verdict-text" id="verdict-text">—</div>
-    </div>
-
+    <!-- ═══ 4. ТОРГОВЫЙ ПЛАН ═══ -->
     <div class="card" id="plan-card" style="display:none;">
-      <div class="card-head"><div class="card-head-icon"><svg><use href="#i-trending"/></svg><span id="lbl-plan">Trade plan</span></div></div>
+      <div class="card-head">
+        <div class="card-head-icon">
+          <span class="mod-lamp lamp-off" id="lamp-plan"></span>
+          <svg><use href="#i-trending"/></svg>
+          <span id="lbl-plan">Trade plan</span>
+        </div>
+      </div>
       <div class="card-body"><div class="plan-grid" id="plan-content"></div></div>
     </div>
 
+    <!-- ═══ 5. МНЕНИЕ ИИ ═══ -->
     <div class="card" id="agent-card" style="display:none;border-color:rgba(94,203,255,.3);">
       <div class="card-head">
         <div class="card-head-icon">
+          <span class="mod-lamp lamp-off" id="lamp-agent"></span>
           <svg style="color:var(--cyan);"><use href="#i-brain"/></svg>
           <span id="lbl-agent">AI opinion</span>
         </div>
@@ -403,9 +419,11 @@
       </div>
     </div>
 
+    <!-- ═══ 6. РАДАР КРУПНОГО КАПИТАЛА ═══ -->
     <div class="card" id="whale-card" style="display:none;border-color:rgba(94,203,255,.3);">
       <div class="card-head">
         <div class="card-head-icon">
+          <span class="mod-lamp lamp-off" id="lamp-whale"></span>
           <svg style="color:var(--cyan);"><use href="#i-whale"/></svg>
           <span id="lbl-whale">Радар крупного капитала</span>
         </div>
@@ -414,29 +432,45 @@
       <div class="card-body" id="whale-content">
         <div class="loader">...</div>
       </div>
-
-      <div id="dash-section" style="display:none;">
-        <div class="dash-section-head">
-          <div class="dash-section-title">
-            <svg class="dash-section-icon"><use href="#i-globe"/></svg>
-            <span>Сеть Dash</span>
-          </div>
-          <span id="dash-network-status" class="dash-section-badge"></span>
-        </div>
-        <div class="card-body" id="dash-network-content">
-          <div class="loader">...</div>
-        </div>
-      </div>
     </div>
 
+    <!-- ═══ 7. РЕНТГЕН ТОЛПЫ ═══ -->
     <div class="card" id="xray-card" style="display:none;">
-      <div class="card-head"><div class="card-head-icon"><svg><use href="#i-search"/></svg><span id="lbl-xray">Crowd x-ray</span></div></div>
+      <div class="card-head">
+        <div class="card-head-icon">
+          <span class="mod-lamp lamp-off" id="lamp-xray"></span>
+          <svg><use href="#i-search"/></svg>
+          <span id="lbl-xray">Crowd x-ray</span>
+        </div>
+      </div>
       <div class="card-body" id="xray-content"></div>
     </div>
 
+    <!-- ═══ 8. СТЕНКИ В СТАКАНЕ ═══ -->
     <div class="card" id="walls-card" style="display:none;">
-      <div class="card-head"><div class="card-head-icon"><svg><use href="#i-target"/></svg><span id="lbl-walls">Order book walls</span></div></div>
+      <div class="card-head">
+        <div class="card-head-icon">
+          <span class="mod-lamp lamp-off" id="lamp-walls"></span>
+          <svg><use href="#i-target"/></svg>
+          <span id="lbl-walls">Order book walls</span>
+        </div>
+      </div>
       <div class="card-body" id="walls-content"></div>
+    </div>
+
+    <!-- ═══ 9. СЕТЬ DASH (ОТДЕЛЬНО В САМОМ НИЗУ) ═══ -->
+    <div class="card" id="dash-section" style="display:none;">
+      <div class="dash-section-head">
+        <div class="dash-section-title">
+          <span class="mod-lamp lamp-off" id="lamp-dash"></span>
+          <svg class="dash-section-icon"><use href="#i-globe"/></svg>
+          <span>Сеть Dash</span>
+        </div>
+        <span id="dash-network-status" class="dash-section-badge"></span>
+      </div>
+      <div class="card-body" id="dash-network-content">
+        <div class="loader">...</div>
+      </div>
     </div>
 
 <div class="card" id="monitor-panel" style="display:none;border-color:rgba(69,224,168,.3);">
@@ -822,7 +856,7 @@
     <div class="about-hero">
       <img src="titlebar-logo.png" alt="NEBULA" onerror="this.style.display='none'" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
       <h2>NEBULA</h2>
-      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.49</div>
+      <div class="ver">ORACLE · TRADING TERMINAL · v2.0.50</div>
     </div>
 
     <div class="terms-body">
@@ -858,7 +892,7 @@
 
       <h4 id="about-version">Версия и сборка</h4>
       <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);line-height:1.8;">
-        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.49</b><br>
+        NEBULA Oracle Terminal · <b style="color:var(--cyan)">v2.0.50</b><br>
         <span id="about-build">Сборка: Tauri (Windows) + Capacitor (Android) + Web</span><br>
         Идентификатор: <code style="font-size:10px;">com.nebula.oracle</code>
       </p>
@@ -952,6 +986,52 @@
   @keyframes nebula-hospital-pulse {
     0% { stroke-dashoffset: 260; }
     100% { stroke-dashoffset: -200; }
+  }
+
+  /* Лампочки-индикаторы модулей */
+  .mod-lamp {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
+  }
+  .mod-lamp.lamp-off    { background: rgba(255,255,255,0.18); box-shadow: none; }
+  .mod-lamp.lamp-green  { background: var(--mint, #2dd4bf); box-shadow: 0 0 8px rgba(45,212,191,0.85); }
+  .mod-lamp.lamp-yellow { background: var(--amber, #fbbf24); box-shadow: 0 0 8px rgba(251,191,36,0.8); }
+  .mod-lamp.lamp-red    { background: var(--coral, #fb7185); box-shadow: 0 0 8px rgba(251,113,133,0.85); }
+  .mod-lamp.lamp-cyan   { background: var(--cyan, #5ecbff); box-shadow: 0 0 8px rgba(94,203,255,0.85); }
+
+  .master-lamp-orb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: master-lamp-pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes master-lamp-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.16); opacity: 0.8; }
+  }
+
+  .nebula-help-pill {
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--mut);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 2px 8px;
+    border-radius: 999px;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .nebula-help-pill:hover {
+    border-color: rgba(94,203,255,0.35);
+    color: var(--hi, #fff);
   }
 </style>
 <script type="module" src="/src/main.ts"></script>

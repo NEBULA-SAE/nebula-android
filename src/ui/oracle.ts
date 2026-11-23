@@ -34,6 +34,7 @@ import {
   renderWhaleData,
   fetchExtras,
 } from './whale';
+import { resetMasterSignal, setModuleSignal } from './master-signal';
 
 // ═══ ОСНОВНОЙ АНАЛИЗ ═══
 
@@ -97,6 +98,7 @@ export async function mobileAnalyze(): Promise<void> {
 
   state.lastOracleResult = null;
   state.lastMarketData = null;
+  resetMasterSignal(raw);
 
   const hint = document.getElementById('oracle-ticker-hint');
   if (hint) hint.textContent = raw;
@@ -193,6 +195,8 @@ export async function mobileAnalyze(): Promise<void> {
       setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tempStatus === 'red' ? tm('sell_text') : tm('flat_text')}`);
     }
 
+    const en = isEN();
+
     const planCard = document.getElementById('plan-card');
     if (planCard) {
       if (status === 'red') {
@@ -210,37 +214,197 @@ export async function mobileAnalyze(): Promise<void> {
           tp3: max120 * 0.98,
           stop: min120 * 0.92,
         };
-        
+
         // ⚠️ СОХРАНЯЕМ ПЛАН ДЛЯ ДЕМО-РЕЖИМА
         (window as any)._currentDemoPlan = p;
 
+        const avgEntry = (p.buy1 + p.buy2 + p.buy3) / 3;
+        const pctFrom = (target: number, base = price) => base > 0 ? ((target - base) / base) * 100 : 0;
+
+        const b2Pct = pctFrom(p.buy2);
+        const b3Pct = pctFrom(p.buy3);
+        const stopPct = pctFrom(p.stop);
+        const tp1Pct = pctFrom(p.tp1);
+        const tp2Pct = pctFrom(p.tp2);
+        const tp3Pct = pctFrom(p.tp3);
+
+        const riskCur = Math.max(price - p.stop, 1e-9);
+        const riskAvg = Math.max(avgEntry - p.stop, 1e-9);
+        const rrCur = Math.max(0, (p.tp2 - price) / riskCur);
+        const rrAvg = Math.max(0, (p.tp2 - avgEntry) / riskAvg);
+        setModuleSignal('plan', rrCur >= 2 ? 'green' : rrCur >= 1.2 ? 'yellow' : 'red');
+
+        const rrColor = rrCur >= 2 ? 'var(--mint)' : rrCur >= 1.2 ? 'var(--amber)' : 'var(--coral)';
+        const rrLabel = rrCur >= 2
+          ? (en ? `R/R 1:${rrCur.toFixed(1)} · GOOD` : `R/R 1:${rrCur.toFixed(1)} · ХОРОШИЙ`)
+          : rrCur >= 1.2
+            ? `R/R 1:${rrCur.toFixed(1)}`
+            : (en ? `R/R 1:${rrCur.toFixed(1)} · WEAK` : `R/R 1:${rrCur.toFixed(1)} · СЛАБЫЙ`);
+
+        const riskAbs = Math.abs(stopPct);
+        const rewardAbs = Math.max(0, tp2Pct);
+        const barSum = riskAbs + rewardAbs;
+        const riskBarPct = barSum > 0 ? Math.min(82, Math.max(18, Math.round((riskAbs / barSum) * 100))) : 50;
+        const rewardBarPct = 100 - riskBarPct;
+
+        const planInsights: string[] = [];
+        if (rrCur >= 2) {
+          planInsights.push(en
+            ? `Solid reward-to-risk (1:${rrCur.toFixed(1)} to TP2; 1:${rrAvg.toFixed(1)} with 3-step ladder).`
+            : `Хороший запас хода к риску (1:${rrCur.toFixed(1)} до TP2, а при наборе лесенкой — 1:${rrAvg.toFixed(1)}).`);
+        } else if (rrCur >= 1.2) {
+          planInsights.push(en
+            ? `Moderate R/R from market (1:${rrCur.toFixed(1)}). Scaling into Buy 2–3 improves it to 1:${rrAvg.toFixed(1)}.`
+            : `Умеренный R/R с текущих (1:${rrCur.toFixed(1)}). Набор лесенкой через вход 2–3 улучшает его до 1:${rrAvg.toFixed(1)}.`);
+        } else {
+          planInsights.push(en
+            ? `Tight R/R from current price (1:${rrCur.toFixed(1)}). Better wait for pullback to Buy 2 (${fmt(p.buy2)}).`
+            : `Слабый R/R с текущих (1:${rrCur.toFixed(1)}). Лучше ждать откат к уровню входа 2 (${fmt(p.buy2)}).`);
+        }
+        if (riskAbs > 15) {
+          planInsights.push(en
+            ? `Wide stop (-${riskAbs.toFixed(1)}%) — reduce position size or avoid leverage.`
+            : `Широкий стоп (-${riskAbs.toFixed(1)}%) — снижай размер позиции и не завышай плечо.`);
+        }
+
+        const planInfoText = en
+          ? '3-step entry ladder spreads risk across support levels (average entry shown). Stop sits 8% below the 120-candle low. TP1–TP3 scale out along the range toward the 120-candle high.'
+          : 'Лесенка из 3 входов распределяет риск по поддержкам (показана средняя цена). Стоп стоит на 8% ниже минимума диапазона. TP1–TP3 — поэтапная фиксация к верхней границе.';
+
+        const planContentEl = document.getElementById('plan-content');
+        if (planContentEl) planContentEl.style.display = 'block';
+
         setHTML('plan-content', `
-          <div><div class="plan-lbl">🔵 ${tm('entry')}</div>
-            <div class="plan-entry">1: ${fmt(p.buy1)}</div>
-            <div class="plan-entry">2: ${fmt(p.buy2)}</div>
-            <div class="plan-entry">3: ${fmt(p.buy3)}</div>
-            <span class="plan-stop">🛑 ${tm('stop')}: ${fmt(p.stop)}</span>
+          <div style="grid-column:1/-1;width:100%;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;">
+                <span>🎯</span>
+                <span>${en ? '3-Step Ladder & Targets' : 'Лесенка входов и цели'}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:0.6px;padding:2px 8px;border-radius:999px;color:${rrColor};border:1px solid ${rrColor};background:rgba(255,255,255,0.05);white-space:nowrap;">${rrLabel}</span>
+                <details style="font-family:'JetBrains Mono',monospace;">
+                  <summary style="list-style:none;cursor:pointer;font-size:9px;color:var(--mut);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:999px;user-select:none;">
+                    ℹ️ ${en ? 'How it works' : 'Справка'}
+                  </summary>
+                  <div style="margin-top:8px;padding:9px 11px;border-radius:10px;background:rgba(15,23,42,0.75);border:1px solid rgba(94,203,255,0.2);font-size:10.5px;line-height:1.45;color:var(--mut);max-width:520px;">
+                    ${planInfoText}
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;font-family:'JetBrains Mono',monospace;">
+              <div style="background:linear-gradient(145deg,rgba(94,203,255,0.09),rgba(255,255,255,0.015));border:1px solid rgba(94,203,255,0.26);border-radius:12px;padding:11px 12px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;">
+                  <span style="color:var(--mut);font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;">🔵 ${tm('entry')}</span>
+                  <span style="font-size:9px;color:var(--dim);">${en ? 'Avg' : 'Средн.'}: <b style="color:var(--cyan);">${fmt(avgEntry)}</b></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:var(--dim);">1 · ${en ? 'Market' : 'Текущая'}</span>
+                    <span style="color:var(--cyan);font-weight:700;">${fmt(p.buy1)} <span style="font-size:9.5px;color:var(--dim);font-weight:500;">(0%)</span></span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:var(--dim);">2 · ${en ? 'Pullback' : 'Откат'}</span>
+                    <span style="color:var(--cyan);font-weight:700;">${fmt(p.buy2)} <span style="font-size:9.5px;color:var(--dim);font-weight:500;">(${b2Pct.toFixed(1)}%)</span></span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="color:var(--dim);">3 · ${en ? 'Support' : 'Дно'}</span>
+                    <span style="color:var(--cyan);font-weight:700;">${fmt(p.buy3)} <span style="font-size:9.5px;color:var(--dim);font-weight:500;">(${b3Pct.toFixed(1)}%)</span></span>
+                  </div>
+                </div>
+                <div style="margin-top:9px;padding-top:8px;border-top:1px dashed rgba(251,113,133,0.3);display:flex;justify-content:space-between;align-items:center;font-size:11.5px;">
+                  <span style="color:var(--coral);font-weight:700;">🛑 ${tm('stop')}</span>
+                  <span style="color:var(--coral);font-weight:800;">${fmt(p.stop)} <span style="font-size:9.5px;opacity:.85;">(${stopPct.toFixed(1)}%)</span></span>
+                </div>
+              </div>
+
+              <div style="background:linear-gradient(145deg,rgba(45,212,191,0.09),rgba(255,255,255,0.015));border:1px solid rgba(45,212,191,0.26);border-radius:12px;padding:11px 12px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;">
+                  <span style="color:var(--mut);font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;">🟢 ${tm('targets')}</span>
+                  <span style="font-size:9px;color:var(--dim);">${en ? 'Max upside' : 'Потенциал'}: <b style="color:var(--mint);">+${tp3Pct.toFixed(1)}%</b></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:8px;background:rgba(45,212,191,0.06);">
+                    <span style="color:var(--mut);font-weight:600;">TP1 <span style="font-size:9px;color:var(--dim);">· 30%</span></span>
+                    <span style="color:var(--mint);font-weight:800;">${fmt(p.tp1)} <span style="font-size:9.5px;opacity:.9;">(+${tp1Pct.toFixed(1)}%)</span></span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:8px;background:rgba(45,212,191,0.08);">
+                    <span style="color:var(--mut);font-weight:600;">TP2 <span style="font-size:9px;color:var(--dim);">· 40%</span></span>
+                    <span style="color:var(--mint);font-weight:800;">${fmt(p.tp2)} <span style="font-size:9.5px;opacity:.9;">(+${tp2Pct.toFixed(1)}%)</span></span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-radius:8px;background:rgba(45,212,191,0.11);">
+                    <span style="color:var(--mut);font-weight:600;">TP3 <span style="font-size:9px;color:var(--dim);">· 30%</span></span>
+                    <span style="color:var(--mint);font-weight:800;">${fmt(p.tp3)} <span style="font-size:9.5px;opacity:.9;">(+${tp3Pct.toFixed(1)}%)</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);font-family:'JetBrains Mono',monospace;">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:9px;font-weight:700;margin-bottom:6px;">
+                <span style="color:var(--coral);">${en ? 'RISK TO STOP' : 'РИСК ДО СТОПА'} · -${riskAbs.toFixed(1)}%</span>
+                <span style="color:var(--mint);">+${rewardAbs.toFixed(1)}% · ${en ? 'REWARD TO TP2' : 'ПОТЕНЦИАЛ TP2'}</span>
+              </div>
+              <div style="display:flex;height:7px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.08);gap:2px;">
+                <div style="width:${riskBarPct}%;background:var(--coral);border-radius:999px 0 0 999px;"></div>
+                <div style="width:${rewardBarPct}%;background:var(--mint);border-radius:0 999px 999px 0;"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;padding:10px 12px;border-radius:11px;background:linear-gradient(90deg,rgba(94,203,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(94,203,255,0.22);display:flex;align-items:flex-start;gap:9px;">
+              <span style="font-size:14px;line-height:1.2;flex-shrink:0;">💡</span>
+              <div style="font-size:11.5px;line-height:1.45;color:var(--fg,#e6edf3);">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);font-weight:700;margin-bottom:3px;">
+                  ${en ? 'PLAN INSIGHT' : 'ИНФО ПО ПЛАНУ'}
+                </div>
+                <div>${planInsights.join(' ')}</div>
+              </div>
+            </div>
           </div>
-          <div><div class="plan-lbl">🟢 ${tm('targets')}</div>
-            <div class="plan-tp">TP1: ${fmt(p.tp1)}</div>
-            <div class="plan-tp">TP2: ${fmt(p.tp2)}</div>
-            <div class="plan-tp">TP3: ${fmt(p.tp3)}</div>
-          </div>`);
+        `);
       }
     }
 
     const agentCard = document.getElementById('agent-card');
     if (agentCard) {
       agentCard.style.display = 'block';
-      let aCls = 'yellow', aTitle = '', aText = '';
-      if (status === 'green') { aCls = 'green'; aTitle = '✅ ' + tm('agent_perfect'); aText = tm('agent_perfect_text'); }
-      else if (status === 'red') { aCls = 'red'; aTitle = '🚫 ' + tm('agent_forbid'); aText = tm('agent_forbid_text'); }
-      else { aCls = 'yellow'; aTitle = '⚖️ ' + tm('agent_watch'); aText = tm('agent_watch_text'); }
+      let aColor = 'var(--amber)', aBorder = 'rgba(251,191,36,0.28)', aBg = 'rgba(251,191,36,0.08)';
+      let aBadge = en ? 'WATCH' : 'НАБЛЮДЕНИЕ';
+      let aTitle = '⚖️ ' + tm('agent_watch');
+      let aText = tm('agent_watch_text');
+
+      if (status === 'green') {
+        aColor = 'var(--mint)'; aBorder = 'rgba(45,212,191,0.32)'; aBg = 'rgba(45,212,191,0.09)';
+        aBadge = en ? 'FAVORABLE' : 'ЗЕЛЁНАЯ ЗОНА';
+        aTitle = '✅ ' + tm('agent_perfect');
+        aText = tm('agent_perfect_text');
+      } else if (status === 'red') {
+        aColor = 'var(--coral)'; aBorder = 'rgba(251,113,133,0.34)'; aBg = 'rgba(251,113,133,0.1)';
+        aBadge = en ? 'OVERHEATED' : 'ПЕРЕГРЕВ';
+        aTitle = '🚫 ' + tm('agent_forbid');
+        aText = tm('agent_forbid_text');
+      }
+
+      setModuleSignal('agent', status === 'green' ? 'green' : status === 'red' ? 'red' : 'yellow');
+
       setHTML('agent-content', `
-        <div class="agent-title ${aCls}">${aTitle}</div>
-        <div class="agent-text">${aText}</div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.08);">
-          <button onclick="askAIMentor()" class="btn-primary btn-violet" style="margin:0;font-size:11px;">${tm('ask_ai_short')}</button>
+        <div style="background:linear-gradient(145deg,${aBg},rgba(255,255,255,0.015));border:1px solid ${aBorder};border-radius:12px;padding:12px 13px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <div style="font-size:14px;font-weight:800;color:${aColor};">${aTitle}</div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:0.6px;padding:2px 8px;border-radius:999px;color:${aColor};border:1px solid ${aColor};background:rgba(255,255,255,0.05);white-space:nowrap;">${aBadge}</span>
+          </div>
+          <div style="font-size:12px;line-height:1.5;color:var(--fg,#e6edf3);margin-bottom:10px;">${aText}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;">
+            <span style="padding:3px 8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--mut);">RSI <b style="color:#fff;">${rsiVal.toFixed(1)}</b></span>
+            <span style="padding:3px 8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--mut);">${tm('rebound')} <b style="color:var(--mint);">+${rebound.toFixed(1)}%</b></span>
+            <span style="padding:3px 8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--mut);">${en ? 'From high' : 'От хая'} <b style="color:var(--coral);">-${drop.toFixed(1)}%</b></span>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.08);">
+          <button onclick="askAIMentor()" class="btn-primary btn-violet" style="margin:0;font-size:11px;border-radius:10px;">✨ ${tm('ask_ai_short')}</button>
           <div id="ai-result" style="margin-top:12px;"></div>
         </div>
       `);
@@ -287,33 +451,57 @@ export async function mobileAnalyze(): Promise<void> {
     if (oracleResult.status === 'success') {
       const vd2 = document.getElementById('verdict');
       if (vd2 && oracleResult.verdict_text) {
-        // ⚡️ МАГИЯ ТУТ: Баннер красится по вердикту Оракула, а не по тупой математике
-        if (oracleResult.verdict === 'strong_buy' || oracleResult.verdict === 'buy') {
-          vd2.className = 'verdict green';
-          setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tm('oracle_recommends_buy')}`);
-        } else if (oracleResult.verdict === 'avoid') {
-          vd2.className = 'verdict red';
-          setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tm('agent_forbid_text')}`);
-        } else {
-          vd2.className = 'verdict yellow';
-          setHTML('verdict-text', `RSI: <b style="color:#fff">${rsiVal.toFixed(1)}</b> · ${tm('rebound')}: <b style="color:#fff">+${rebound.toFixed(1)}%</b><br>${tm('flat_text')}`);
-        }
+        const isBuy = oracleResult.verdict === 'strong_buy' || oracleResult.verdict === 'buy';
+        const isAvoid = oracleResult.verdict === 'avoid';
+        setModuleSignal('oracle', isBuy ? 'green' : isAvoid ? 'red' : 'yellow');
+
+        vd2.className = 'verdict ' + (isBuy ? 'green' : isAvoid ? 'red' : 'yellow');
+        const vColor = isBuy ? 'var(--mint)' : isAvoid ? 'var(--coral)' : 'var(--amber)';
+        const vSummary = isBuy ? tm('oracle_recommends_buy') : isAvoid ? tm('agent_forbid_text') : tm('flat_text');
+        const vBadge = oracleResult.verdict === 'strong_buy' ? 'STRONG BUY'
+          : oracleResult.verdict === 'buy' ? 'BUY'
+          : isAvoid ? 'AVOID' : 'HOLD';
+
+        setHTML('verdict-text', `
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <div style="font-size:12.5px;color:var(--fg,#e6edf3);font-weight:600;">${vSummary}</div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:0.7px;padding:3px 9px;border-radius:999px;color:${vColor};border:1px solid ${vColor};background:rgba(255,255,255,0.05);white-space:nowrap;">
+              ${vBadge} · ${oracleResult.confidence ?? 0}%
+            </span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;">
+            <span style="padding:3px 8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--mut);">RSI <b style="color:#fff;">${rsiVal.toFixed(1)}</b></span>
+            <span style="padding:3px 8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--mut);">${tm('rebound')} <b style="color:var(--mint);">+${rebound.toFixed(1)}%</b></span>
+          </div>
+        `);
 
         const oldOracle = vd2.querySelector('.oracle-line');
         if (oldOracle) oldOracle.remove();
         const oracleDiv = document.createElement('div');
         oracleDiv.className = 'oracle-line';
-        oracleDiv.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.06);font-size:11.5px;color:var(--cyan);line-height:1.6;';
+        oracleDiv.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08);';
 
-              const sc = (oracleResult as any).scenarios;
+        const sc = (oracleResult as any).scenarios;
         if (sc) {
           const vLabel = (v: string) => tm('v_' + v);
-          oracleDiv.innerHTML =
-            `🔮 <b>${tm('verdict_base_label')}:</b> ${vLabel(sc.base.verdict)} (${sc.base.prob}%)` +
-            ` · 🚀 <b>${tm('verdict_bull_label')}:</b> ${vLabel(sc.bull.verdict)} (${sc.bull.prob}%)` +
-            ` · ⚠️ <b>${tm('verdict_bear_label')}:</b> ${vLabel(sc.bear.verdict)} (${sc.bear.prob}%)`;
+          oracleDiv.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;font-family:'JetBrains Mono',monospace;">
+              <div style="padding:7px 9px;border-radius:9px;background:rgba(94,203,255,0.07);border:1px solid rgba(94,203,255,0.22);">
+                <div style="font-size:8.5px;color:var(--cyan);text-transform:uppercase;letter-spacing:0.8px;">🔮 ${tm('verdict_base_label')}</div>
+                <div style="font-size:11px;color:var(--fg,#e6edf3);font-weight:700;margin-top:2px;">${vLabel(sc.base.verdict)} <span style="color:var(--cyan);">(${sc.base.prob}%)</span></div>
+              </div>
+              <div style="padding:7px 9px;border-radius:9px;background:rgba(45,212,191,0.07);border:1px solid rgba(45,212,191,0.22);">
+                <div style="font-size:8.5px;color:var(--mint);text-transform:uppercase;letter-spacing:0.8px;">🚀 ${tm('verdict_bull_label')}</div>
+                <div style="font-size:11px;color:var(--fg,#e6edf3);font-weight:700;margin-top:2px;">${vLabel(sc.bull.verdict)} <span style="color:var(--mint);">(${sc.bull.prob}%)</span></div>
+              </div>
+              <div style="padding:7px 9px;border-radius:9px;background:rgba(251,113,133,0.07);border:1px solid rgba(251,113,133,0.22);">
+                <div style="font-size:8.5px;color:var(--coral);text-transform:uppercase;letter-spacing:0.8px;">⚠️ ${tm('verdict_bear_label')}</div>
+                <div style="font-size:11px;color:var(--fg,#e6edf3);font-weight:700;margin-top:2px;">${vLabel(sc.bear.verdict)} <span style="color:var(--coral);">(${sc.bear.prob}%)</span></div>
+              </div>
+            </div>
+          `;
         } else {
-          oracleDiv.textContent = `🔮 ${oracleResult.verdict_text} · ${oracleResult.confidence}%`;
+          oracleDiv.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);">🔮 ${oracleResult.verdict_text} · ${oracleResult.confidence}%</div>`;
         }
         vd2.appendChild(oracleDiv);
       }
@@ -568,6 +756,19 @@ export function renderConfluence(result: ConfluenceResult): void {
   }
 
   card.style.display = 'block';
+  const en = isEN();
+  setModuleSignal(
+    'tf',
+    result.overall === 'strong_buy' || result.overall === 'buy'
+      ? 'green'
+      : result.overall === 'avoid'
+        ? 'red'
+        : 'yellow'
+  );
+
+  const overallColor =
+    result.overall === 'strong_buy' || result.overall === 'buy' ? 'var(--mint)'
+    : result.overall === 'avoid' ? 'var(--coral)' : 'var(--amber)';
 
   if (badge) {
     const labels: Record<string, string> = {
@@ -578,34 +779,62 @@ export function renderConfluence(result: ConfluenceResult): void {
       no_data: '—',
     };
     badge.textContent = labels[result.overall] || '—';
-    badge.style.color =
-      result.overall === 'strong_buy' || result.overall === 'buy' ? 'var(--mint)' :
-      result.overall === 'avoid' ? 'var(--coral)' : 'var(--amber)';
+    badge.style.color = overallColor;
   }
 
   const tfHtml = result.signals.map(s => {
-    const color = !s.ok ? 'var(--dim)' :
-      s.verdict === 'buy' ? 'var(--mint)' :
-      s.verdict === 'avoid' ? 'var(--coral)' : 'var(--amber)';
-    const icon = !s.ok ? '—' :
-      s.verdict === 'buy' ? '✅' :
-      s.verdict === 'avoid' ? '❌' : '⚖️';
+    const color = !s.ok ? 'var(--dim)'
+      : s.verdict === 'buy' ? 'var(--mint)'
+      : s.verdict === 'avoid' ? 'var(--coral)' : 'var(--amber)';
+    const bg = !s.ok ? 'rgba(255,255,255,0.02)'
+      : s.verdict === 'buy' ? 'rgba(45,212,191,0.08)'
+      : s.verdict === 'avoid' ? 'rgba(251,113,133,0.08)' : 'rgba(251,191,36,0.07)';
+    const border = !s.ok ? 'rgba(255,255,255,0.08)'
+      : s.verdict === 'buy' ? 'rgba(45,212,191,0.3)'
+      : s.verdict === 'avoid' ? 'rgba(251,113,133,0.3)' : 'rgba(251,191,36,0.28)';
+    const statusTxt = !s.ok ? '—'
+      : s.verdict === 'buy' ? 'BUY'
+      : s.verdict === 'avoid' ? 'AVOID' : 'HOLD';
+
     return `
-      <div class="conf-tf" style="border-color:${s.ok ? color : 'var(--border)'}">
-        <div class="conf-tf-label">${s.tf.toUpperCase()}</div>
-        <div class="conf-tf-rsi" style="color:${color}">RSI ${s.rsi.toFixed(0)}</div>
-        <div class="conf-tf-verdict" style="color:${color}">${icon}</div>
+      <div style="background:linear-gradient(145deg,${bg},rgba(255,255,255,0.01));border:1px solid ${border};border-radius:11px;padding:9px 10px;font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+          <span style="font-size:10px;font-weight:800;color:var(--fg,#e6edf3);letter-spacing:0.8px;">${s.tf.toUpperCase()}</span>
+          <span style="font-size:8px;font-weight:700;padding:1px 6px;border-radius:999px;color:${color};border:1px solid ${color};background:rgba(255,255,255,0.04);">${statusTxt}</span>
+        </div>
+        <div style="font-size:14px;font-weight:800;color:${color};margin-top:2px;">RSI ${s.ok ? s.rsi.toFixed(0) : '—'}</div>
       </div>`;
   }).join('');
 
+  const tfInfoText = en
+    ? 'Checks RSI across 3 timeframes (1H, 1D, 1W). When short and higher timeframes align in BUY, the signal is much more reliable than a single timeframe.'
+    : 'Сверяет RSI сразу на 3 таймфреймах (1H, 1D, 1W). Когда младший и старшие ТФ одновременно показывают BUY — сигнал намного надёжнее, чем на одном графике.';
+
   content.innerHTML = `
-    <div class="conf-grid">${tfHtml}</div>
-    <div class="conf-summary">
-      <div class="conf-summary-text">
-        ${result.buyCount}/${result.totalCount} buy · ${tm('journal_confidence')} <b>${result.confidence}%</b>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:1.1px;">
+        📡 ${en ? 'Timeframe Alignment' : 'Согласованность ТФ'}
       </div>
-      <div class="conf-bar">
-        <div class="conf-fill" style="width:${result.confidence}%"></div>
+      <details style="font-family:'JetBrains Mono',monospace;">
+        <summary style="list-style:none;cursor:pointer;font-size:9px;color:var(--mut);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:999px;user-select:none;">
+          ℹ️ ${en ? 'How it works' : 'Справка'}
+        </summary>
+        <div style="margin-top:8px;padding:9px 11px;border-radius:10px;background:rgba(15,23,42,0.75);border:1px solid rgba(94,203,255,0.2);font-size:10.5px;line-height:1.45;color:var(--mut);max-width:520px;">
+          ${tfInfoText}
+        </div>
+      </details>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:8px;">
+      ${tfHtml}
+    </div>
+    <div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);font-family:'JetBrains Mono',monospace;">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:9.5px;margin-bottom:6px;">
+        <span style="color:var(--mut);">${result.buyCount}/${result.totalCount} ${en ? 'TFs bullish' : 'ТФ за покупку'}</span>
+        <span style="color:${overallColor};font-weight:700;">${tm('journal_confidence')} ${result.confidence}%</span>
+      </div>
+      <div style="height:6px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.08);">
+        <div style="width:${result.confidence}%;height:100%;background:${overallColor};border-radius:999px;transition:width 0.35s ease;"></div>
       </div>
     </div>
   `;

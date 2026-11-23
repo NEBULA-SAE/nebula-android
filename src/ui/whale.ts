@@ -9,6 +9,7 @@ import { getAggregatedFunding } from '../sources/funding';
 import { getAggregatedOrderbook } from '../sources/orderbook';
 import { state } from '../utils';
 import { audioService } from '../services/audio';
+import { setModuleSignal } from './master-signal';
 
 let _extrasTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -267,7 +268,6 @@ interface SignalItem {
   value: string;
   color: string;
   strength: 'strong' | 'medium' | 'weak';
-  what: string;
   react: string;
   active: boolean;
 }
@@ -285,21 +285,9 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: `${z.toFixed(2)}σ`,
       color: z >= 2.5 ? 'var(--cyan)' : z >= 1.5 ? 'var(--amber)' : 'var(--mut)',
       strength,
-      what: `
-        <span class="pc-only">${T(
-          'Z-score показывает, насколько объём последних свечей выше обычного. 2.5σ — это крупный вход, в 2.5 раза выше стандартного разброса за 30 дней.',
-          'Z-score shows how much the recent volume exceeds the norm. 2.5σ means a large entry — 2.5x the standard deviation over 30 days.'
-        )}</span>
-        <span class="mobile-only">${T(
-          'Объём в 2.5σ раз выше нормы. Крупный игрок вошёл в рынок.',
-          'Volume is 2.5σ above normal. A big player entered the market.'
-        )}</span>
-      `,
       react: z >= 2.5
-        ? `<span class="pc-only">${T('Смотри на свечу: растёт на объёме — покупают, падает — продают, стоит на месте — кто-то копит (поглощение).', 'Look at the candle: rising on volume — buyers, falling — sellers, flat — someone is accumulating (absorption).')}</span>
-           <span class="mobile-only">${T('📈 Растёт = покупают. 📉 Падает = продают. 😐 Стоит = копят.', '📈 Up = buying. 📉 Down = selling. 😐 Flat = accumulating.')}</span>`
-        : `<span class="pc-only">${T('Объём в норме, крупных входов не видно.', 'Volume is normal, no big entries visible.')}</span>
-           <span class="mobile-only">${T('Объём в норме. Ждём.', 'Volume is normal. Waiting.')}</span>`,
+        ? T('Аномальный всплеск. Рост = покупают, падение = льют, флэт = поглощение.', 'Volume spike. Up = buying, down = selling, flat = absorption.')
+        : T('Объём в норме, крупных входов не видно.', 'Volume is normal, no big entries.'),
       active: z >= 2.5,
     });
   }
@@ -312,18 +300,11 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: v.obvTrend,
       color: v.isRising ? 'var(--mint)' : v.isFalling ? 'var(--coral)' : 'var(--mut)',
       strength: v.isRising || v.isFalling ? 'medium' : 'weak',
-      what: `
-        <span class="pc-only">${T('On-Balance Volume — суммарный объём с учётом направления свечей. Показывает, кто давит — покупатели или продавцы, даже если цена стоит.', 'On-Balance Volume — cumulative volume weighted by candle direction. Shows who is pushing — buyers or sellers — even if the price is flat.')}</span>
-        <span class="mobile-only">${T('Накопление объёма. Показывает скрытое давление покупателей.', 'Volume accumulation. Shows hidden buyer pressure.')}</span>
-      `,
       react: v.isRising
-        ? `<span class="pc-only">${T('Идёт накопление. Если цена при этом в боковике — крупный тихо набирает позицию.', 'Accumulation is underway. If price is sideways meanwhile — someone big is quietly building a position.')}</span>
-           <span class="mobile-only">${T('🟢 Идёт набор позиции. Цена может выстрелить.', '🟢 Accumulation. Price may shoot up.')}</span>`
+        ? T('Идёт скрытое накопление объёма покупателями.', 'Quiet buyer accumulation underway.')
         : v.isFalling
-          ? `<span class="pc-only">${T('Распределение. Даже если цена растёт — за этим могут стоять продажи крупных.', 'Distribution. Even if price rises — big players may be selling into it.')}</span>
-           <span class="mobile-only">${T('🔴 Крупные сбрасывают. Осторожно.', '🔴 Big players selling. Be careful.')}</span>`
-          : `<span class="pc-only">${T('Нейтрально, явного перевеса нет.', 'Neutral, no clear bias.')}</span>
-           <span class="mobile-only">${T('⚖️ Нейтрально.', '⚖️ Neutral.')}</span>`,
+          ? T('Идёт распределение — крупные могут сбрасывать.', 'Distribution — big players may be selling.')
+          : T('Нейтрально, явного перевеса нет.', 'Neutral, no clear bias.'),
       active: v.isRising || v.isFalling,
     });
   }
@@ -345,16 +326,12 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: `${chg >= 0 ? '+' : ''}${chg.toFixed(1)}% · ${v.oiTrend || 'flat'}`,
       color: fvColor,
       strength,
-      what: `
-        <span class="pc-only">${T('Open Interest — сумма всех открытых фьючерсных позиций. Показывает, заходят ли в рынок новые деньги или закрываются старые.', 'Open Interest — the sum of all open futures positions. Shows whether new money enters the market or old positions are closed.')}</span>
-        <span class="mobile-only">${T('Сумма всех открытых фьючерсных позиций.', 'Total open futures positions.')}</span>
-      `,
       react:
-        v.futuresVerdict === 'new_longs' ? `<span class="pc-only">${T('OI растёт, цена растёт — новые лонги. Тренд сильный, но следи за funding: если он высокий, возможна коррекция.', 'OI rises, price rises — new longs. Trend is strong, but watch funding: if it is high, a correction may come.')}</span><span class="mobile-only">${T('🚀 Новые лонги. Тренд вверх, но следи за перегревом.', '🚀 New longs. Uptrend, but watch for overheat.')}</span>`
-        : v.futuresVerdict === 'new_shorts' ? `<span class="pc-only">${T('OI растёт, цена падает — новые шорты. Давление вниз, но при негативном funding возможен сквиз вверх.', 'OI rises, price falls — new shorts. Downward pressure, but a squeeze up is possible with negative funding.')}</span><span class="mobile-only">${T('🔻 Новые шорты. Давят вниз.', '🔻 New shorts. Pushing down.')}</span>`
-        : v.futuresVerdict === 'short_cover' ? `<span class="pc-only">${T('OI падает, цена растёт — шорты закрываются. Импульс вверх на закрытиях, но это не новые деньги.', 'OI falls, price rises — shorts are covering. Upward impulse on closes, but not new money.')}</span><span class="mobile-only">${T('⚡ Шорты закрываются. Растёт на закрытиях.', '⚡ Shorts covering. Rising on closures.')}</span>`
-        : v.futuresVerdict === 'long_liq' ? `<span class="pc-only">${T('OI падает, цена падает — лонги ликвидируются. Возможна капитуляция, но не входи против тренда без подтверждения.', 'OI falls, price falls — longs are being liquidated. Capitulation possible, but do not trade against the trend without confirmation.')}</span><span class="mobile-only">${T('💀 Ликвидация лонгов. Возможна капитуляция.', '💀 Long liquidation. Capitulation possible.')}</span>`
-        : `<span class="pc-only">${T('OI без явного сигнала.', 'OI without a clear signal.')}</span><span class="mobile-only">${T('OI без сигнала.', 'OI no signal.')}</span>`,
+        v.futuresVerdict === 'new_longs' ? T('Новые лонги заходят в рынок. Тренд поддержан деньгами.', 'New longs entering. Trend backed by money.')
+        : v.futuresVerdict === 'new_shorts' ? T('Новые шорты давят вниз. При минус-фандинге риск сквиза.', 'New shorts pushing down. Watch for squeeze.')
+        : v.futuresVerdict === 'short_cover' ? T('Рост на закрытии шортов, не на новых покупках.', 'Rising on short covering, not fresh buys.')
+        : v.futuresVerdict === 'long_liq' ? T('Ликвидация лонгов. Не лови ножи без подтверждения.', 'Long liquidations. Do not catch knives.')
+        : T('OI без явного перекоса.', 'OI without a clear signal.'),
       active: abs >= 3,
     });
   }
@@ -373,15 +350,11 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: glob != null ? `${top.toFixed(2)} / ${glob.toFixed(2)}` : top.toFixed(2),
       color: isBull ? 'var(--mint)' : isBear ? 'var(--coral)' : 'var(--mut)',
       strength,
-      what: `
-        <span class="pc-only">${T('Long/Short Ratio. Первое число — топ-трейдеры, второе — толпа. Показывает, на чьей стороне умные деньги.', 'Long/Short Ratio. First number — top traders, second — the crowd. Shows which side smart money is on.')}</span>
-        <span class="mobile-only">${T('Топ-трейдеры / Толпа. Умные против толпы.', 'Top traders / Crowd. Smart vs crowd.')}</span>
-      `,
       react: isBull
-        ? `<span class="pc-only">${T('Топ в лонгах, толпа в шортах — классический бычий сигнал. Умные против толпы.', 'Top in longs, crowd in shorts — classic bullish. Smart money against the crowd.')}</span><span class="mobile-only">${T('🟢 Топ в лонг, толпа в шорт. Бычий.', '🟢 Top in long, crowd in short. Bullish.')}</span>`
+        ? T('Топ в лонгах, толпа в шортах — умные против толпы.', 'Top long, crowd short — smart money bullish.')
         : isBear
-          ? `<span class="pc-only">${T('Топ в шортах, толпа в лонгах — тревожно. Умные фиксируются, толпа покупает.', 'Top in shorts, crowd in longs — warning. Smart money is taking profit, crowd is buying.')}</span><span class="mobile-only">${T('🔴 Топ в шорт, толпа в лонг. Медвежий.', '🔴 Top in short, crowd in long. Bearish.')}</span>`
-          : `<span class="pc-only">${T('Топ и толпа смотрят в одну сторону — сигнала нет.', 'Top and crowd on the same side — no signal.')}</span><span class="mobile-only">${T('⚖️ Смотрят в одну сторону.', '⚖️ Same side.')}</span>`,
+          ? T('Топ в шортах, толпа в лонгах — умные фиксируются.', 'Top short, crowd long — smart money exiting.')
+          : T('Топ и толпа смотрят в одну сторону.', 'Top and crowd on the same side.'),
       active: isBull || isBear,
     });
   }
@@ -399,21 +372,51 @@ function buildSignals(v: WhaleMergedData): SignalItem[] {
       value: t.toFixed(2),
       color: isBull ? 'var(--mint)' : isBear ? 'var(--coral)' : 'var(--mut)',
       strength,
-      what: `
-        <span class="pc-only">${T('Соотношение агрессивных рыночных покупок и продаж. Показывает, кто бьёт по рынку прямо сейчас.', 'Ratio of aggressive market buys to sells. Shows who is hitting the market right now.')}</span>
-        <span class="mobile-only">${T('Агрессия. Кто бьёт по рынку прямо сейчас.', 'Aggression. Who hits the market now.')}</span>
-      `,
       react: isBull
-        ? `<span class="pc-only">${T('Покупатели агрессивнее. Краткосрочно бычий, но если funding уже высокий — риск перегрева.', 'Buyers are more aggressive. Short-term bullish, but if funding is already high — risk of overheat.')}</span><span class="mobile-only">${T('🟢 Покупатели давят. Следи за funding.', '🟢 Buyers pushing. Watch funding.')}</span>`
+        ? T('Покупатели бьют по рынку агрессивнее продавцов.', 'Buyers hitting the market more aggressively.')
         : isBear
-          ? `<span class="pc-only">${T('Продавцы агрессивнее. Краткосрочно медвежий, но если funding отрицательный — возможен сквиз.', 'Sellers are more aggressive. Short-term bearish, but a squeeze is possible with negative funding.')}</span><span class="mobile-only">${T('🔴 Продавцы давят. Возможен сквиз.', '🔴 Sellers pushing. Squeeze possible.')}</span>`
-          : `<span class="pc-only">${T('Паритет. Рынок не определился.', 'Parity. Market is undecided.')}</span><span class="mobile-only">${T('⚖️ Паритет.', '⚖️ Parity.')}</span>`,
+          ? T('Продавцы агрессивнее бьют по рынку прямо сейчас.', 'Sellers hitting the market more aggressively.')
+          : T('Паритет по рыночным сделкам.', 'Market orders are balanced.'),
       active: isBull || isBear,
     });
   }
 
   const order = { strong: 0, medium: 1, weak: 2 };
   return out.sort((a, b) => order[a.strength] - order[b.strength]);
+}
+
+function buildSmartWhaleInsight(v: WhaleMergedData, activeCount: number, en: boolean): string {
+  const parts: string[] = [];
+
+  if (v.isWhaleActive) {
+    if (v.pressure === 'buying') {
+      parts.push(en ? `Strong whale buying spike (${v.zScore.toFixed(1)}σ).` : `Зафиксирован крупный вход покупателей (${v.zScore.toFixed(1)}σ).`);
+    } else if (v.pressure === 'selling') {
+      parts.push(en ? `Heavy whale selling spike (${v.zScore.toFixed(1)}σ).` : `Зафиксирован крупный сброс объёма (${v.zScore.toFixed(1)}σ).`);
+    } else if (v.pressure === 'absorption') {
+      parts.push(en ? `High volume absorption (${v.zScore.toFixed(1)}σ) with flat price — big player quietly building.` : `Поглощение на высоком объёме (${v.zScore.toFixed(1)}σ) при стоящей цене — идёт скрытый набор.`);
+    }
+  }
+
+  if (v.futuresVerdict === 'new_longs') {
+    parts.push(en ? 'Futures confirm fresh longs entering.' : 'Фьючерсы подтверждают приток новых лонгов.');
+  } else if (v.futuresVerdict === 'new_shorts') {
+    parts.push(en ? 'Futures show fresh short pressure.' : 'На фьючерсах заходят новые шорты.');
+  } else if (v.futuresVerdict === 'short_cover') {
+    parts.push(en ? 'Move is fueled by short covering rather than new demand.' : 'Движение идёт на закрытии шортов, а не на новых деньгах.');
+  } else if (v.futuresVerdict === 'long_liq') {
+    parts.push(en ? 'Long liquidations underway — wait for stabilization.' : 'Идёт вынос лонгов — лучше дождаться стабилизации.');
+  }
+
+  if (!parts.length) {
+    if (activeCount >= 2) {
+      parts.push(en ? 'Moderate capital flow detected across multiple metrics — keep an eye on confirmation.' : 'Умеренная активность капитала сразу по нескольким метрикам — следи за подтверждением.');
+    } else {
+      parts.push(en ? 'No anomalous whale entries right now. Market is moving on regular flow.' : 'Аномальных входов китов сейчас нет. Рынок движется на обычном потоке.');
+    }
+  }
+
+  return parts.join(' ');
 }
 
 // ─── РЕНДЕР КАРТОЧКИ WHALE ───
@@ -437,25 +440,27 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
     return;
   }
 
+  const en = isEN();
   const isActive = volData.isWhaleActive || volData.score > 50;
-  
-  // Если не PRO — оставляем только Volume и OBV
+
   let signals = buildSignals(volData);
   if (!state.isPro) {
     signals = signals.filter(s => s.key === 'volume' || s.key === 'obv');
   }
-  
+
   const activeSignals = signals.filter(s => s.active);
 
   if (badge) {
-    if (isActive) {
-      badge.textContent = T('🐋 АКТИВЕН', '🐋 ACTIVE');
-      badge.style.color = 'var(--cyan)';
-      badge.style.textShadow = '0 0 10px rgba(94,203,255,.6)';
+    badge.classList.remove('whale-badge-calm', 'whale-badge-waking', 'whale-badge-active');
+    if (volData.isWhaleActive || volData.score >= 60) {
+      badge.textContent = T('🐋 КАПИТАЛ ВОШЁЛ', '🐋 WHALE IN');
+      badge.classList.add('whale-badge-active');
+    } else if (volData.score >= 35 || activeSignals.length >= 2) {
+      badge.textContent = T('⚡ ПОЯВЛЯЕТСЯ', '⚡ WAKING UP');
+      badge.classList.add('whale-badge-waking');
     } else {
       badge.textContent = T('СПОКОЙНО', 'CALM');
-      badge.style.color = 'var(--dim)';
-      badge.style.textShadow = 'none';
+      badge.classList.add('whale-badge-calm');
     }
   }
 
@@ -468,52 +473,90 @@ export function renderWhaleData(volData: WhaleMergedData | null): void {
   }
 
   const scoreColor = volData.score > 60 ? 'var(--cyan)' : volData.score > 30 ? 'var(--amber)' : 'var(--mut)';
-
-  let verdictText = '';
-  let verdictColor = 'var(--mut)';
-  if (volData.score > 60) { verdictText = tm('whale_verdict_strong'); verdictColor = 'var(--cyan)'; }
-  else if (volData.score > 40) { verdictText = tm('whale_verdict_moderate'); verdictColor = 'var(--amber)'; }
-  else { verdictText = tm('whale_verdict_calm'); verdictColor = 'var(--mut)'; }
-
   const srcCov = sourcesCoverage(volData.sources);
-
-  const signalsHtml = signals.map(s => `
-    <div class="whale-signal whale-strength-${s.strength}">
-      <div class="whale-signal-head">
-        <div class="whale-signal-title">${s.title}</div>
-        <div class="whale-signal-value" style="color:${s.color}">${s.value}</div>
-      </div>
-      <div class="whale-signal-what">${s.what}</div>
-      <div class="whale-signal-react">💡 ${s.react}</div>
-    </div>
-  `).join('');
-
-const audioOn = audioService.isEnabled();
+  const audioOn = audioService.isEnabled();
   const audioBtnLabel = audioOn ? T('🔊 Звук ВКЛ', '🔊 Sound ON') : T('🔇 Звук ВЫКЛ', '🔇 Sound OFF');
 
+  const infoText = T(
+    'Радар объединяет спотовый объём (Z-score за 30 свечей и наклон OBV) с фьючерсами (изменение Open Interest, перекос LSR топ-трейдеров против толпы и агрессию Taker Buy/Sell). Чем выше балл, тем сильнее след крупного капитала.',
+    'Radar combines spot volume (30-candle Z-score & OBV slope) with futures (Open Interest delta, top-vs-crowd LSR skew, and Taker Buy/Sell aggression). Higher score means stronger institutional footprint.'
+  );
+
+  const signalsHtml = signals.map(s => {
+    const borderCol =
+      s.active
+        ? (s.color === 'var(--mint)' ? 'rgba(45,212,191,0.32)'
+          : s.color === 'var(--coral)' ? 'rgba(251,113,133,0.32)'
+          : s.color === 'var(--cyan)' ? 'rgba(94,203,255,0.38)'
+          : 'rgba(251,191,36,0.3)')
+        : 'rgba(255,255,255,0.08)';
+
+    const pill = s.strength === 'strong'
+      ? { text: en ? 'STRONG' : 'СИЛЬНЫЙ', color: s.color }
+      : s.active
+        ? { text: en ? 'ACTIVE' : 'АКТИВЕН', color: s.color }
+        : { text: en ? 'CALM' : 'НОРМА', color: 'var(--dim)' };
+
+    return `
+      <div style="background:linear-gradient(145deg,rgba(255,255,255,0.035),rgba(255,255,255,0.01));border:1px solid ${borderCol};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:18px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:0.9px;font-weight:700;">${s.title}</span>
+          ${renderBadgePill(pill)}
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:800;color:${s.color};letter-spacing:0.2px;">${s.value}</div>
+        <div style="font-size:11px;line-height:1.4;color:var(--dim);">${s.react}</div>
+      </div>
+    `;
+  }).join('');
+
+  const smartInsight = buildSmartWhaleInsight(volData, activeSignals.length, en);
+
   content.innerHTML = `
-    <div class="whale-score-block">
-      <div class="whale-score-row">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;">
         <div>
-          <div class="whale-score-label">${tm('whale_score')}</div>
-          <div class="whale-score-value" style="color:${scoreColor}">${volData.score}<span>/100</span></div>
+          <div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;">${tm('whale_score')}</div>
+          <div style="font-size:20px;font-weight:800;color:${scoreColor};line-height:1.15;">${volData.score}<span style="font-size:11px;color:var(--dim);font-weight:600;">/100</span></div>
         </div>
-        <div class="whale-signals-count">
-          <div class="whale-score-label">${tm('whale_signals_label')}</div>
-          <div class="whale-score-value" style="color:${scoreColor}">${activeSignals.length}<span>/${signals.length}</span></div>
+        <div style="width:1px;height:26px;background:rgba(255,255,255,0.08);"></div>
+        <div>
+          <div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;">${tm('whale_signals_label')}</div>
+          <div style="font-size:20px;font-weight:800;color:${scoreColor};line-height:1.15;">${activeSignals.length}<span style="font-size:11px;color:var(--dim);font-weight:600;">/${signals.length}</span></div>
         </div>
       </div>
-      <div class="whale-score-bar"><div class="whale-score-fill" style="width:${volData.score}%;background:${scoreColor}"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;">
-        <div class="whale-verdict-line" style="color:${verdictColor};margin:0;">${verdictText}</div>
-        <button id="whale-audio-toggle" type="button" style="cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 9px;border-radius:8px;border:1px solid ${audioOn ? 'rgba(94,203,255,.5)' : 'rgba(255,255,255,.12)'};background:${audioOn ? 'rgba(94,203,255,.14)' : 'rgba(255,255,255,.04)'};color:${audioOn ? 'var(--cyan)' : 'var(--mut)'};white-space:nowrap;">${audioBtnLabel}</button>
+
+      <div style="display:flex;align-items:center;gap:6px;">
+        <details style="font-family:'JetBrains Mono',monospace;">
+          <summary style="list-style:none;cursor:pointer;font-size:9px;color:var(--mut);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:4px 9px;border-radius:999px;user-select:none;">
+            ℹ️ ${en ? 'How it works' : 'Справка'}
+          </summary>
+          <div style="margin-top:8px;padding:9px 11px;border-radius:10px;background:rgba(15,23,42,0.75);border:1px solid rgba(94,203,255,0.2);font-size:10.5px;line-height:1.45;color:var(--mut);max-width:520px;">
+            ${infoText}
+          </div>
+        </details>
+        <button id="whale-audio-toggle" type="button" style="cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9.5px;padding:4px 9px;border-radius:999px;border:1px solid ${audioOn ? 'rgba(94,203,255,.5)' : 'rgba(255,255,255,.12)'};background:${audioOn ? 'rgba(94,203,255,.14)' : 'rgba(255,255,255,.04)'};color:${audioOn ? 'var(--cyan)' : 'var(--mut)'};white-space:nowrap;">${audioBtnLabel}</button>
       </div>
-      ${srcCov ? `<div class="whale-sources">${tm('whale_sources_label')}: ${srcCov}</div>` : ''}
     </div>
 
-    <div class="whale-signals">${signalsHtml}</div>
+    <div style="height:6px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.07);margin-bottom:8px;">
+      <div style="width:${volData.score}%;height:100%;background:${scoreColor};border-radius:999px;transition:width 0.35s ease;"></div>
+    </div>
 
-    <div class="whale-footer-hint">${tm('whale_footer_warn')}</div>
+    ${srcCov ? `<div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim);margin-bottom:10px;">${tm('whale_sources_label')}: ${srcCov}</div>` : ''}
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      ${signalsHtml}
+    </div>
+
+    <div style="margin-top:10px;padding:10px 12px;border-radius:11px;background:linear-gradient(90deg,rgba(94,203,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(94,203,255,0.22);display:flex;align-items:flex-start;gap:9px;">
+      <span style="font-size:14px;line-height:1.2;flex-shrink:0;">💡</span>
+      <div style="font-size:11.5px;line-height:1.45;color:var(--fg, #e6edf3);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);font-weight:700;margin-bottom:3px;">
+          ${en ? 'WHALE RADAR INSIGHT' : 'ИНФО ПО КИТАМ'}
+        </div>
+        <div>${smartInsight}</div>
+      </div>
+    </div>
   `;
 
   const audioBtn = document.getElementById('whale-audio-toggle');
@@ -531,6 +574,16 @@ const audioOn = audioService.isEnabled();
     const sym = (state as any).symbol || (state as any).coin || 'active';
     audioService.playWhaleAlert(volData.pressure, volData.score, `whale:${sym}:${volData.pressure}`);
   }
+
+  const whaleLamp =
+    volData.pressure === 'buying' || volData.futuresVerdict === 'new_longs'
+      ? 'green'
+      : volData.pressure === 'selling' || volData.futuresVerdict === 'new_shorts' || volData.futuresVerdict === 'long_liq'
+        ? 'red'
+        : volData.score >= 50
+          ? 'cyan'
+          : 'yellow';
+  setModuleSignal('whale', whaleLamp);
 
   card.style.display = 'block';
 }
@@ -583,28 +636,51 @@ export async function fetchExtras(ticker: string): Promise<void> {
 }
 
 export interface XrayData {
-  fundingText: string;
-  obText: string;
-  mood: string;
-  pressure: string;
+  funding: {
+    ok: boolean;
+    avg: number;
+    apr: number;
+    sourceCount: number;
+    regime: 'short_heavy' | 'long_heavy' | 'extreme_long' | 'neutral';
+  };
+  book: {
+    ok: boolean;
+    bidsPct: number;
+    asksPct: number;
+    pressureNear: number;
+    pressureWeighted: number;
+    totalBidsUsdt: number;
+    totalAsksUsdt: number;
+    sourceCount: number;
+    failedCount: number;
+    regime: 'bids' | 'asks' | 'fight';
+    nearDivergence: 'fake_bids' | 'fake_asks' | null;
+  };
+}
+
+function fmtCompactUsdt(val: number): string {
+  if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(2)}M`;
+  if (val >= 1_000) return `$${Math.round(val / 1_000)}K`;
+  return `$${Math.round(val)}`;
 }
 
 async function fetchXray(ticker: string): Promise<XrayData> {
-  const en = isEN();
-  const noFutures = en ? 'Futures unavailable' : 'Фьючерсы недоступны';
-  const noBook = en ? 'Book unavailable' : 'Стакан недоступен';
-  const crowdShort = en ? 'Crowd is shorting 🚀' : 'Толпа шортит 🚀';
-  const crowdEuphoria = en ? 'Crowd euphoric ⚠️' : 'Толпа в эйфории ⚠️';
-  const neutralTxt = en ? 'Neutral.' : 'Нейтрально.';
-  const bidsBelow = en ? 'Bids below 🛡️' : 'Снизу тазики 🛡️';
-  const asksPressure = en ? 'Sellers push 🧱' : 'Давят сверху 🧱';
-  const fight = en ? 'Fight ⚔️' : 'Позиционная борьба ⚔️';
-  const mood = en ? 'Crowd mood' : 'Настроение толпы';
-  const pressure = en ? 'Order book pressure' : 'Давление в стакане';
-  const exLabel = tm('exchange_count');
-
-  let fundingText = `<span style="color:var(--dim)">${noFutures}</span>`;
-  let obText = `<span style="color:var(--dim)">${noBook}</span>`;
+  const data: XrayData = {
+    funding: { ok: false, avg: 0, apr: 0, sourceCount: 0, regime: 'neutral' },
+    book: {
+      ok: false,
+      bidsPct: 50,
+      asksPct: 50,
+      pressureNear: 0,
+      pressureWeighted: 0,
+      totalBidsUsdt: 0,
+      totalAsksUsdt: 0,
+      sourceCount: 0,
+      failedCount: 0,
+      regime: 'fight',
+      nearDivergence: null,
+    },
+  };
 
   try {
     const [fundingRes, orderbookRes] = await Promise.all([
@@ -614,37 +690,140 @@ async function fetchXray(ticker: string): Promise<XrayData> {
 
     if (fundingRes && fundingRes.status === 'success') {
       const avg = fundingRes.avgFunding;
-      const srcCount = fundingRes.sourceCount;
       (window as any).updateFundingRate?.(avg, ticker);
-      if (avg < -0.01) {
-        fundingText = `<span style="color:var(--mint)"><b>${avg.toFixed(4)}%</b><br><span style="font-size:10px; color:var(--mut);">${crowdShort} · ${srcCount} ${exLabel}</span></span>`;
-      } else if (avg > 0.01) {
-        fundingText = `<span style="color:var(--coral)"><b>${avg.toFixed(4)}%</b><br><span style="font-size:10px; color:var(--mut);">${crowdEuphoria} · ${srcCount} ${exLabel}</span></span>`;
-      } else {
-        fundingText = `<span style="color:var(--amber)"><b>${avg.toFixed(4)}%</b><br><span style="font-size:10px; color:var(--mut);">${neutralTxt} · ${srcCount} ${exLabel}</span></span>`;
-      }
+      const regime: XrayData['funding']['regime'] =
+        avg < -0.01 ? 'short_heavy'
+        : avg >= 0.05 ? 'extreme_long'
+        : avg > 0.01 ? 'long_heavy'
+        : 'neutral';
+
+      data.funding = {
+        ok: true,
+        avg,
+        apr: avg * 3 * 365,
+        sourceCount: fundingRes.sourceCount,
+        regime,
+      };
     }
 
     if (orderbookRes && orderbookRes.status === 'success') {
-      const bidsPct = orderbookRes.bidsPct;
-      const asksPct = orderbookRes.asksPct;
-      const srcCount = orderbookRes.sourceCount;
-      const failed = (orderbookRes.sourcesFailed || []).length;
-      const partial = failed > 0 ? ` · ${tm('book_partial')}` : '';
+      const bidsRound = Math.min(99, Math.max(1, Math.round(orderbookRes.bidsPct)));
+      const asksRound = 100 - bidsRound;
+      const pNear = orderbookRes.pressureNear ?? 0;
+      const pWeight = orderbookRes.pressureWeighted ?? 0;
 
-      if (bidsPct > 60) {
-        obText = `<span style="color:var(--mint)"><b>${bidsPct.toFixed(0)}% / ${asksPct.toFixed(0)}%</b><br><span style="font-size:10px; color:var(--mut);">${bidsBelow} · ${srcCount} ${exLabel}${partial}</span></span>`;
-      } else if (asksPct > 60) {
-        obText = `<span style="color:var(--coral)"><b>${bidsPct.toFixed(0)}% / ${asksPct.toFixed(0)}%</b><br><span style="font-size:10px; color:var(--mut);">${asksPressure} · ${srcCount} ${exLabel}${partial}</span></span>`;
-      } else {
-        obText = `<span style="color:var(--amber)"><b>${bidsPct.toFixed(0)}% / ${asksPct.toFixed(0)}%</b><br><span style="font-size:10px; color:var(--mut);">${fight} · ${srcCount} ${exLabel}${partial}</span></span>`;
-      }
+      const regime: XrayData['book']['regime'] =
+        bidsRound >= 60 ? 'bids' : asksRound >= 60 ? 'asks' : 'fight';
+
+      let nearDivergence: XrayData['book']['nearDivergence'] = null;
+      if (bidsRound >= 58 && pNear <= -0.15) nearDivergence = 'fake_bids';
+      else if (asksRound >= 58 && pNear >= 0.15) nearDivergence = 'fake_asks';
+
+      data.book = {
+        ok: true,
+        bidsPct: bidsRound,
+        asksPct: asksRound,
+        pressureNear: pNear,
+        pressureWeighted: pWeight,
+        totalBidsUsdt: orderbookRes.totalBidsUsdt || 0,
+        totalAsksUsdt: orderbookRes.totalAsksUsdt || 0,
+        sourceCount: orderbookRes.sourceCount,
+        failedCount: (orderbookRes.sourcesFailed || []).length,
+        regime,
+        nearDivergence,
+      };
     }
   } catch (e) {
     console.warn('[whale] aggregated xray failed', e);
   }
 
-  return { fundingText, obText, mood, pressure };
+  return data;
+}
+
+function buildSmartXrayInsight(x: XrayData, en: boolean): string {
+  const f = x.funding;
+  const b = x.book;
+  const parts: string[] = [];
+
+  if (f.ok && b.ok) {
+    if (f.regime === 'short_heavy' && b.regime === 'bids') {
+      parts.push(
+        en
+          ? 'Strong short-squeeze setup: crowd is heavily short while dense bids support price below.'
+          : 'Сильный сетап на шорт-сквиз: толпа перегружена в шортах, а снизу стоит плотная поддержка.'
+      );
+    } else if ((f.regime === 'long_heavy' || f.regime === 'extreme_long') && b.regime === 'asks') {
+      parts.push(
+        en
+          ? 'Overheated longs facing sell pressure above — elevated pullback risk.'
+          : 'Перегретые лонги упираются в давление продавцов сверху — повышенный риск отката.'
+      );
+    } else if (f.regime === 'extreme_long') {
+      parts.push(
+        en
+          ? 'Extreme positive funding — longs are paying a steep premium, watch for a flush.'
+          : 'Экстремальный фандинг — лонги переплачивают, высокий риск резкого сброса.'
+      );
+    } else if (f.regime === 'short_heavy') {
+      parts.push(
+        en
+          ? 'Negative funding shows short crowding — any upward impulse can trigger a squeeze.'
+          : 'Отрицательный фандинг указывает на скопление шортов — импульс вверх может дать сквиз.'
+      );
+    } else if (b.regime === 'bids') {
+      parts.push(
+        en
+          ? `Funding is neutral, while order book leans bullish (${b.bidsPct}% bids).`
+          : `Фандинг нейтральный, но стакан перевешивает в сторону покупателей (${b.bidsPct}% бидов).`
+      );
+    } else if (b.regime === 'asks') {
+      parts.push(
+        en
+          ? `Funding is neutral, while sellers dominate the order book (${b.asksPct}% asks).`
+          : `Фандинг нейтральный, но в стакане доминируют продавцы (${b.asksPct}% асков).`
+      );
+    } else {
+      parts.push(
+        en
+          ? 'Market is balanced across both funding and order book — waiting for a clear trigger.'
+          : 'Баланс и по фандингу, и по стакану — явного перекоса нет, ждём триггер.'
+      );
+    }
+  } else if (f.ok) {
+    parts.push(
+      f.regime === 'short_heavy'
+        ? T('Отрицательный фандинг — много шортов, возможен сквиз вверх.', 'Negative funding — heavy shorts, squeeze possible.')
+        : f.regime === 'neutral'
+          ? T('Фандинг в нейтральной зоне, перегрева нет.', 'Funding is neutral, no overheat.')
+          : T('Положительный фандинг — лонги перегреты, осторожнее с входом в рост.', 'Positive funding — longs are crowded, be careful chasing.')
+    );
+  } else if (b.ok) {
+    parts.push(
+      b.regime === 'bids'
+        ? T(`В стакане перевес покупателей (${b.bidsPct}% / ${b.asksPct}%).`, `Buyers lead the book (${b.bidsPct}% / ${b.asksPct}%).`)
+        : b.regime === 'asks'
+          ? T(`В стакане давление продавцов (${b.bidsPct}% / ${b.asksPct}%).`, `Sellers press the book (${b.bidsPct}% / ${b.asksPct}%).`)
+          : T('В стакане позиционная борьба без явного лидера.', 'Order book shows balanced tug-of-war.')
+    );
+  } else {
+    return T('Нет данных от бирж для оценки перекоса.', 'No exchange data available for skew analysis.');
+  }
+
+  if (b.ok && b.nearDivergence === 'fake_bids') {
+    parts.push(
+      en
+        ? 'Caution: near-spread (±0.3%) sellers are pressing despite deep bids — watch for bid spoofing.'
+        : 'Осторожно: прямо у цены (±0.3%) давят продавцы вопреки глубоким бидам — возможны фейковые тазики.'
+    );
+  } else if (b.ok && b.nearDivergence === 'fake_asks') {
+    parts.push(
+      en
+        ? 'Note: near-spread (±0.3%) buyers are stronger than deep asks — resistance may be thin close to price.'
+        : 'Нюанс: у самой цены (±0.3%) покупатели сильнее общих асков — ближнее сопротивление слабее.'
+    );
+  }
+
+  return parts.join(' ');
 }
 
 function renderXray(x: XrayData): void {
@@ -652,35 +831,155 @@ function renderXray(x: XrayData): void {
   if (!card) return;
   card.style.display = 'block';
 
-  const whatFunding = `
-    <span class="pc-only">${T('Funding rate — периодическая плата между лонгами и шортами (обычно каждые 8 часов). Показывает, куда перекошены позиции.', 'Funding rate — periodic payment between longs and shorts (usually every 8 hours). Shows which side positions are skewed to.')}</span>
-    <span class="mobile-only">${T('Плата между лонгами и шортами. Показывает перекос.', 'Payment between longs and shorts. Shows skew.')}</span>
-  `;
-  const reactFunding = `
-    <span class="pc-only">${T('Отрицательный funding = много шортов, возможен резкий рост (сквиз). Положительный > 0.05% = эйфория в лонгах, риск коррекции.', 'Negative funding = many shorts, sharp rise (squeeze) possible. Positive > 0.05% = long euphoria, risk of correction.')}</span>
-    <span class="mobile-only">${T('Минус = сквиз вверх. Плюс > 0.05% = перегрев лонгов.', 'Minus = squeeze up. Plus > 0.05% = long overheat.')}</span>
-  `;
-  const whatBook = `
-    <span class="pc-only">${T('Стакан — лимитные заявки на покупку (bids) и продажу (asks), агрегированные с нескольких бирж. Показывает, где стоят крупные лимитники.', 'Order book — limit orders to buy (bids) and sell (asks) aggregated from several exchanges. Shows where big limit orders sit.')}</span>
-    <span class="mobile-only">${T('Лимитные заявки. Где стоят крупные.', 'Limit orders. Where the big ones sit.')}</span>
-  `;
-  const reactBook = `
-    <span class="pc-only">${T('Bids > 60% — плотная поддержка снизу. Asks > 60% — давление сверху. Но крупная заявка может быть снята перед движением — это спуфинг.', 'Bids > 60% — dense support below. Asks > 60% — pressure above. But a big order can be pulled before the move — that is spoofing.')}</span>
-    <span class="mobile-only">${T('Bids > 60% = поддержка. Asks > 60% = давление. Осторожно: заявку могут снять (спуфинг).', 'Bids > 60% = support. Asks > 60% = pressure. Careful: order can be pulled (spoofing).')}</span>
-  `;
+  const xrayLamp =
+    (x.funding.regime === 'short_heavy' || x.book.regime === 'bids') && x.funding.regime !== 'extreme_long'
+      ? 'green'
+      : x.funding.regime === 'extreme_long' || x.funding.regime === 'long_heavy' || x.book.regime === 'asks'
+        ? 'red'
+        : 'yellow';
+  setModuleSignal('xray', xrayLamp);
+
+  const en = isEN();
+  const exLabel = tm('exchange_count');
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const f = x.funding;
+  const b = x.book;
+
+  // ── Карточка 1: Funding ──
+  const fColor =
+    !f.ok ? 'var(--dim)'
+    : f.regime === 'short_heavy' ? 'var(--mint)'
+    : f.regime === 'long_heavy' || f.regime === 'extreme_long' ? 'var(--coral)'
+    : 'var(--amber)';
+
+  const fBadge = !f.ok ? null : (
+    f.regime === 'short_heavy' ? { text: en ? 'SHORTS CROWDED' : 'ШОРТЫ ДАВЯТ', color: 'var(--mint)' }
+    : f.regime === 'extreme_long' ? { text: en ? 'EXTREME LONGS' : 'ПЕРЕГРЕВ ЛОНГОВ', color: 'var(--coral)' }
+    : f.regime === 'long_heavy' ? { text: en ? 'LONGS CROWDED' : 'ЭЙФОРИЯ', color: 'var(--coral)' }
+    : { text: en ? 'NEUTRAL' : 'НЕЙТРАЛЬНО', color: 'var(--amber)' }
+  );
+
+  // Позиция маркера на биполярной шкале (-0.05% .. +0.05%)
+  const clampedFund = Math.max(-0.05, Math.min(0.05, f.avg));
+  const fundMarkerPct = 50 + (clampedFund / 0.05) * 46;
+
+  const fundingCardHtml = !f.ok
+    ? `<div style="color:var(--dim);font-size:12px;padding:12px 0;">${en ? 'Futures unavailable' : 'Фьючерсы недоступны'}</div>`
+    : `
+      <div style="color:${fColor};font-size:18px;font-weight:800;letter-spacing:0.3px;">
+        ${f.avg > 0 ? '+' : ''}${f.avg.toFixed(4)}%
+      </div>
+      <div style="font-size:10.5px;color:var(--mut);margin-top:4px;">
+        APR: <span style="color:var(--fg,#e6edf3);font-weight:600;">${f.apr > 0 ? '+' : ''}${f.apr.toFixed(1)}%</span> · ${f.sourceCount} ${exLabel}
+      </div>
+      <div style="margin-top:9px;">
+        <div style="position:relative;height:7px;border-radius:999px;background:linear-gradient(90deg,var(--mint) 0%,rgba(255,255,255,0.18) 50%,var(--coral) 100%);border:1px solid rgba(255,255,255,0.1);">
+          <div style="position:absolute;left:50%;top:-1px;bottom:-1px;width:1px;background:rgba(255,255,255,0.35);"></div>
+          <div style="position:absolute;left:${fundMarkerPct}%;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:${fColor};box-shadow:0 0 8px ${fColor};border:1.5px solid #0b111a;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8.5px;color:var(--dim);margin-top:4px;">
+          <span>-0.05%</span>
+          <span>0%</span>
+          <span>+0.05%</span>
+        </div>
+      </div>
+    `;
+
+  // ── Карточка 2: Order book pressure ──
+  const bColor =
+    !b.ok ? 'var(--dim)'
+    : b.regime === 'bids' ? 'var(--mint)'
+    : b.regime === 'asks' ? 'var(--coral)'
+    : 'var(--amber)';
+
+  const bBadge = !b.ok ? null : (
+    b.regime === 'bids' ? { text: en ? 'BIDS BELOW' : 'СНИЗУ ТАЗИКИ', color: 'var(--mint)' }
+    : b.regime === 'asks' ? { text: en ? 'SELLERS PUSH' : 'ДАВЯТ СВЕРХУ', color: 'var(--coral)' }
+    : { text: en ? 'BALANCED' : 'БОРЬБА', color: 'var(--amber)' }
+  );
+
+  const nearBidPct = Math.round(((b.pressureNear + 1) / 2) * 100);
+  const nearColor = nearBidPct >= 58 ? 'var(--mint)' : nearBidPct <= 42 ? 'var(--coral)' : 'var(--mut)';
+  const partialTxt = b.failedCount > 0 ? ` · ${tm('book_partial')}` : '';
+
+  const bookCardHtml = !b.ok
+    ? `<div style="color:var(--dim);font-size:12px;padding:12px 0;">${en ? 'Order book unavailable' : 'Стакан недоступен'}</div>`
+    : `
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <span style="color:var(--mint);font-size:18px;font-weight:800;">${b.bidsPct}%</span>
+        <span style="color:var(--dim);font-size:13px;">/</span>
+        <span style="color:var(--coral);font-size:18px;font-weight:800;">${b.asksPct}%</span>
+      </div>
+      <div style="display:flex;height:6px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.08);gap:2px;margin-top:7px;">
+        <div style="width:${b.bidsPct}%;background:var(--mint);border-radius:999px 0 0 999px;transition:width 0.3s ease;"></div>
+        <div style="width:${b.asksPct}%;background:var(--coral);border-radius:0 999px 999px 0;transition:width 0.3s ease;"></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:9.5px;color:var(--dim);margin-top:7px;">
+        <span>${en ? 'Near ±0.3%' : 'У цены ±0.3%'}: <b style="color:${nearColor}">${nearBidPct}%</b></span>
+        <span>·</span>
+        <span>${fmtCompactUsdt(b.totalBidsUsdt)} / ${fmtCompactUsdt(b.totalAsksUsdt)}</span>
+        <span>·</span>
+        <span>${b.sourceCount} ${exLabel}${partialTxt}</span>
+      </div>
+    `;
+
+  const smartInsight = buildSmartXrayInsight(x, en);
+  const infoText = T(
+    'Funding rate — ставка между лонгами и шортами каждые 8ч (минус = толпа в шортах, риск сквиза; плюс > 0.05% = перегрев лонгов). Давление в стакане сравнивает общий объём лимиток с давлением прямо у спреда (±0.3%), чтобы отличать реальную поддержку от дальних фейковых заявок.',
+    'Funding rate is the 8h fee between longs and shorts (negative = crowded shorts / squeeze risk; positive > 0.05% = overheated longs). Book pressure compares total depth against near-spread (±0.3%) liquidity to separate real support from far spoof orders.'
+  );
+
+  const fBorder = f.regime === 'short_heavy' ? 'rgba(45,212,191,0.3)' : (f.regime === 'long_heavy' || f.regime === 'extreme_long') ? 'rgba(251,113,133,0.3)' : 'rgba(251,191,36,0.24)';
+  const bBorder = b.regime === 'bids' ? 'rgba(45,212,191,0.3)' : b.regime === 'asks' ? 'rgba(251,113,133,0.3)' : 'rgba(251,191,36,0.24)';
 
   setHTML('xray-content', `
-    <div class="xray-item">
-      <div class="xray-label">${x.mood}</div>
-      <div class="xray-value" style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin-bottom:8px">${x.fundingText}</div>
-      <div class="xray-explain">${whatFunding}</div>
-      <div class="xray-react">💡 ${reactFunding}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:1.2px;">
+        <span>🧬</span>
+        <span>${en ? 'Funding & Book Skew' : 'Фандинг и перекос стакана'}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <details style="font-family:'JetBrains Mono',monospace;">
+          <summary style="list-style:none;cursor:pointer;font-size:9px;color:var(--mut);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:999px;user-select:none;">
+            ℹ️ ${en ? 'How it works' : 'Справка'}
+          </summary>
+          <div style="margin-top:8px;padding:9px 11px;border-radius:10px;background:rgba(15,23,42,0.75);border:1px solid rgba(94,203,255,0.2);font-size:10.5px;line-height:1.45;color:var(--mut);max-width:520px;">
+            ${infoText}
+          </div>
+        </details>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:2px 8px;border-radius:999px;">
+          ${en ? 'Updated' : 'Обновлено'}: ${timeStr}
+        </div>
+      </div>
     </div>
-    <div class="xray-item">
-      <div class="xray-label">${x.pressure}</div>
-      <div class="xray-value" style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;margin-bottom:8px">${x.obText}</div>
-      <div class="xray-explain">${whatBook}</div>
-      <div class="xray-react">💡 ${reactBook}</div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;font-family:'JetBrains Mono',monospace;">
+      <div style="background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid ${fBorder};border-radius:12px;padding:11px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:20px;margin-bottom:6px;">
+          <span style="color:var(--mut);font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;">🔥 ${en ? 'Crowd mood (Funding)' : 'Настроение толпы'}</span>
+          ${renderBadgePill(fBadge)}
+        </div>
+        ${fundingCardHtml}
+      </div>
+
+      <div style="background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid ${bBorder};border-radius:12px;padding:11px 12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:20px;margin-bottom:6px;">
+          <span style="color:var(--mut);font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;">⚖️ ${en ? 'Order book pressure' : 'Давление в стакане'}</span>
+          ${renderBadgePill(bBadge)}
+        </div>
+        ${bookCardHtml}
+      </div>
+    </div>
+
+    <div style="margin-top:10px;padding:10px 12px;border-radius:11px;background:linear-gradient(90deg,rgba(94,203,255,0.08),rgba(255,255,255,0.02));border:1px solid rgba(94,203,255,0.22);display:flex;align-items:flex-start;gap:9px;">
+      <span style="font-size:14px;line-height:1.2;flex-shrink:0;">💡</span>
+      <div style="font-size:11.5px;line-height:1.45;color:var(--fg, #e6edf3);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);font-weight:700;margin-bottom:3px;">
+          ${en ? 'LIVE X-RAY INSIGHT' : 'ИНФО ПО РЕНТГЕНУ'}
+        </div>
+        <div>${smartInsight}</div>
+      </div>
     </div>
   `);
 }
@@ -836,6 +1135,14 @@ function renderWalls(w: WallsData | null): void {
     return;
   }
   card.style.display = 'block';
+
+  const wallsLamp =
+    w.bestBidWall.status === 'pulled' || w.summary?.dominantSide === 'ask'
+      ? 'red'
+      : w.summary?.dominantSide === 'bid'
+        ? 'green'
+        : 'yellow';
+  setModuleSignal('walls', wallsLamp);
 
   const en = isEN();
   const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
