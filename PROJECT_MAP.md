@@ -1,8 +1,8 @@
 # NEBULA Oracle Terminal - Project Map
 
 > **Auto-generated** by `scripts/release.ps1` / `scripts/context.ps1`
-> Version: **2.0.52** | Branch: `main` | Commit: `7416cc1`
-> Generated: 2026-11-23 15:18
+> Version: **2.0.53** | Branch: `main` | Commit: `325b55b`
+> Generated: 2026-11-25 03:43
 
 ---
 
@@ -39,15 +39,30 @@ One codebase, three platforms: Web / Android (Capacitor) / Windows (Tauri).
 
 - TypeScript files in `src/`: 61
 - Total LOC in `src/`: 20495
-- Bundle (`dist/`): 63 files, 979.8 KB
+- Bundle (`dist/`): 63 files, 976.8 KB
 
 ## Consistency check
 
-- `package.json` version: **2.0.52**
-- Last git tag: `v2.0.51`
+- `package.json` version: **2.0.53**
+- Last git tag: `v2.0.52`
 - Status: **DRIFT** (package.json != last tag)
 
 ## Recent changes
+
+### `325b55b` - 2026-11-23 - chore(release): v2.0.52
+
+Files:
+- `PROJECT_MAP.md`
+- `README.md`
+- `android/app/build.gradle`
+- `index.html`
+- `package-lock.json`
+- `package.json`
+- `public/styles/new-skin.css`
+- `src-tauri/Cargo.lock`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+- `src/locales/auto-en.json`
 
 ### `7416cc1` - 2026-11-23 - chore(release): v2.0.51
 
@@ -123,27 +138,13 @@ Files:
 - `src/sources/stream.ts`
 - `src/sources/whale-futures.ts`
 
-### `f71b264` - 2026-11-22 - chore(release): v2.0.47
-
-Files:
-- `PROJECT_MAP.md`
-- `README.md`
-- `android/app/build.gradle`
-- `index.html`
-- `package-lock.json`
-- `package.json`
-- `src-tauri/Cargo.lock`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/config.ts`
-- `src/platform/http.ts`
-
 ## Last release diff
 
-No changes since `v2.0.51`
+No changes since `v2.0.52`
 
 ## Recent tags
 
+- `v2.0.52`
 - `v2.0.51`
 - `v2.0.50`
 - `v2.0.49`
@@ -153,7 +154,6 @@ No changes since `v2.0.51`
 - `v2.0.45`
 - `v2.0.44`
 - `v2.0.43`
-- `v2.0.42`
 
 ## File tree (src/)
 
@@ -163,6 +163,8 @@ src/
 |   +--   247 engine.ts
 +-- btc/
 |   +--   166 outlook-engine.ts
++-- code-map/
+|   +-- web/
 +-- data/
 |   +--   310 hub.ts
 |   +--    42 info.ts
@@ -1003,6 +1005,7 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 
 ## Release history (last 15 commits)
 
+- 325b55b  2026-11-23  chore(release): v2.0.52
 - 7416cc1  2026-11-23  chore(release): v2.0.51
 - f98e7e7  2026-11-23  chore(release): v2.0.50
 - 8fe5451  2026-11-22  chore(release): v2.0.49
@@ -1017,7 +1020,6 @@ about-build, about-can, about-features-list, about-feedback, about-feedback-desc
 - 904606c  2026-11-20  chore(release): v2.0.40
 - 3d5b255  2026-11-20  chore(release): v2.0.39
 - 8fa67c2  2026-11-11  chore(release): v2.0.38
-- baad85d  2026-11-07  chore(release): v2.0.37
 
 ---
 
