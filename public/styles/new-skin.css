@@ -101,10 +101,12 @@ body.skin-active #brand-pro-btn-pc {
   /* 2. Логотип NEBULA PRO */
   body.skin-active #main-brand-pc {
     display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 6px !important;
-    padding: 0 0 32px 16px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    padding: 0 0 20px 12px !important;
     border-bottom: none !important;
     margin-bottom: 8px !important;
   }
@@ -503,13 +505,17 @@ body.skin-active #home-fav-content {
    ═══════════════════════════════════════════════════════════════ */
 
 /* ─── ПК (Сайдбар) ─── */
-body.skin-active #main-brand-pc {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 6px !important;
-  padding: 16px !important;
-  margin-bottom: 16px !important;
+@media (min-width: 1024px) {
+  body.skin-active #main-brand-pc {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+  }
 }
 body.skin-active #main-brand-pc .brand-dot { display: none !important; }
 
@@ -1157,21 +1163,27 @@ body.skin-active #main-brand #brand-pro-btn::after {
 }
 
 /* ─── ПК ─── */
-body.skin-active #main-brand-pc {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 6px !important;
+@media (min-width: 1024px) {
+  body.skin-active #main-brand-pc {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 9px !important;
+  }
 }
 
 body.skin-active #main-brand-pc #brand-text-pc {
   font-family: 'Space Grotesk', sans-serif !important;
-  font-size: 24px !important;
+  font-size: 20px !important;
   font-weight: 800 !important;
   color: #ffffff !important;
   background: none !important;
   -webkit-text-fill-color: #ffffff !important;
-  letter-spacing: 1px !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
 }
 
 body.skin-active #main-brand-pc #brand-pro-btn-pc {
@@ -1181,10 +1193,12 @@ body.skin-active #main-brand-pc #brand-pro-btn-pc {
   color: #000000 !important;
   border: none !important;
   border-radius: 4px !important;
-  padding: 2px 8px !important;
+  padding: 2px 6px !important;
   font-family: 'Space Grotesk', sans-serif !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   font-weight: 800 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
   animation: none !important;
 }
 body.skin-active #main-brand-pc #brand-pro-btn-pc::after {
@@ -2151,9 +2165,9 @@ body.skin-active .nav-section-lbl {
 
   /* Логотип NEBULA PRO чуть компактнее */
   body.skin-active #main-brand-pc {
-    padding: 4px 12px 14px 12px !important;
+    padding: 4px 8px 14px 8px !important;
     margin-bottom: 6px !important;
-    gap: 5px !important;
+    gap: 8px !important;
   }
 
   /* Пункты меню: меньше высота и аккуратнее иконки */
