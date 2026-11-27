@@ -180,6 +180,14 @@ function buildSettingsHTML(d: SettingsData): string {
         </div>
         <div class="settings-row-arrow">›</div>
       </button>
+      <button class="settings-row" onclick="triggerRecorderJsonlImport()">
+        <div class="settings-row-icon">📡</div>
+        <div class="settings-row-body">
+          <div class="settings-row-title">${en ? 'NEBULA Recorder (.jsonl)' : 'Логи NEBULA Recorder (.jsonl)'}</div>
+          <div class="settings-row-hint">${en ? 'Import session logs from Telegram bot' : 'Импорт сессий из Telegram-бота для анализа повадок'}</div>
+        </div>
+        <div class="settings-row-arrow">›</div>
+      </button>
       <button class="settings-row" onclick="resetAllKeys()" style="border-color:rgba(255,101,132,.3)">
         <div class="settings-row-icon">🗑️</div>
         <div class="settings-row-body">

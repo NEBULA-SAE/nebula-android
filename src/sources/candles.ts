@@ -382,3 +382,103 @@ export async function fetchCandlesWithSource(
 export async function fetchCandles(ticker: string, tf: Timeframe = '1d'): Promise<Candle[]> {
   return (await fetchCandlesWithSource(ticker, tf)).data;
 }
+
+// ─── ГЛУБОКАЯ ИСТОРИЯ 1H (3 МЕСЯЦА / 6 МЕСЯЦЕВ) ДЛЯ ПОИСКА ПОВАДОК ───
+
+async function fetchBinance1hBatch(symbol: string, endTimeMs?: number): Promise<Candle[]> {
+  const base = P('binance', 'https://api.binance.com');
+  const endParam = endTimeMs ? `&endTime=${endTimeMs}` : '';
+  const r = await fetch(
+    `${base}/api/v3/klines?symbol=${symbol}USDT&interval=1h&limit=1000${endParam}`,
+    { signal: AbortSignal.timeout(6000) }
+  );
+  if (!r.ok) throw new Error(`binance 1h ${r.status}`);
+  const d: any[] = await r.json();
+  return d.map(x => ({
+    time: toSeconds(x[0]),
+    open: parseFloat(x[1]),
+    high: parseFloat(x[2]),
+    low: parseFloat(x[3]),
+    close: parseFloat(x[4]),
+    volume: parseFloat(x[5]),
+  }));
+}
+
+async function fetchBybit1hBatch(symbol: string, endTimeMs?: number): Promise<Candle[]> {
+  const base = P('bybit', 'https://api.bybit.com');
+  const endParam = endTimeMs ? `&end=${endTimeMs}` : '';
+  const r = await fetch(
+    `${base}/v5/market/kline?category=spot&symbol=${symbol}USDT&interval=60&limit=1000${endParam}`,
+    { signal: AbortSignal.timeout(6000) }
+  );
+  if (!r.ok) throw new Error(`bybit 1h ${r.status}`);
+  const j = await r.json();
+  if (j.retCode !== 0) throw new Error(`bybit ${j.retMsg}`);
+  return (j.result?.list || []).map((d: any) => ({
+    time: toSeconds(d[0]),
+    open: parseFloat(d[1]),
+    high: parseFloat(d[2]),
+    low: parseFloat(d[3]),
+    close: parseFloat(d[4]),
+    volume: parseFloat(d[5]),
+  })).reverse();
+}
+
+export async function fetchDeepCandles1h(ticker: string, days = 180): Promise<Candle[]> {
+  const sym = ticker.toUpperCase().trim();
+  const targetBars = Math.min(4500, Math.max(720, days * 24));
+  const cacheKey = `${sym}:deep1h:${days}d`;
+  const ttlMs = 30 * 60 * 1000; // 30 минут
+
+  const cached = await readPersistCache(cacheKey);
+  if (cached && Date.now() - cached.ts < ttlMs && cached.value.data.length >= targetBars * 0.7) {
+    return cached.value.data;
+  }
+
+  const batchesNeeded = Math.ceil(targetBars / 1000);
+  const tryPaginated = async (
+    fetcher: (s: string, endMs?: number) => Promise<Candle[]>
+  ): Promise<Candle[]> => {
+    let all: Candle[] = [];
+    let endMs: number | undefined = undefined;
+    for (let i = 0; i < batchesNeeded; i++) {
+      const chunk = await fetcher(sym, endMs);
+      if (!chunk.length) break;
+      all = chunk.concat(all);
+      const oldestSec = chunk[0].time;
+      if (!oldestSec) break;
+      endMs = oldestSec * 1000 - 1;
+      if (all.length >= targetBars) break;
+    }
+    return sortAndDedupe(all);
+  };
+
+  let candles: Candle[] = [];
+  try {
+    candles = await tryPaginated(fetchBinance1hBatch);
+  } catch {
+    candles = [];
+  }
+
+  if (candles.length < 500) {
+    try {
+      candles = await tryPaginated(fetchBybit1hBatch);
+    } catch {
+      // fallback на обычный 1h
+    }
+  }
+
+  if (candles.length < 200) {
+    const fallback = await fetchCandlesWithSource(sym, '1h');
+    candles = fallback.data;
+  }
+
+  if (candles.length > 0) {
+    writePersistCache(cacheKey, {
+      value: { data: candles, source: 'deep1h' },
+      ts: Date.now(),
+    });
+  }
+
+  return candles;
+}

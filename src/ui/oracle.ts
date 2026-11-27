@@ -6,7 +6,16 @@
 import { tm, isEN } from '../i18n';
 import { state, fmt, fmtP, setText, setHTML, esc, toast, relTime } from '../utils';
 import { wCall } from '../worker';
-import { initChart, clearLines, drawNowLine, setCandlesAndFit, showChartLoading, hideChartLoading } from '../chart';
+import {
+  initChart,
+  clearLines,
+  drawNowLine,
+  setCandlesAndFit,
+  showChartLoading,
+  hideChartLoading,
+  calcLiquidationLevels,
+  drawLiquidationLines,
+} from '../chart';
 import { fetchCandlesWithSource } from '../sources/candles';
 import { getWhaleFuturesMetrics } from '../sources/whale-futures';
 import { getAdvancedAnalytics } from '../market';
@@ -35,6 +44,14 @@ import {
   fetchExtras,
 } from './whale';
 import { resetMasterSignal, setModuleSignal } from './master-signal';
+import {
+  computeHabitsReport,
+  importRecorderJsonlText,
+  clearSavedRecorderData,
+  type HabitWindowMonths,
+} from '../habits-engine';
+
+let _habitsMonths: HabitWindowMonths = 6;
 
 // ═══ ОСНОВНОЙ АНАЛИЗ ═══
 
@@ -178,6 +195,8 @@ export async function mobileAnalyze(): Promise<void> {
     clearLines();
     setCandlesAndFit(candles as any);
     drawNowLine(price);
+    const liqLevels = calcLiquidationLevels(candles as any, (futuresMetrics as any)?.oi ?? null);
+    drawLiquidationLines(liqLevels);
     
     (state as any).chartLoading = false; // <-- Разблокируем WS, график загружен
     hideChartLoading();                  // <-- Убираем шторку
@@ -563,8 +582,10 @@ export async function mobileAnalyze(): Promise<void> {
       }
     }).catch(() => { /* silent */ });
 
-        // Обновляем Зеркало истории (если открыта вкладка Оракул)
+        // Обновляем Зеркало истории, Повадки 3м/6м и контекст BTC / PDH-PDL
     renderOracleAnalogies(marketData);
+    renderOracleHabits(raw, _habitsMonths);
+    renderBtcRelativeAndLevels(raw, candles as any, liqLevels);
     
 
     // ⚠️ ОБНОВЛЕНИЕ ДЕМО-РЕЖИМА: если мы в песочнице, перерисовываем её
@@ -1421,6 +1442,265 @@ export function renderOracleAnalogies(marketData: any): void {
   `;
 }
 
+export async function renderOracleHabits(
+  ticker = state.currentTicker || 'DASH',
+  months: HabitWindowMonths = _habitsMonths
+): Promise<void> {
+  const host = document.getElementById('oracle-habits-content');
+  if (!host) return;
+
+  _habitsMonths = months;
+  const b3 = document.getElementById('habits-win-3');
+  const b6 = document.getElementById('habits-win-6');
+  if (b3 && b6) {
+    b3.style.background = months === 3 ? 'rgba(69,224,168,.16)' : 'rgba(255,255,255,.04)';
+    b3.style.borderColor = months === 3 ? 'var(--mint)' : 'var(--border)';
+    b3.style.color = months === 3 ? 'var(--mint)' : 'var(--mut)';
+
+    b6.style.background = months === 6 ? 'rgba(69,224,168,.16)' : 'rgba(255,255,255,.04)';
+    b6.style.borderColor = months === 6 ? 'var(--mint)' : 'var(--border)';
+    b6.style.color = months === 6 ? 'var(--mint)' : 'var(--mut)';
+  }
+
+  host.innerHTML = `<div class="loader">${tm('loading')}</div>`;
+
+  try {
+    const rep = await computeHabitsReport(ticker, months, isEN());
+
+    const curH = rep.currentHourStat;
+    const nextBull = rep.topBullHours
+      .slice()
+      .sort((a, b) => ((a.key - rep.currentHour + 24) % 24) - ((b.key - rep.currentHour + 24) % 24))[0];
+
+    const habitLevel =
+      curH?.bias === 'bull' ? 'green' : curH?.bias === 'bear' ? 'red' : 'yellow';
+    const habitRel =
+      curH?.consistentWithOtherWindow && rep.candlesCount >= 720
+        ? 'high'
+        : rep.candlesCount >= 300
+          ? 'medium'
+          : 'low';
+
+    const curStr = curH
+      ? `${isEN() ? 'Now' : 'Сейчас'} ${curH.label}: ${curH.upWinRate}%`
+      : '';
+    const nextStr = nextBull
+      ? `${isEN() ? 'Best growth' : 'Лучший рост'}: ${nextBull.label} (${nextBull.upWinRate}%)`
+      : '';
+    const habitNote = [curStr, nextStr].filter(Boolean).join(' · ');
+    setModuleSignal('habits', habitLevel, habitNote, habitRel);
+    const curHourHtml = curH
+      ? `<div style="padding:9px 11px;border-radius:10px;background:rgba(94,203,255,.07);border:1px solid rgba(94,203,255,.22);margin-bottom:10px;font-family:'JetBrains Mono',monospace;font-size:11px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--cyan);font-weight:700;">Сейчас · ${esc(curH.label)}</span>
+            <span style="color:${curH.avgMovePct >= 0 ? 'var(--mint)' : 'var(--coral)'};font-weight:700;">
+              рост ${curH.upWinRate}% · ср. ${curH.avgMovePct >= 0 ? '+' : ''}${curH.avgMovePct}%
+            </span>
+          </div>
+          <div style="color:var(--mut);font-size:10px;margin-top:3px;">
+            Разброс (H-L): ~${curH.avgRangePct}% · выборка ${curH.samples}ч (${rep.periodStartIso}..${rep.periodEndIso})
+          </div>
+        </div>`
+      : '';
+
+    const bullRows = rep.topBullHours.length
+      ? rep.topBullHours.map(h => `
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.05);font-family:'JetBrains Mono',monospace;font-size:11px;">
+            <span><b>${esc(h.label)}</b> ${h.consistentWithOtherWindow ? '<span style="color:var(--mint);">★3м+6м</span>' : ''}</span>
+            <span style="color:var(--mint);font-weight:700;">${h.upWinRate}% (${h.avgMovePct >= 0 ? '+' : ''}${h.avgMovePct}%)</span>
+          </div>
+        `).join('')
+      : `<div style="font-size:11px;color:var(--dim);">Недостаточно явных бычьих часов</div>`;
+
+    const bearRows = rep.topBearHours.length
+      ? rep.topBearHours.map(h => `
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.05);font-family:'JetBrains Mono',monospace;font-size:11px;">
+            <span><b>${esc(h.label)}</b> ${h.consistentWithOtherWindow ? '<span style="color:var(--coral);">★3м+6м</span>' : ''}</span>
+            <span style="color:var(--coral);font-weight:700;">${h.downWinRate}% (${h.avgMovePct}%)</span>
+          </div>
+        `).join('')
+      : `<div style="font-size:11px;color:var(--dim);">Недостаточно явных медвежьих часов</div>`;
+
+    const daysHtml = rep.topDays.length
+      ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">` +
+        rep.topDays.map(d => {
+          const bestRate = Math.max(d.upWinRate, d.downWinRate);
+          const isUp = d.upWinRate >= d.downWinRate;
+          return `<span style="padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:10px;color:${isUp ? 'var(--mint)' : 'var(--coral)'};">
+            ${esc(d.label)}: ${isUp ? '▲' : '▼'} ${bestRate}% (ср. ${d.avgMovePct >= 0 ? '+' : ''}${d.avgMovePct}%)
+          </span>`;
+        }).join('') +
+        `</div>`
+      : '';
+
+    const impulsesHtml = rep.impulses.length
+      ? `<div style="margin-top:10px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Что бывает после импульса (${months}М)</div>
+          ${rep.impulses.map(im => `
+            <div style="padding:8px 10px;border-radius:9px;background:rgba(0,0,0,.3);border:1px solid var(--border);margin-bottom:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;">
+              <div style="display:flex;justify-content:space-between;gap:6px;">
+                <b style="color:var(--hi);">${esc(im.title)}</b>
+                <span style="color:var(--cyan);">n=${im.samples}</span>
+              </div>
+              <div style="color:var(--mut);margin-top:3px;">
+                Через 4ч в плюсе: <b style="color:var(--mint);">${im.bounceWinRate4h}%</b> ·
+                1ч: <b>${im.avgReturn1h >= 0 ? '+' : ''}${im.avgReturn1h}%</b> ·
+                4ч: <b>${im.avgReturn4h >= 0 ? '+' : ''}${im.avgReturn4h}%</b> ·
+                12ч: <b>${im.avgReturn12h >= 0 ? '+' : ''}${im.avgReturn12h}%</b> ·
+                просадка 4ч: <span style="color:var(--coral);">${im.maxDrawdown4h}%</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>`
+      : '';
+
+    host.innerHTML = `
+      ${curHourHtml}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;padding:9px 10px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--mint);font-weight:700;margin-bottom:6px;">▲ ЧАСЫ РОСТА (${months}М)</div>
+          ${bullRows}
+        </div>
+        <div style="background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;padding:9px 10px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--coral);font-weight:700;margin-bottom:6px;">▼ ЧАСЫ ПАДЕНИЯ (${months}М)</div>
+          ${bearRows}
+        </div>
+      </div>
+      ${daysHtml}
+      ${impulsesHtml}
+    `;
+  } catch (e: any) {
+    host.innerHTML = `<div class="empty-msg">${tm('error')}: ${esc(e?.message || 'failed')}</div>`;
+  }
+}
+
+export function setHabitsWindow(months: HabitWindowMonths): void {
+  renderOracleHabits(state.currentTicker || 'DASH', months);
+}
+
+export function showHabitsHelp(): void {
+  const en = isEN();
+  const html = en
+    ? `
+      <div style="font-size:13px;line-height:1.6;color:var(--tx);">
+        <p style="margin-bottom:12px;">The <b>Habits (3M / 6M)</b> module scans hourly candles over the last 90 and 180 days to find recurring time windows and post-impulse reactions.</p>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <b style="color:var(--cyan);">1. Current Hour</b><br>
+          Shows how often the current hour closed green, its average move (%), and typical High-Low range.
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <b style="color:var(--mint);">2. Bullish & Bearish Hours + ★3M+6M</b><br>
+          Top hours where the coin historically rises or drops. The <b>★3M+6M</b> badge means the pattern holds across both 3-month and 6-month windows.
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
+          <b style="color:var(--amber);">3. Post-Impulse Behavior</b><br>
+          Tracks what usually happens 1h, 4h, and 12h after a sharp -2.5% drop or a 1.8x green volume spike (including average 4h drawdown).
+        </div>
+        <button class="btn-primary btn-mint" onclick="closeSheet()">Got it</button>
+      </div>
+    `
+    : `
+      <div style="font-size:13px;line-height:1.6;color:var(--tx);">
+        <p style="margin-bottom:12px;">Модуль <b>«Повадки (3М / 6М)»</b> проверяет часовые свечи монеты за последние 90 и 180 дней и ищет повторяющиеся окна роста, падения и реакции после резких движений.</p>
+
+        <div style="background:rgba(94,203,255,.06);border-left:3px solid var(--cyan);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+          <b style="color:var(--cyan);">1. Плашка «Сейчас» (текущий час)</b><br>
+          Показывает характер текущего часа: в скольких % случаев он закрывался в плюс, средний ход в % и обычный разброс цены от минимума до максимума (H-L).
+        </div>
+
+        <div style="background:rgba(69,224,168,.06);border-left:3px solid var(--mint);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+          <b style="color:var(--mint);">2. Часы роста, падения и метка ★3м+6м</b><br>
+          Слева — часы, когда монета чаще всего растёт; справа — когда чаще сливается. Метка <b>★3м+6м</b> означает, что привычка подтверждена и за 3 месяца, и за полгода (устойчивый паттерн, а не случайность).
+        </div>
+
+        <div style="background:rgba(255,184,88,.06);border-left:3px solid var(--amber);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+          <b style="color:var(--amber);">3. Что бывает после импульса</b><br>
+          Считает, что происходило через <b>1ч, 4ч и 12ч</b> после резкого пролива (≥ -2.5% за 3ч) или всплеска объёма (≥ 1.8x). Помогает понять: откупают ли монету после падения или лучше заходить только на всплеске объёма вверх.
+        </div>
+
+        <div style="font-size:11.5px;color:var(--mut);margin-bottom:14px;">
+          💡 <b>Как применять:</b> используй как фильтр к торговому плану — заходи, когда сигнал Оракула совпадает с сильным часом или статистикой отработки импульса, и не лезь в лонг перед часами массового слива.
+        </div>
+
+        <button class="btn-primary btn-mint" onclick="closeSheet()">Понятно</button>
+      </div>
+    `;
+
+  (window as any).openSheet?.(en ? '🧭 How Habits Work' : '🧭 Как читать Повадки (3М / 6М)', html);
+}
+
+export function triggerRecorderJsonlImport(): void {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.jsonl,.json,.txt';
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const summary = await importRecorderJsonlText(text);
+    toast(`Загружено точек: ${summary.pointsCount}`, 'success');
+    renderOracleHabits(state.currentTicker || 'DASH', _habitsMonths);
+  };
+  input.click();
+}
+
+export async function clearRecorderLogsFromOracle(): Promise<void> {
+  await clearSavedRecorderData();
+  toast('Логи рекордера очищены', 'info');
+  renderOracleHabits(state.currentTicker || 'DASH', _habitsMonths);
+}
+
+async function renderBtcRelativeAndLevels(
+  ticker: string,
+  candles: Candle[],
+  liq: ReturnType<typeof calcLiquidationLevels>
+): Promise<void> {
+  const host = document.getElementById('verdict');
+  if (!host || !candles.length) return;
+
+  const coinStart = candles[Math.max(0, candles.length - 8)].close;
+  const coinNow = candles[candles.length - 1].close;
+  const coin7BarPct = coinStart > 0 ? ((coinNow - coinStart) / coinStart) * 100 : 0;
+
+  let relText = '';
+  if (ticker !== 'BTC') {
+    try {
+      const btcRes = await fetchCandlesWithSource('BTC', ((state as any).currentTimeframe || '1d') as any);
+      const bc = btcRes.data || [];
+      if (bc.length >= 8) {
+        const bStart = bc[bc.length - 8].close;
+        const bNow = bc[bc.length - 1].close;
+        const btc7BarPct = bStart > 0 ? ((bNow - bStart) / bStart) * 100 : 0;
+        const diff = coin7BarPct - btc7BarPct;
+        const sign = diff >= 0 ? '+' : '';
+        relText = isEN()
+          ? `vs BTC: <b>${sign}${diff.toFixed(2)}%</b>`
+          : `к BTC: <b>${sign}${diff.toFixed(2)}%</b>`;
+      }
+    } catch {
+      // без лишнего шума
+    }
+  }
+
+  const levelsText = liq
+    ? `PDH <b>${fmtP(liq.pdh)}</b> · PDL <b>${fmtP(liq.pdl)}</b> · ⚡ ${fmtP(liq.longMagnet)} / ${fmtP(liq.shortMagnet)}`
+    : '';
+
+  const infoParts = [relText, levelsText].filter(Boolean);
+  if (!infoParts.length) return;
+
+  let box = document.getElementById('btc-rel-levels-strip');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'btc-rel-levels-strip';
+    box.style.cssText =
+      "margin-top:8px;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mut);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;";
+    host.appendChild(box);
+  }
+
+  box.innerHTML = infoParts.join(' <span style="opacity:.4;">|</span> ');
+}
+
 // ═══ Экспорт в window ═══
 
 if (typeof window !== 'undefined') {
@@ -1442,6 +1722,11 @@ if (typeof window !== 'undefined') {
     saveGroqKeyFromModal,
     deleteGroqKeyFromModal,
     executeDemoTrade,
-    renderOracleAnalogies, 
+    renderOracleAnalogies,
+    renderOracleHabits,
+    setHabitsWindow,
+    showHabitsHelp,
+    triggerRecorderJsonlImport,
+    clearRecorderLogsFromOracle,
   });
 }

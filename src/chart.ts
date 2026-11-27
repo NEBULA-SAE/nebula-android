@@ -23,9 +23,18 @@ export interface WallsData {
 }
 
 // Отложенные свечи: если setCandlesAndFit/updateCandles пришли до создания series
+export interface LiquidationLevels {
+  longMagnet: number;
+  shortMagnet: number;
+  pdh: number;
+  pdl: number;
+  oiBoosted: boolean;
+}
+
 let _pendingCandles: Candle[] | null = null;
 let _loadingEl: HTMLElement | null = null;
 let _nowLine: any = null; // <-- Ссылка на линию NOW
+let _liqLines: any[] = [];
 
 export function showChartLoading(): void {
   const c = document.getElementById('chart-container');
@@ -186,7 +195,74 @@ export function clearLines(): void {
   });
   state.priceLines = [];
   _nowLine = null; // <-- Сбрасываем ссылку
+  clearLiquidationLines();
   clearOrderbookLines();
+}
+
+export function clearLiquidationLines(): void {
+  _liqLines.forEach((l: any) => {
+    try { state.candleSeries?.removePriceLine(l); }
+    catch { /* silent */ }
+  });
+  _liqLines = [];
+}
+
+export function calcLiquidationLevels(candles: Candle[], oi?: number | null): LiquidationLevels | null {
+  if (!candles || candles.length < 10) return null;
+
+  const last = candles[candles.length - 1];
+  const price = last.close;
+  if (!price || price <= 0) return null;
+
+  const recent = candles.slice(-30);
+  const swingLow = Math.min(...recent.map(c => c.low));
+  const swingHigh = Math.max(...recent.map(c => c.high));
+
+  // Предыдущая закрытая свеча (PDH / PDL по прошлому бару выбранного ТФ)
+  const prevBar = candles.length >= 2 ? candles[candles.length - 2] : last;
+  const pdh = prevBar?.high ?? swingHigh;
+  const pdl = prevBar?.low ?? swingLow;
+
+  // Кластеры ликвидаций: ниже цены (ликвидации лонгов от свинга/PDL ~10x) и выше (ликвидации шортов от свинга/PDH ~10x)
+  const rawLong = Math.min(swingLow * 0.992, price * 0.91);
+  const rawShort = Math.max(swingHigh * 1.008, price * 1.09);
+
+  return {
+    longMagnet: Math.max(0.000001, rawLong),
+    shortMagnet: Math.max(price * 1.005, rawShort),
+    pdh,
+    pdl,
+    oiBoosted: Boolean(oi && oi > 0),
+  };
+}
+
+export function drawLiquidationLines(liq: LiquidationLevels | null): void {
+  clearLiquidationLines();
+  if (!liq || !state.candleSeries) return;
+
+  try {
+    const ls = LineStyle.Dotted;
+    const tag = liq.oiBoosted ? ' · OI' : '';
+    const longLiqLine = state.candleSeries.createPriceLine({
+      price: liq.longMagnet,
+      color: 'rgba(255, 184, 88, 0.75)',
+      lineWidth: 1,
+      lineStyle: ls,
+      axisLabelVisible: true,
+      title: `⚡ LIQ LONG${tag}`,
+    });
+    const shortLiqLine = state.candleSeries.createPriceLine({
+      price: liq.shortMagnet,
+      color: 'rgba(167, 139, 250, 0.75)',
+      lineWidth: 1,
+      lineStyle: ls,
+      axisLabelVisible: true,
+      title: `⚡ LIQ SHORT${tag}`,
+    });
+    _liqLines.push(longLiqLine, shortLiqLine);
+  } catch (e) {
+    console.warn('drawLiquidationLines failed', e);
+  }
 }
 
 export function clearOrderbookLines(): void {
